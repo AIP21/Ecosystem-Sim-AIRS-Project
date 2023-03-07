@@ -1,4 +1,7 @@
 using UnityEngine;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace DataStructure
 {
@@ -47,7 +50,7 @@ namespace DataStructure
         public Vector2 position;
         public Vector2 size;
 
-        public List<GridData> data;
+        public Dictionary<string, GridData> data;
 
         public GridCell(int level, Vector2 position, Vector2 size)
         {
@@ -57,23 +60,31 @@ namespace DataStructure
             this.data = new List<GridData>();
         }
 
-        public setData(GridData data)
+        public void AddData(string name, object data)
         {
-            this.data.Add(data);
+            this.data.Add(name, new GridData(name, data));
+        }
+
+        public void SetData(string name, object data)
+        {
+            this.data[name].SetData(data);
         }
     }
 
-    public abstract struct GridData<T>
+    public class GridData
     {
         public string name;
-        public T data;
+        public object data;
 
-        public GridData(string name, T data)
+        public GridData(string name, object data)
         {
             this.name = name;
             this.data = data;
         }
+
+        public void SetData(object data)
+        {
+            this.data = data;
+        }
     }
-
-
 }
