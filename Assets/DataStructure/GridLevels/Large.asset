@@ -14,3 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Level: 3
   CellSize: {x: 10, y: 10}
+  data:
+    list:
+    - Key: dfgfdg
+      Value: 3
+    keyCollision: 0

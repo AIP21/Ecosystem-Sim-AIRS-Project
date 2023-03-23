@@ -14,3 +14,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Level: 1
   CellSize: {x: 1, y: 1}
+  data:
+    list:
+    - Key: test a
+      Value: 0
+    - Key: test b
+      Value: 2
+    - Key: test c
+      Value: 1
+    keyCollision: 0

@@ -167,11 +167,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0013169faf7e2a24483f14d4dcd2611c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  OverallSize: {x: 100, y: 100}
+  OverallSize: {x: 20, y: 20}
   Levels:
+  - {fileID: 11400000, guid: 36751346e59f29e409b3874b0603be45, type: 2}
   - {fileID: 11400000, guid: a8156ca0bf27694458adbefdae0a24e1, type: 2}
   - {fileID: 11400000, guid: 5d57596dba7f4ac4582655b943c0fedc, type: 2}
+  DebugDraw: 1
   LevelZShift: 10
+  DebugTests: 1
+  TestSingleLevel: 0
+  TestLevel: 0
+  TestPosition: {x: 0, y: 0}
+  TestedCellData: []
 --- !u!1 &638825939
 GameObject:
   m_ObjectHideFlags: 0
