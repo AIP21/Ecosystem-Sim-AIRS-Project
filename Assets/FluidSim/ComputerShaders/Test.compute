@@ -1,0 +1,76 @@
+#pragma kernel CSMain
+
+RWStructuredBuffer<int> cells;
+
+RWTexture2D<float4> output;
+
+int brushSize;
+int brushX;
+int brushY;
+int drawing;
+
+int resolution;
+
+void moveWater(int x, int y)
+{
+    int cell2 = cells[x + y * resolution];
+    if (cell2 < 10)
+    {
+        cells[x + y * resolution] = cell2 + 1;
+    }
+}
+
+void simulateCell(int x, int y, int cell)
+{
+    if (y > 0) // move down
+    {
+        moveWater(x, y - 1);
+        cell--;
+    }
+    // else if (y > 0 && x < resolution - 1) // move right
+    // {
+    //     moveWater(x + 1, y - 1);
+    //     cell--;
+    // }
+    // else if (y > 0 && x > 0) // move left
+    // {
+    //     moveWater(x - 1, y - 1);
+    //     cell--;
+    // }
+    cells[x + y * resolution] = cell;
+}
+
+[numthreads(8, 8, 1)] void CSMain(uint3 id
+                                  : SV_DispatchThreadID)
+{
+    float x = id.x;
+    float y = resolution - id.y;
+
+    int cell = cells[x + y * resolution];
+
+    // Draw with brush (circle)
+    if (drawing == 1)
+    {
+        float dx = x - brushX;
+        float dy = y - (resolution - brushY);
+        float dist = dx * dx + dy * dy;
+        if (dist < brushSize * brushSize)
+        {
+            cells[x + y * resolution] = 10;
+        }
+    }
+
+    // Cellular automata fluid simulation
+    // If the cell is noy empty (fill > 0), move one unit of water to the cell below
+    // If the cell below is full (fill == 10), move one unit of water to the cell to the bottom right
+    // If the cell to the bottom right is full, move one unit of water to the cell to the bottom left
+    // If the cell to the bottom left is full, don't move
+    // Also do checks to make sure we don't go out of bounds
+    if (cell > 0)
+    {
+        simulateCell(x, y, cell);
+    }
+
+    // Draw the cell
+    output[id.xy] = float4(cells[x + y * resolution] / 10.0, 1.0, 0.0, 1.0);
+}

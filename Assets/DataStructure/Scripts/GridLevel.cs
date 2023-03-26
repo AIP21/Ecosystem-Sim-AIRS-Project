@@ -10,6 +10,8 @@ namespace SimDataStructure
         public int Level;
         public Vector2 CellSize;
 
-        public GenericDictionary<string, SimDataStructure.DataType> data = new GenericDictionary<string, SimDataStructure.DataType>();
+        public GenericDictionary<string, SimDataStructure.CellDataType> CellDataTypes = new GenericDictionary<string, SimDataStructure.CellDataType>();
+        
+        public GenericDictionary<string, SimDataStructure.CellDataType> GPUData = new GenericDictionary<string, SimDataStructure.CellDataType>();
     }
 }

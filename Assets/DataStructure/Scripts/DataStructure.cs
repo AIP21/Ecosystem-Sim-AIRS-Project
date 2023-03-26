@@ -61,19 +61,20 @@ namespace SimDataStructure
                 {
                     TestedCells.Add(cell);
 
-                    Dictionary<string, AbstractGridData> data = cell.GetData();
+                    GenericDictionary<string, AbstractCellData> data = cell.GetData();
                     TestedCellData.Clear();
 
                     if (data == null)
                     {
                         TestedCellData.Add("NULL", "Data is null");
                     }
-                    else if (data.Count == 0){
+                    else if (data.Count == 0)
+                    {
                         TestedCellData.Add("NULL", "No data");
                     }
                     else
                     {
-                        foreach (KeyValuePair<string, AbstractGridData> d in data)
+                        foreach (KeyValuePair<string, AbstractCellData> d in data)
                         {
                             TestedCellData.Add(d.Key, d.Value.ToString());
                         }
@@ -111,7 +112,7 @@ namespace SimDataStructure
                 Grid grid = Grids[i];
 
                 // Set the child grid of the grid below this one
-                grid.ChildGrid = i == 0 ? null : Grids[i - 1];
+                grid.childGrid = i == 0 ? null : Grids[i - 1];
 
                 // If this is the highest level grid, skip
                 if (i == Grids.Count - 1)
@@ -119,10 +120,10 @@ namespace SimDataStructure
 
                 // Get the grid above this one (parent grid) and set it as the parent grid
                 Grid gridAbove = Grids[i + 1];
-                grid.ParentGrid = gridAbove;
+                grid.parentGrid = gridAbove;
 
                 // Go through each cell in this grid
-                foreach (GridCell cell in grid.Cells)
+                foreach (GridCell cell in grid.cells)
                 {
                     // Get the cell in the parent that contains the current cell's center position
                     GridCell containerCell = gridAbove.GetCell(cell.center);
@@ -172,20 +173,28 @@ namespace SimDataStructure
         }
     }
 
+    #region Grid
     public class Grid
     {
+        #region Public
         public Vector2 size;
         public GridLevel gridLevel;
 
-        public Grid ParentGrid;
-        public Grid ChildGrid;
+        public Grid parentGrid;
+        public Grid childGrid;
 
-        public List<GridCell> Cells;
-        public List<GridCell> ChildCells;
+        public List<GridCell> cells;
+        public List<GridCell> childCells;
 
-        public int XCellCount, YCellCount;
+        public int xCellCount, yCellCount;
 
-        public Color color;
+        // Data
+        public AbstractGridData data;
+        #endregion
+
+        #region Private
+        private Color color; // For debugging purposed
+        #endregion
 
         public Grid(Vector2 size, GridLevel gridLevel)
         {
@@ -194,45 +203,45 @@ namespace SimDataStructure
             this.size = size;
             this.gridLevel = gridLevel;
 
-            this.Cells = new List<GridCell>();
-            this.ChildCells = new List<GridCell>();
+            this.cells = new List<GridCell>();
+            this.childCells = new List<GridCell>();
 
-            this.XCellCount = (int)(size.x / gridLevel.CellSize.x);
-            this.YCellCount = (int)(size.y / gridLevel.CellSize.y);
+            this.xCellCount = (int)(size.x / gridLevel.CellSize.x);
+            this.yCellCount = (int)(size.y / gridLevel.CellSize.y);
 
             populate();
         }
 
         private void populate()
         {
-            for (int y = 0; y < YCellCount; y++)
+            for (int y = 0; y < yCellCount; y++)
             {
-                for (int x = 0; x < XCellCount; x++)
+                for (int x = 0; x < xCellCount; x++)
                 {
                     // Calculate the center position using size
                     Vector2 pos = new Vector2(x * gridLevel.CellSize.x + gridLevel.CellSize.x / 2, y * gridLevel.CellSize.y + gridLevel.CellSize.y / 2);
 
                     GridCell cell = new GridCell(this.gridLevel, pos);
-                    Cells.Add(cell);
+                    cells.Add(cell);
 
                     // Assign this cell's neighbors to the cell above and to the left
                     if (y > 0)
                     {
-                        cell.neighbors[0] = Cells[Cells.Count - XCellCount - 1];
+                        cell.neighbors[0] = cells[cells.Count - xCellCount - 1];
                     }
                     if (x > 0)
                     {
-                        cell.neighbors[1] = Cells[Cells.Count - 2];
+                        cell.neighbors[1] = cells[cells.Count - 2];
                     }
 
                     // Assign the cell above and to the left's neighbors to this cell
                     if (y > 0)
                     {
-                        Cells[Cells.Count - XCellCount - 1].neighbors[2] = cell;
+                        cells[cells.Count - xCellCount - 1].neighbors[2] = cell;
                     }
                     if (x > 0)
                     {
-                        Cells[Cells.Count - 2].neighbors[3] = cell;
+                        cells[cells.Count - 2].neighbors[3] = cell;
                     }
                 }
             }
@@ -244,12 +253,12 @@ namespace SimDataStructure
         public GridCell GetCell(Vector2 queryPoint)
         {
             // Calculate the index of the cell that contains the query point
-            int index = (int)(queryPoint.x / gridLevel.CellSize.x) + (int)(queryPoint.y / gridLevel.CellSize.y) * XCellCount;
+            int index = (int)(queryPoint.x / gridLevel.CellSize.x) + (int)(queryPoint.y / gridLevel.CellSize.y) * xCellCount;
 
-            if (index < 0 || index >= Cells.Count)
+            if (index < 0 || index >= cells.Count)
                 return null;
             else
-                return Cells[index];
+                return cells[index];
         }
 
         /**
@@ -270,7 +279,7 @@ namespace SimDataStructure
 
         public void DebugDrawGrid(float levelZShift)
         {
-            foreach (GridCell cell in Cells)
+            foreach (GridCell cell in cells)
             {
                 Gizmos.color = color;
 
@@ -319,15 +328,21 @@ namespace SimDataStructure
 
     public class GridCell
     {
+        #region Public
         public Vector2 center;
         public Bounds bounds;
         public GridLevel level;
 
+        // References
         public GridCell parentCell;
         public List<GridCell> childCells = new List<GridCell>();
         public GridCell[] neighbors = new GridCell[4]; // 0 = above, 1 = left, 2 = below, 3 = right
+        #endregion
 
-        public GenericDictionary<string, AbstractGridData> data = new GenericDictionary<string, AbstractGridData>();
+        #region Private
+        // Data
+        private GenericDictionary<string, AbstractCellData> data = new GenericDictionary<string, AbstractCellData>();
+        #endregion
 
         public GridCell(GridLevel level, Vector2 center)
         {
@@ -340,24 +355,24 @@ namespace SimDataStructure
 
         private void setupLevelData()
         {
-            foreach (KeyValuePair<string, DataType> dataEntry in level.data)
+            foreach (KeyValuePair<string, CellDataType> dataEntry in level.CellDataTypes)
             {
                 switch (dataEntry.Value)
                 {
-                    case DataType.Float:
-                        this.AddData(dataEntry.Key, new GridData<float>(4.20f));
+                    case CellDataType.Float:
+                        this.AddData(dataEntry.Key, new CellData<float>(4.20f));
                         break;
-                    case DataType.Int:
-                        this.AddData(dataEntry.Key, new GridData<int>(69));
+                    case CellDataType.Int:
+                        this.AddData(dataEntry.Key, new CellData<int>(69));
                         break;
-                    case DataType.Bool:
-                        this.AddData(dataEntry.Key, new GridData<bool>(true));
+                    case CellDataType.Bool:
+                        this.AddData(dataEntry.Key, new CellData<bool>(true));
                         break;
-                    case DataType.Vector2:
-                        this.AddData(dataEntry.Key, new GridData<Vector2>(new Vector2(6, 9)));
+                    case CellDataType.Vector2:
+                        this.AddData(dataEntry.Key, new CellData<Vector2>(new Vector2(6, 9)));
                         break;
-                    case DataType.Object:
-                        this.AddData(dataEntry.Key, new GridData<object>(null));
+                    case CellDataType.Object:
+                        this.AddData(dataEntry.Key, new CellData<object>(null));
                         break;
                 }
             }
@@ -405,12 +420,12 @@ namespace SimDataStructure
             return path;
         }
 
-        public void AddData(string name, AbstractGridData data)
+        public void AddData(string name, AbstractCellData data)
         {
             this.data.Add(name, data);
         }
 
-        public Dictionary<string, AbstractGridData> GetData()
+        public GenericDictionary<string, AbstractCellData> GetData()
         {
             return this.data;
         }
@@ -420,19 +435,22 @@ namespace SimDataStructure
             return this.data[name];
         }
     }
+    #endregion
 
-    public abstract class AbstractGridData
+    #region Data
+    // Data for each cell (only inside cells)
+    public abstract class AbstractCellData
     {
-        public AbstractGridData()
+        public AbstractCellData()
         {
         }
     }
 
-    public class GridData<T> : AbstractGridData
+    public class CellData<T> : AbstractCellData
     {
         public T data;
 
-        public GridData(T data) : base()
+        public CellData(T data) : base()
         {
             this.data = data;
         }
@@ -443,7 +461,7 @@ namespace SimDataStructure
         }
     }
 
-    public enum DataType
+    public enum CellDataType
     {
         Float,
         Int,
@@ -451,4 +469,28 @@ namespace SimDataStructure
         Vector2,
         Object
     }
+
+    // Data for whole grid (one instance per grid)
+    // This class will contain a reference to a compute shader that will be a grid shader that computes some data for each cell
+    // This class will contain a method to update the shader
+    // This class will contain a method to access the data of the shader
+    // This class will contain a method to supply input data to the shader
+    public abstract class AbstractGridData
+    {
+        public AbstractGridData()
+        {
+        }
+
+    }
+
+    public class ShaderGridData : AbstractGridData {
+        // This class will contain a reference to a compute shader that will be a grid shader that computes some data for each cell
+        // This class will contain a method to update the shader
+        // This class will contain a method to access the data of the shader
+        // This class will contain a method to supply input data to the shader
+
+        
+    }
+    
+    #endregion
 }
