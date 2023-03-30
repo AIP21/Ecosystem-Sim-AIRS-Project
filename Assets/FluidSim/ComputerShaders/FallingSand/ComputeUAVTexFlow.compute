@@ -1,0 +1,72 @@
+﻿#pragma kernel CSMain
+
+RWTexture2D<float4> Result;
+int _Size;
+float _Time;
+float2 _MousePos;
+int _MouseMode;
+//=========================================================================
+float4 GetResultPixel(int2 pID_new)
+{
+	float4 result = Result[pID_new];
+	//if( pID_new.x < 0 || pID_new.x >= _Size || pID_new.y < 0 || pID_new.y >= _Size ) result = float4(0,1,1,1);  //outside canvas is obstacle
+	return result;
+}
+
+void MakeNewPixelObstacle(int2 id)
+{
+	float4 p = Result[id];
+	if( _MouseMode == 0 && p.x == 0 && p.z == 0  ) Result[id] = float4(1,1,0,1);
+	else if( _MouseMode == 1 ) Result[id] = float4(0,1,1,1);
+	else if( _MouseMode == 2 && p.x == 0 ) Result[id] = float4(0,0,0,1);
+}
+
+float random(float2 st) 
+{
+	return frac(sin(dot(st.xy,float2(12.9898f, 78.233f)))*43758.5453123f);
+}
+//============================= MAIN ====================================
+[numthreads(8,8,1)]
+void CSMain (uint3 id : SV_DispatchThreadID)
+{
+	//make new pixel / obstacle ----------------------
+	int2 newPixelID = _MousePos*_Size;
+	if( _MouseMode != 0)
+	{
+		//so that the brush is thicker
+		float dist = distance(float2(id.xy),float2(newPixelID));
+		if(dist < 2.5f) MakeNewPixelObstacle(id.xy);
+	}
+	else
+	{
+		MakeNewPixelObstacle(newPixelID);
+	}
+
+	//move pixels ----------------------
+	int2 pID = id.xy;
+	float4 p = Result[pID];
+
+	if(p.x == 1)
+	{
+		//move down
+		int2 direction = int2( 0 , -1 );
+		int2 pID_new = pID+direction;//*(10*p.y);
+		float4 p_new = GetResultPixel(pID_new);
+
+		//if not empty - move horizontal
+		if(p_new.x > 0 || p_new.z > 0)
+		{
+			direction = int2( sign(random(float2(pID) + _Time)-0.5f) , -1 );
+			pID_new = pID+direction;
+			p_new = GetResultPixel(pID_new);
+		}
+
+		//if empty - assign
+		if(p_new.x == 0 && p_new.z == 0)
+		{
+			Result[pID_new] = p;
+			Result[pID] = float4(0,0,0,1);
+		}
+	}
+}
+

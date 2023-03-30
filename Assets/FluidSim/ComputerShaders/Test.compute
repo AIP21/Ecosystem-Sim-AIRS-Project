@@ -1,76 +1,107 @@
 #pragma kernel CSMain
 
-RWStructuredBuffer<int> cells;
-
-RWTexture2D<float4> output;
-
-int brushSize;
-int brushX;
-int brushY;
-int drawing;
+RWTexture2D<float4> Watermap;
+RWTexture2D<float4> NewWatermap;
+RWTexture2D<float4> Output;
+Texture2D<float> Heightmap;
 
 int resolution;
+int fillX;
+int fillY;
+int fillRadius;
+int filling;
+int maxWater;
+float diffusionFactor; // Anything above about 0.2 will give an unstable simulation.
 
-void moveWater(int x, int y)
+// psuedorandom number between 0 and 1
+float random (float2 uv)
 {
-    int cell2 = cells[x + y * resolution];
-    if (cell2 < 10)
-    {
-        cells[x + y * resolution] = cell2 + 1;
-    }
+    return frac(sin(dot(uv, float2(12.9898, 78.233))) * 43758.5453123);
 }
 
-void simulateCell(int x, int y, int cell)
-{
-    if (y > 0) // move down
-    {
-        moveWater(x, y - 1);
-        cell--;
-    }
-    // else if (y > 0 && x < resolution - 1) // move right
-    // {
-    //     moveWater(x + 1, y - 1);
-    //     cell--;
-    // }
-    // else if (y > 0 && x > 0) // move left
-    // {
-    //     moveWater(x - 1, y - 1);
-    //     cell--;
-    // }
-    cells[x + y * resolution] = cell;
+float TotalHeight (int2 pos){
+    // check if in bounds
+    if (pos.x < 0 || pos.x >= resolution || pos.y < 0 || pos.y >= resolution)
+        return 0.0;
+    return Watermap[pos].r + Heightmap[pos];
 }
 
-[numthreads(8, 8, 1)] void CSMain(uint3 id
-                                  : SV_DispatchThreadID)
-{
-    float x = id.x;
-    float y = resolution - id.y;
+void simWater(int2 pos){
+    int x = pos.x;
+    int y = pos.y;
 
-    int cell = cells[x + y * resolution];
+    // Water will low from high elevation to low elevation based on the heightmap
+    // Water will flow from high water to low water based on the watermap
 
-    // Draw with brush (circle)
-    if (drawing == 1)
-    {
-        float dx = x - brushX;
-        float dy = y - (resolution - brushY);
-        float dist = dx * dx + dy * dy;
-        if (dist < brushSize * brushSize)
-        {
-            cells[x + y * resolution] = 10;
+    if(Watermap[pos].r == 0.0)
+        return;
+
+    int2 lowestNeighbor = pos;
+    float lowestNeighborHeight = TotalHeight(pos);
+    for (int i = 0; i < 8; i++){
+        int2 neighbor = pos;
+        switch (i){
+            case 0:
+                neighbor.x += 1;
+                break;
+            case 1:
+                neighbor.x += 1;
+                neighbor.y += 1;
+                break;
+            case 2:
+                neighbor.y += 1;
+                break;
+            case 3:
+                neighbor.x -= 1;
+                neighbor.y += 1;
+                break;
+            case 4:
+                neighbor.x -= 1;
+                break;
+            case 5:
+                neighbor.x -= 1;
+                neighbor.y -= 1;
+                break;
+            case 6:
+                neighbor.y -= 1;
+                break;
+            case 7:
+                neighbor.x += 1;
+                neighbor.y -= 1;
+                break;
+        }
+        float neighborHeight = TotalHeight(neighbor);
+        if (neighborHeight < lowestNeighborHeight){
+            lowestNeighbor = neighbor;
+            lowestNeighborHeight = neighborHeight;
         }
     }
-
-    // Cellular automata fluid simulation
-    // If the cell is noy empty (fill > 0), move one unit of water to the cell below
-    // If the cell below is full (fill == 10), move one unit of water to the cell to the bottom right
-    // If the cell to the bottom right is full, move one unit of water to the cell to the bottom left
-    // If the cell to the bottom left is full, don't move
-    // Also do checks to make sure we don't go out of bounds
-    if (cell > 0)
-    {
-        simulateCell(x, y, cell);
+    
+    // If the neighbor height is lower, a certain amount of water flows from this cell to the neighbor
+    if (lowestNeighborHeight < TotalHeight(pos)){
+        float diff = (TotalHeight(pos) - lowestNeighborHeight) * diffusionFactor;
+        // diff = diff;
+        NewWatermap[lowestNeighbor] = float4(Watermap[lowestNeighbor].r + diff, 0.0, 0.0, 1.0);
+        NewWatermap[pos] = float4(Watermap[pos].r - diff, 0.0, 0.0, 1.0);
     }
+}
 
-    // Draw the cell
-    output[id.xy] = float4(cells[x + y * resolution] / 10.0, 1.0, 0.0, 1.0);
+[numthreads(8, 8, 1)] void CSMain(uint3 id : SV_DispatchThreadID)
+{
+    int x = id.x;
+    int y = id.y;
+
+    // Fill within circular radius of (fillX, fillY) with maxValue
+    if (filling == 1 && (x - fillX) * (x - fillX) + (y - fillY) * (y - fillY) <= fillRadius * fillRadius)
+    {
+        NewWatermap[id.xy] = float4(1.0, 0.0, 0.0, 1.0);
+        return;
+    }
+    
+    simWater(id.xy);
+
+    if (NewWatermap[id.xy].r > 0.0)
+        Output[id.xy] = float4(NewWatermap[id.xy].r * 10, Heightmap[id.xy], Heightmap[id.xy], 1.0);
+    else if (NewWatermap[id.xy].r == 0.0)
+        Output[id.xy] = float4(Heightmap[id.xy], Heightmap[id.xy], Heightmap[id.xy], 1.0);
 }

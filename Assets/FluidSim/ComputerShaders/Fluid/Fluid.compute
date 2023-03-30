@@ -1,0 +1,312 @@
+﻿#pragma kernel Kernel_Init
+// #pragma kernel Kernel_bruh
+#pragma kernel Kernel_Diffusion
+#pragma kernel Kernel_UserInput
+#pragma kernel Kernel_Divergence
+#pragma kernel Kernel_Jacobi
+#pragma kernel Kernel_Advection
+#pragma kernel Kernel_SubtractGradient
+
+float2 sourcePos;
+float2 sourceVelocity;
+float forceIntensity;
+float forceRange;
+float _deltaTime;
+float3 dyeColor;
+
+Texture2D<float> ObstacleTex; //0 is obstacle, 1 is fluid
+RWTexture2D<float2> VelocityTex;
+RWTexture2D<float4> DensityTex; //r,g,b is dye color, a is density
+RWTexture2D<float> PressureTex;
+RWTexture2D<float> DivergenceTex;
+RWTexture2D<float4> testX;
+RWTexture2D<float4> testY;
+RWTexture2D<float4> testH;
+
+uint size; //texture resolution
+
+float advectStrength;
+
+//Neighbour pixel offsets: top,bottom,left,right
+#define offsetAbove int2(0,1);
+#define offsetBelow int2(0,-1);
+#define offsetLeft int2(-1,0);
+#define offsetRight int2(1,0);
+
+// Returns float3(gradientX, gradientY, height)
+float3 CalculateHeightAndGradient (int posX, int posY) {
+	// Calculate heights of the four nodes of the cell
+	int2 pos = int2(posX, posY);
+	int2 posAbove = pos + offsetAbove;
+	int2 posBelow = pos + offsetBelow;
+	int2 posLeft = pos + offsetLeft;
+	int2 posRight = pos + offsetRight;
+
+	float height = ObstacleTex[pos].x;
+
+	float diffAbove = ObstacleTex[posAbove].x - height; 
+	float diffBelow = ObstacleTex[posBelow].x - height; 
+	float diffLeft = ObstacleTex[posLeft].x - height;
+	float diffRight = ObstacleTex[posRight].x - height;
+
+	float lowestXDiff = min(diffLeft, diffRight);
+	float lowestYDiff = min(diffAbove, diffBelow);
+
+	// Calculate direction of flow with bilinear interpolation of height difference along the edges
+	float gradientX = 0;
+	float gradientY = 0;
+	
+	if(lowestXDiff < 0.0){
+		// There is a neighbor below us in the X
+		gradientX = abs(lowestXDiff);
+	} 
+	if(lowestYDiff < 0.0){
+		// There is a neighbor below us in the Y
+		gradientY = abs(lowestYDiff);
+	} 
+
+	
+	// Calculate height with bilinear interpolation of the heights of the nodes of the cell
+	// float height = heightNW * (1 - x) * (1 - y) + heightNE * x * (1 - y) + heightSW * (1 - x) * y + heightSE * x * y;
+
+	return float3(gradientX, gradientY, 0.0);
+}
+
+//===========================================================
+
+[numthreads(16,16,1)]
+void Kernel_Init (uint3 id : SV_DispatchThreadid)
+{
+	DensityTex[id.xy] = 0;
+	VelocityTex[id.xy] = 0;
+	PressureTex[id.xy] = 0;
+	DivergenceTex[id.xy] = 0;
+}
+
+//===========================================================
+
+float TrueHeight(int2 pos){
+	return ObstacleTex[pos].x;// + DensityTex[pos];
+}
+
+[numthreads(16,16,1)]
+void Kernel_Diffusion (uint3 id : SV_DispatchThreadid)
+{
+	// Calcualate height gradient
+	float3 heightAndGradient = CalculateHeightAndGradient(id.x, id.y);
+
+	testX[id.xy] = float4(heightAndGradient.x, 0.0, 0.0, 1.0);
+	testY[id.xy] = float4(0.0, heightAndGradient.y, 0.0, 1.0);
+	testH[id.xy] = float4(heightAndGradient.x, heightAndGradient.y, heightAndGradient.z, 1.0);
+
+	// Grid positions
+	int2 pos = int2(id.xy);
+	int2 posAbove = pos + offsetAbove;
+	int2 posBelow = pos + offsetBelow;
+	int2 posLeft = pos + offsetLeft;
+	int2 posRight = pos + offsetRight;
+
+	// Heightmap gradients
+	float height = TrueHeight(pos);
+
+	float diffAbove = min(0.0, TrueHeight(posAbove) - height); 
+	float diffBelow = min(0.0, TrueHeight(posBelow) - height); 
+	float diffLeft = min(0.0, TrueHeight(posLeft) - height);
+	float diffRight = min(0.0, TrueHeight(posRight) - height);
+
+	float flowToAbove = diffAbove * forceIntensity * DensityTex[posAbove];
+	float flowToBelow = diffBelow * forceIntensity * DensityTex[posBelow];
+	float flowToLeft = diffLeft * forceIntensity * DensityTex[posLeft];
+	float flowToRight = diffRight * forceIntensity * DensityTex[posRight];
+
+	DensityTex[posAbove] = float4(DensityTex[posAbove].r + flowToAbove, 0.0, 0.0, 1.0);
+	DensityTex[posBelow] = float4(DensityTex[posBelow].r + flowToBelow, 0.0, 0.0, 1.0);
+	DensityTex[posLeft] = float4(DensityTex[posLeft].r + flowToLeft, 0.0, 0.0, 1.0);
+	DensityTex[posRight] = float4(DensityTex[posRight].r + flowToRight, 0.0, 0.0, 1.0);
+
+	DensityTex[pos] = DensityTex[pos] - (flowToAbove + flowToBelow + flowToLeft + flowToRight);
+	
+	// float gradientAbove = max(0.0, 1 + ObstacleTex[posAbove].x - height);
+	// float gradientBelow = max(0.0, 1 + ObstacleTex[posBelow].x - height); 
+	// float gradientLeft = max(0.0, 1 + ObstacleTex[posLeft].x - height);
+	// float gradientRight = max(0.0, 1 + ObstacleTex[posRight].x - height);
+
+	// Densities
+	// float4 density = DensityTex[pos];
+	// float4 densityAbove = DensityTex[posAbove] * gradientAbove;
+	// float4 densityBelow = DensityTex[posBelow] * gradientBelow;
+	// float4 densityLeft = DensityTex[posLeft] * gradientLeft;
+	// float4 densityRight = DensityTex[posRight] * gradientRight;
+	
+	// // Diffusion (average of neighboring densities)
+	// float4 newDensity = (density + size * _deltaTime * (densityAbove + densityBelow + densityLeft + densityRight)) / (1 + 4 * size * _deltaTime);
+	// newDensity *= height;
+
+	// Set new density value
+	// DensityTex[pos] = newDensity;
+}
+
+//===========================================================
+
+[numthreads(16,16,1)]
+void Kernel_Advection (uint3 id : SV_DispatchThreadid)
+{
+	float2 velocity = VelocityTex[id.xy].xy;
+	float gradientX = testH[id.xy].x;
+	float gradientY = testH[id.xy].y;
+
+	float obstacle = 1;
+
+	// Get previous id for Prev value -> current value (get the position that gave us this velocity)
+	float2 displacement = velocity * _deltaTime * size * float2(gradientX, gradientY);
+	int2 prevPos = round(float2(id.xy) - displacement);
+
+	// Advect density
+	float4 density = DensityTex[id.xy];
+	float4 prevDensity = DensityTex[prevPos];
+	density.a = advectStrength * prevDensity.a * obstacle;
+
+	// Advect dye color
+	density.rgb = lerp(density.rgb, prevDensity.rgb, 0.8f);
+	DensityTex[id.xy] = density;
+
+	// Advect velocity
+	VelocityTex[id.xy] = advectStrength * VelocityTex[prevPos] * obstacle;
+}
+
+//===========================================================
+
+[numthreads(16,16,1)]
+void Kernel_UserInput (uint3 id : SV_DispatchThreadid)
+{
+	// Mouse position
+	// float2 center = 0.5;
+	float2 uv = float2(id.xy) / float(size);
+	float2 sphereUV = sourcePos; //sphere world position to 0-1 uv space
+
+	float2 velocity = VelocityTex[id.xy].xy;
+	float4 density = DensityTex[id.xy];
+	float gradientX = testH[id.xy].x;
+	float gradientY = testH[id.xy].y;
+	float obstacle = 1;
+
+	// // Impulse factor
+	float _distance = 1.0 - smoothstep(distance(uv, sphereUV), 0.0, forceRange);
+	// float impulse = forceIntensity * _distance * _deltaTime * obstacle;
+
+	// Add dye density
+	// float speed = distance(sourceVelocity, 0);
+	// density.a += impulse * speed;
+
+	// Add dye color
+	// density.rgb = lerp(density.rgb, dyeColor, _distance);
+	if(distance(uv, sphereUV) < forceRange){
+		density.rgb = dyeColor;
+	}
+
+	// Flow downhill
+	// float2 flowDir = float2(1, 1);
+	// velocity += _deltaTime * density.a * flowDir;
+
+	// Add mouse velocity
+	// float2 dir = sourceVelocity;
+	// velocity += dir * impulse;
+
+	// Assign
+	// VelocityTex[id.xy] = float2(velocity);
+	DensityTex[id.xy] = density;
+}
+//===========================================================
+[numthreads(16,16,1)]
+void Kernel_Divergence (uint3 id : SV_DispatchThreadid)
+{
+	// Grid positions
+	int2 pos = int2(id.xy);
+	int2 posAbove = pos + offsetAbove;
+	int2 posBelow = pos + offsetBelow;
+	int2 posLeft = pos + offsetLeft;
+	int2 posRight = pos + offsetRight;
+
+	// Heightmap
+	float gradientX = testH[id.xy].x;
+	float gradientY = testH[id.xy].y;
+
+	// Densities
+	float4 densityAbove = DensityTex[posAbove] * gradientY;
+	float4 densityBelow = DensityTex[posBelow] * gradientY;
+	float4 densityLeft = DensityTex[posLeft] * gradientX;
+	float4 densityRight = DensityTex[posRight] * gradientX;
+
+	// Velocity
+	float2 velocityAbove = VelocityTex[posAbove].xy * gradientY;
+	float2 velocityBelow = VelocityTex[posBelow].xy * gradientX;
+	float2 velocityLeft = VelocityTex[posLeft].xy * gradientX;
+	float2 velocityRight = VelocityTex[posRight].xy * gradientY;
+
+	// Divergence
+	float halfPixelSize = (1.0 / float(size)) * 0.5;
+	float div = halfPixelSize * (velocityRight.x - velocityLeft.x + velocityAbove.y - velocityBelow.y);
+	DivergenceTex[pos.xy] = div;
+}
+
+//===========================================================
+
+[numthreads(16,16,1)]
+void Kernel_Jacobi (uint3 id : SV_DispatchThreadid)
+{
+	// Grid positions
+	int2 pos = int2(id.xy);
+	int2 posAbove = pos + offsetAbove;
+	int2 posBelow = pos + offsetBelow;
+	int2 posLeft = pos + offsetLeft;
+	int2 posRight = pos + offsetRight;
+
+	// Heightmap
+	float gradientX = testH[id.xy].x;
+	float gradientY = testH[id.xy].y;
+
+	// Pressure
+	float pressure = PressureTex[pos.xy].x;
+	float pressureAbove = lerp(pressure, PressureTex[posAbove].x, gradientY);
+	float pressureBelow = lerp(pressure, PressureTex[posBelow].x, gradientX);
+	float pressureLeft = lerp(pressure, PressureTex[posLeft].x, gradientX);
+	float pressureRight = lerp(pressure, PressureTex[posRight].x, gradientY);
+
+	// New pressure
+	float divergence = DivergenceTex[pos.xy].x * size;
+	pressure = (pressureRight + pressureLeft + pressureBelow + pressureAbove - divergence) / 4.0;
+	PressureTex[pos.xy] = pressure;
+}
+
+//===========================================================
+
+[numthreads(16,16,1)]
+void Kernel_SubtractGradient (uint3 id : SV_DispatchThreadid)
+{
+	// Grid positions
+	int2 pos = int2(id.xy);
+	int2 posAbove = pos + offsetAbove;
+	int2 posBelow = pos + offsetBelow;
+	int2 posLeft = pos + offsetLeft;
+	int2 posRight = pos + offsetRight;
+
+	// Obstacles
+	float obstacleAbove = 1 - ObstacleTex[posAbove].x;
+	float obstacleBelow = 1 - ObstacleTex[posBelow].x;
+	float obstacleLeft = 1 - ObstacleTex[posLeft].x;
+	float obstacleRight = 1 - ObstacleTex[posRight].x;
+
+	// Pressure
+	float pressure = PressureTex[pos.xy].x;
+	float pressureAbove = lerp(pressure, PressureTex[posAbove].x, obstacleAbove);
+	float pressureBelow = lerp(pressure, PressureTex[posBelow].x, obstacleRight);
+	float pressureLeft = lerp(pressure, PressureTex[posLeft].x, obstacleLeft);
+	float pressureRight = lerp(pressure, PressureTex[posRight].x, obstacleBelow);
+
+	//Pressure affect velocity, where the curl happens
+	float2 velocity = VelocityTex[pos.xy].xy;
+	float curlSize = 1.0; // 0.2 - feels like thicker, 1.0 - more flowy
+	float2 gradient = float2(pressureRight - pressureLeft, pressureAbove - pressureBelow) * curlSize;
+	velocity -= gradient;
+	VelocityTex[pos.xy] = float2(velocity); 
+}

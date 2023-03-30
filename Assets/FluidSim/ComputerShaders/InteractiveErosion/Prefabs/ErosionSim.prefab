@@ -1,0 +1,85 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &100000
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 400000}
+  - component: {fileID: 11400000}
+  m_Layer: 0
+  m_Name: ErosionSim
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &400000
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 100000}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 100000}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: eec9729b1c79e5e479705b50dd0ec22d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_sun: {fileID: 0}
+  m_landMat: {fileID: 2100000, guid: 0e169389d52a02b4fabccc42235e3d87, type: 2}
+  m_waterMat: {fileID: 2100000, guid: fb1cf0736cbe0c5409618cd1641a8e96, type: 2}
+  m_initTerrainMat: {fileID: 2100000, guid: 07ffd5ada9deec94f974b43154007137, type: 2}
+  m_noiseMat: {fileID: 2100000, guid: f6ae7f58b08b1cb4d8e90b94a321a519, type: 2}
+  m_waterInputMat: {fileID: 2100000, guid: 81a62431610f308438a17bf405cc391f, type: 2}
+  m_evaprationMat: {fileID: 2100000, guid: 24516c7fbd46970448cb6a362554c6af, type: 2}
+  m_outFlowMat: {fileID: 2100000, guid: ea609e46ebdabde4faa83db6ee1c7254, type: 2}
+  m_fieldUpdateMat: {fileID: 2100000, guid: c9dd88656c63ed441b277daebb7aec7a, type: 2}
+  m_waterVelocityMat: {fileID: 2100000, guid: 178a1903e9819084097f104edde52152, type: 2}
+  m_diffuseVelocityMat: {fileID: 2100000, guid: 31fc308c8f0795748968688c79c001f5, type: 2}
+  m_tiltAngleMat: {fileID: 2100000, guid: ae59a128e47e9f84b84311b35687cc34, type: 2}
+  m_erosionAndDepositionMat: {fileID: 2100000, guid: fc3cf32b9690e6040924f85dac9b3aae, type: 2}
+  m_advectSedimentMat: {fileID: 2100000, guid: 1d8f638fdc78a4443a320b737c1654a4, type: 2}
+  m_processMacCormackMat: {fileID: 2100000, guid: bd2167d80fe63de44bd15b81f91a3745, type: 2}
+  m_slippageHeightMat: {fileID: 2100000, guid: f723679a88f726342b9a64a247025aea, type: 2}
+  m_slippageOutflowMat: {fileID: 2100000, guid: 596e74e9c9342764f96e922b46d68b0f, type: 2}
+  m_slippageUpdateMat: {fileID: 2100000, guid: 4e1e3e85ac2bee84c84687f386751276, type: 2}
+  m_disintegrateAndDepositMat: {fileID: 2100000, guid: 6fe2ef9d013b1fa40a5f97d5c4c967ec, type: 2}
+  m_applyFreeSlipMat: {fileID: 2100000, guid: c19a9724021a8d04287fed8c0b82aa02, type: 2}
+  m_waterInputSpeed: 0.01
+  m_waterInputPoint: {x: 0.5, y: 0.5}
+  m_waterInputAmount: 2
+  m_waterInputRadius: 0.008
+  m_seed: 0
+  m_octaves: {x: 8, y: 8, z: 8, w: 8}
+  m_frequency: {x: 2, y: 100, z: 200, w: 200}
+  m_lacunarity: {x: 2, y: 3, z: 3, w: 2}
+  m_gain: {x: 0.5, y: 0.5, z: 0.5, w: 0.5}
+  m_amp: {x: 2, y: 0.01, z: 0.01, w: 0.001}
+  m_offset: {x: 0, y: 10, z: 20, w: 30}
+  m_dissolvingConstant: {x: 0.01, y: 0.04, z: 0.2, w: 0.2}
+  m_sedimentCapacity: 0.2
+  m_depositionConstant: 0.015
+  m_evaporationConstant: 0.01
+  m_minTiltAngle: 0.1
+  m_regolithDamping: 0.85
+  m_waterDamping: 0
+  m_maxRegolith: 0.008
+  m_talusAngle: {x: 45, y: 20, z: 15, w: 15}
