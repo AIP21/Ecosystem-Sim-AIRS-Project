@@ -1,0 +1,147 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &2566442593908158340
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2566442593908158339}
+  - component: {fileID: 2566442593908158338}
+  - component: {fileID: 2566442593908158341}
+  - component: {fileID: 2566442593908158337}
+  - component: {fileID: 1258558761060615783}
+  m_Layer: 0
+  m_Name: Fluid Sim
+  m_TagString: MainCamera
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2566442593908158339
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2566442593908158340}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 1, z: -10}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!20 &2566442593908158338
+Camera:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2566442593908158340}
+  m_Enabled: 1
+  serializedVersion: 2
+  m_ClearFlags: 1
+  m_BackGroundColor: {r: 0.19215687, g: 0.3019608, b: 0.4745098, a: 0}
+  m_projectionMatrixMode: 1
+  m_GateFitMode: 2
+  m_FOVAxisMode: 0
+  m_SensorSize: {x: 36, y: 24}
+  m_LensShift: {x: 0, y: 0}
+  m_FocalLength: 50
+  m_NormalizedViewPortRect:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 1
+    height: 1
+  near clip plane: 0.3
+  far clip plane: 1000
+  field of view: 60
+  orthographic: 0
+  orthographic size: 5
+  m_Depth: -1
+  m_CullingMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_RenderingPath: -1
+  m_TargetTexture: {fileID: 0}
+  m_TargetDisplay: 0
+  m_TargetEye: 3
+  m_HDR: 1
+  m_AllowMSAA: 1
+  m_AllowDynamicResolution: 0
+  m_ForceIntoRT: 0
+  m_OcclusionCulling: 1
+  m_StereoConvergence: 10
+  m_StereoSeparation: 0.022
+--- !u!81 &2566442593908158341
+AudioListener:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2566442593908158340}
+  m_Enabled: 1
+--- !u!114 &2566442593908158337
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2566442593908158340}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b3d46b2467dfa9142b3d86b9272d618b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  computeShader: {fileID: 7200000, guid: 1c3b445941b32804dbb9b992ea49c70f, type: 3}
+  heightmap: {fileID: 2800000, guid: 36341a9953beaf84eba6cf08cef3c594, type: 3}
+  waterMap: {fileID: 0}
+  newWaterMap: {fileID: 0}
+  flowMap: {fileID: 0}
+  newFlowMap: {fileID: 0}
+  velocityMap: {fileID: 0}
+  newVelocityMap: {fileID: 0}
+  TextureToDraw: 0
+  resolution: 1024
+  timeStep: 0.1
+  waterDensity: 1
+  gravitationAcceleration: 9.81
+  cellHeight: 1
+  cellArea: 1
+  epsilon: 0.00001
+  diffuseAlpha: 1
+  evaporationConstant: 0.005
+  heightmapMultiplier: 1
+  flowDamping: 0
+  enableInput: 1
+  enableFlow: 1
+  enableHeight: 1
+  enableVelocity: 1
+  enableVelocityDiffusion: 1
+  sourceIsMouse: 1
+  sourceRadius: 0.008
+  sourceAmount: 2
+  sourcePosition: {x: 0, y: 0}
+  showDebugTextures: 1
+--- !u!114 &1258558761060615783
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2566442593908158340}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 132d26542ffa23e4aad4f1de5260d8bc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  waterMaterial: {fileID: 2100000, guid: fb1cf0736cbe0c5409618cd1641a8e96, type: 2}
+  sun: {fileID: 0}
+  meshSize: {x: 512, y: 512}
+  meshHeight: 128
+  fluidSim: {fileID: 2566442593908158337}
