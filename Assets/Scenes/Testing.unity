@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.12731704, g: 0.13414727, b: 0.121078536, a: 1}
+  m_IndirectSpecularColor: {r: 0.12731749, g: 0.13414757, b: 0.1210787, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -134,7 +134,7 @@ GameObject:
   - component: {fileID: 282096876}
   - component: {fileID: 282096877}
   m_Layer: 0
-  m_Name: GridManager
+  m_Name: Data Structure
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -167,21 +167,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0013169faf7e2a24483f14d4dcd2611c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  OverallSize: {x: 20, y: 20}
+  OverallSize: {x: 200, y: 200}
   Levels:
   - {fileID: 11400000, guid: 36751346e59f29e409b3874b0603be45, type: 2}
   - {fileID: 11400000, guid: a8156ca0bf27694458adbefdae0a24e1, type: 2}
   - {fileID: 11400000, guid: 5d57596dba7f4ac4582655b943c0fedc, type: 2}
-  DebugDraw: 0
-  LevelZShift: 10
-  DebugTests: 1
-  TestSingleLevel: 0
-  TestLevel: 0
-  TestPosition: {x: 0, y: 0}
-  TestedCellData:
-    list: []
-    keyCollision: 0
-  TestedCellCount: 0
 --- !u!1 &638825939
 GameObject:
   m_ObjectHideFlags: 0
@@ -211,6 +201,72 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 282096876}
+  - {fileID: 1597987556}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1597987555
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1597987556}
+  - component: {fileID: 1597987557}
+  m_Layer: 0
+  m_Name: Tests
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1597987556
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1597987555}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 638825940}
+  m_RootOrder: 1
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1597987557
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1597987555}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2a84a96a7aae4d64da2599285d913e77, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ds: {fileID: 282096877}
+  DrawAll: 1
+  DrawRelationshipLines: 0
+  DrawParentLines: 0
+  LevelZShift: 3
+  DoQueryTest: 1
+  QueryTestCount: 100000
+  DoAddDataTest: 1
+  AddDataTestCount: 100000
+  DoRemoveDataTest: 1
+  RemoveDataTestCount: 100000
+  DoModifyDataTest: 1
+  ModifyDataTestCount: 100000
+  TestLevel: -1
+  QuerySingleCellTest: 0
+  QuerySingleCellLevel: 0
+  QuerySingleCellPosition: {x: 0, y: 0}
+  TestedCellData:
+    list: []
+    keyCollision: 0
+  TestedCellCount: 0

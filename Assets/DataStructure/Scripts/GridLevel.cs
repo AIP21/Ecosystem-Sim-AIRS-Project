@@ -10,8 +10,13 @@ namespace SimDataStructure
         public int Level;
         public Vector2 CellSize;
 
-        public GenericDictionary<string, SimDataStructure.CellDataType> CellDataTypes = new GenericDictionary<string, SimDataStructure.CellDataType>();
+        public GenericDictionary<string, CellDataType> CellDataTypes = new GenericDictionary<string, CellDataType>();
         
-        public GenericDictionary<string, SimDataStructure.CellDataType> GPUData = new GenericDictionary<string, SimDataStructure.CellDataType>();
+        public GenericDictionary<string, CellDataType> GPUData = new GenericDictionary<string, CellDataType>();
+
+        public bool CanContainData(string dataName, CellDataType dataType)
+        {
+            return CellDataTypes.ContainsKey(dataName) && CellDataTypes[dataName] == dataType;
+        }
     }
 }

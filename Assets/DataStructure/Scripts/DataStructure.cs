@@ -2,6 +2,8 @@ using UnityEngine;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Diagnostics;
+using Debug = UnityEngine.Debug;
 
 namespace SimDataStructure
 {
@@ -13,83 +15,17 @@ namespace SimDataStructure
         public List<GridLevel> Levels;
         public List<Grid> Grids = new List<Grid>();
 
-        [Header("Debug")]
-        public bool DebugDraw = false;
-        [Range(0f, 10f)]
-        public float LevelZShift = 3f;
-        public bool DebugTests = false;
-        public bool TestSingleLevel = false;
-        public int TestLevel = 0;
-        public Vector2 TestPosition = new Vector2(0, 0);
-        public List<GridCell> TestedCells = new List<GridCell>();
-        public GenericDictionary<string, string> TestedCellData = new GenericDictionary<string, string>();
-        public int TestedCellCount = 0;
-
-        private Vector2 lastTestPos = new Vector2(0, 0);
-
         public void Awake()
         {
+            Stopwatch st = new Stopwatch();
+            st.Start();
+
             // Create and populate the grids
             this.populateGrids(Levels);
-            this.performDebugTests(true);
-        }
 
-        public void FixedUpdate()
-        {
-            if (DebugTests)
-            {
-                this.performDebugTests();
-            }
-        }
+            st.Stop();
 
-        private void performDebugTests(bool force = false)
-        {
-            if (!force && lastTestPos == TestPosition)
-                return;
-
-            Debug.Log("Test Position: " + TestPosition);
-
-            lastTestPos = TestPosition;
-
-            if (TestSingleLevel)
-            {
-                Grid grid = Grids[TestLevel];
-                GridCell cell = grid.GetCell(TestPosition);
-                TestedCells.Clear();
-
-                if (cell != null)
-                {
-                    TestedCells.Add(cell);
-
-                    GenericDictionary<string, AbstractCellData> data = cell.GetData();
-                    TestedCellData.Clear();
-
-                    if (data == null)
-                    {
-                        TestedCellData.Add("NULL", "Data is null");
-                    }
-                    else if (data.Count == 0)
-                    {
-                        TestedCellData.Add("NULL", "No data");
-                    }
-                    else
-                    {
-                        foreach (KeyValuePair<string, AbstractCellData> d in data)
-                        {
-                            TestedCellData.Add(d.Key, d.Value.ToString());
-                        }
-                    }
-                }
-
-                TestedCellCount = TestedCells.Count;
-            }
-            else if (Grids.Count > 0)
-            {
-                // Query the highest level grid for all cells that contian the test position
-                // It should return a list of grid cells that contain the test position
-                TestedCells = Grids[Grids.Count - 1].GetCells(TestPosition);
-                TestedCellCount = TestedCells.Count;
-            }
+            Debug.Log("Data structure initialized successfully in " + st.ElapsedMilliseconds + " ms");
         }
 
         /*
@@ -123,7 +59,7 @@ namespace SimDataStructure
                 grid.parentGrid = gridAbove;
 
                 // Go through each cell in this grid
-                foreach (GridCell cell in grid.cells)
+                foreach (GridCell cell in grid.Cells())
                 {
                     // Get the cell in the parent that contains the current cell's center position
                     GridCell containerCell = gridAbove.GetCell(cell.center);
@@ -141,65 +77,114 @@ namespace SimDataStructure
             }
         }
 
-        private void OnDrawGizmos()
+        #region Cell Queries
+        public GridCell GetCell(Vector2 queryPoint, int level)
         {
-            if (DebugDraw)
-            {
-                if (Grids != null && Grids.Count > 0)
-                {
-                    foreach (Grid grid in Grids)
-                    {
-                        if (grid != null)
-                            grid.DebugDrawGrid(LevelZShift);
-                    }
-                }
-
-                // Draw a green box around the tested cells
-                if (TestedCells != null)
-                {
-                    foreach (GridCell cell in TestedCells)
-                    {
-                        Gizmos.color = Color.green;
-
-                        Vector3 center = new Vector3(cell.center.x, (cell.level.Level - 1) * LevelZShift, cell.center.y);
-
-                        Gizmos.DrawLine(center + new Vector3(-cell.level.CellSize.x / 2, 0, -cell.level.CellSize.y / 2), center + new Vector3(cell.level.CellSize.x / 2, 0, -cell.level.CellSize.y / 2));
-                        Gizmos.DrawLine(center + new Vector3(cell.level.CellSize.x / 2, 0, -cell.level.CellSize.y / 2), center + new Vector3(cell.level.CellSize.x / 2, 0, cell.level.CellSize.y / 2));
-                        Gizmos.DrawLine(center + new Vector3(cell.level.CellSize.x / 2, 0, cell.level.CellSize.y / 2), center + new Vector3(-cell.level.CellSize.x / 2, 0, cell.level.CellSize.y / 2));
-                        Gizmos.DrawLine(center + new Vector3(-cell.level.CellSize.x / 2, 0, cell.level.CellSize.y / 2), center + new Vector3(-cell.level.CellSize.x / 2, 0, -cell.level.CellSize.y / 2));
-                    }
-                }
-            }
+            return Grids[level].GetCell(queryPoint);
         }
+
+        public GridCell GetLowestCell(Vector2 queryPoint, int startingLevel)
+        {
+            return Grids[startingLevel].GetLowestCell(queryPoint);
+        }
+
+        public GridCell GetCells(Vector2 queryPoint, int startingLevel)
+        {
+            return Grids[startingLevel].GetLowestCell(queryPoint);
+        }
+
+        public List<GridCell> GetPathToLowestCell(Vector2 queryPoint, int startingLevel)
+        {
+            return Grids[startingLevel].GetPathToLowestCell(queryPoint);
+        }
+        #endregion
+
+        #region Data Queries
+        public AbstractCellData GetData(Vector2 position, int level, string dataName)
+        {
+            return Grids[level]?.GetData(position, dataName);
+        }
+
+        public Dictionary<string, AbstractCellData> GetDataOfType(Vector2 position, int level, CellDataType type)
+        {
+            return Grids[level]?.GetDataOfType(position, type);
+        }
+
+        public GenericDictionary<string, AbstractCellData> GetAllData(Vector2 position, int level)
+        {
+            return Grids[level]?.GetAllData(position);
+        }
+        #endregion
+
+        #region Data Management
+        public void SetData(Vector2 position, int level, string dataName, AbstractCellData data)
+        {
+            Grids[level].SetData(position, dataName, data);
+        }
+
+        public void SetData(int level, string dataName, AbstractCellData data)
+        {
+            Grids[level].SetData(dataName, data);
+        }
+
+        /** USE AT YOUR OWN RISK, YOU SHOULD NOT (UNDER ANY CIRCUMSTANCES) BE ADDING DATA TO INDIVIDUAL CELLS. IF YOU NEED TO ADD DATA, JUST ADD IT TO THE ENTIRE GRID OR DEFINE IT IN THE GRID LEVEL. **/
+        public void AddData(Vector2 position, int level, string dataName, CellDataType dataType, AbstractCellData data, bool ignoreChecks = false)
+        {
+            if (!ignoreChecks)
+                Debug.LogWarning("You are adding data to an individual cell in the data structure. This is (REALLY!) not recommended and may cause errors. Use at your own risk! If you need to add data, just add it to the entire grid or define it in the grid level.");
+
+            Grids[level].AddData(position, dataName, dataType, data, ignoreChecks);
+        }
+
+        // This is ok though
+        public void AddData(int level, string dataName, CellDataType dataType, AbstractCellData data, bool ignoreChecks = false)
+        {
+            Grids[level].AddData(dataName, dataType, data, ignoreChecks);
+        }
+
+        /** USE AT YOUR OWN RISK, YOU SHOULD NOT (UNDER ANY CIRCUMSTANCES) BE REMOVING DATA FROM INDIVIDUAL CELLS. IF YOU WANT TO REMOVE DATA JUST REMOVE IT FROM THE ENTIRE GRID. **/
+        public void RemoveData(Vector2 position, int level, string dataName, bool ignoreChecks = false)
+        {
+            if (!ignoreChecks)
+                Debug.LogWarning("You are removing data from an individual cell in the data structure. This is (REALLY!) not recommended and may cause errors. Use at your own risk! If you want to remove data, remove it from the entire grid.");
+
+            Grids[level].RemoveData(position, dataName, ignoreChecks);
+        }
+
+        // This is ok though
+        public void RemoveData(int level, string dataName)
+        {
+            Grids[level].RemoveData(dataName);
+        }
+        #endregion
     }
 
     #region Grid
     public class Grid
     {
-        #region Public
+        #region Variables
         public Vector2 size;
-        public GridLevel gridLevel;
+
+        private GridLevel gridLevel;
+        public GridLevel GridLevel { get { return gridLevel; } }
 
         public Grid parentGrid;
         public Grid childGrid;
 
-        public List<GridCell> cells;
-        public List<GridCell> childCells;
+        private List<GridCell> cells;
+        private List<GridCell> childCells;
+
+        // public List<GridCell> Cells { get { return cells; } }
+        // public List<GridCell> ChildCells { get { return childCells; } }
 
         public int xCellCount, yCellCount;
 
         // Data
-        public AbstractGridData data;
-        #endregion
-
-        #region Private
-        private Color color; // For debugging purposed
+        private AbstractGridData data;
         #endregion
 
         public Grid(Vector2 size, GridLevel gridLevel)
         {
-            this.color = UnityEngine.Random.ColorHSV();
-
             this.size = size;
             this.gridLevel = gridLevel;
 
@@ -247,6 +232,7 @@ namespace SimDataStructure
             }
         }
 
+        #region Cell Queries
         /**
         Return the cell that contains the query point
         **/
@@ -262,14 +248,28 @@ namespace SimDataStructure
         }
 
         /**
-        Return the path of cells to the lowest-level cell that contains the query point
+        Return the lowest-level cell that contains the query point
         **/
-        public List<GridCell> GetCells(Vector2 queryPoint)
+        public GridCell GetLowestCell(Vector2 queryPoint)
         {
             GridCell container = GetCell(queryPoint);
             if (container != null)
             {
-                List<GridCell> path = container.GetLowestChild(queryPoint);
+                return container.GetLowestChild(queryPoint);
+            }
+
+            return null;
+        }
+
+        /**
+        Return the path of cells to the lowest-level cell that contains the query point
+        **/
+        public List<GridCell> GetPathToLowestCell(Vector2 queryPoint)
+        {
+            GridCell container = GetCell(queryPoint);
+            if (container != null)
+            {
+                List<GridCell> path = container.GetPathToLowestChild(queryPoint);
                 path.Add(container);
                 return path;
             }
@@ -277,53 +277,131 @@ namespace SimDataStructure
             return null;
         }
 
-        public void DebugDrawGrid(float levelZShift)
+        /**
+        Return all the cells
+        **/
+        public List<GridCell> Cells()
+        {
+            return cells;
+        }
+        #endregion
+
+        #region Data Queries
+        public AbstractCellData GetData(Vector2 position, string dataName)
+        {
+            GridCell cell = GetCell(position);
+            if (cell != null)
+            {
+                return cell.GetData(dataName);
+            }
+
+            return null;
+        }
+
+        public Dictionary<string, AbstractCellData> GetDataOfType(Vector2 position, CellDataType type)
+        {
+            GridCell cell = GetCell(position);
+            if (cell != null)
+            {
+                return cell.GetDataOfType(type);
+            }
+
+            return null;
+        }
+
+        public GenericDictionary<string, AbstractCellData> GetAllData(Vector2 position)
+        {
+            GridCell cell = GetCell(position);
+            if (cell != null)
+            {
+                return cell.GetAllData();
+            }
+
+            return null;
+        }
+        #endregion
+
+        #region Data Management
+        public bool CanContainData(string dataName, CellDataType type)
+        {
+            return gridLevel.CanContainData(dataName, type);
+        }
+
+        public void SetData(Vector2 position, string dataName, AbstractCellData data)
+        {
+            GridCell cell = GetCell(position);
+            if (cell != null)
+            {
+                cell.SetData(dataName, data);
+            }
+        }
+
+        public void SetData(string dataName, AbstractCellData data)
         {
             foreach (GridCell cell in cells)
             {
-                Gizmos.color = color;
-
-                // Draw gizmo square using lines centered around cell center
-                Vector3 center = new Vector3(cell.center.x, (this.gridLevel.Level - 1) * levelZShift, cell.center.y);
-
-                Gizmos.DrawLine(center + new Vector3(-gridLevel.CellSize.x / 2, 0, -gridLevel.CellSize.y / 2), center + new Vector3(gridLevel.CellSize.x / 2, 0, -gridLevel.CellSize.y / 2));
-                Gizmos.DrawLine(center + new Vector3(gridLevel.CellSize.x / 2, 0, -gridLevel.CellSize.y / 2), center + new Vector3(gridLevel.CellSize.x / 2, 0, gridLevel.CellSize.y / 2));
-                Gizmos.DrawLine(center + new Vector3(gridLevel.CellSize.x / 2, 0, gridLevel.CellSize.y / 2), center + new Vector3(-gridLevel.CellSize.x / 2, 0, gridLevel.CellSize.y / 2));
-                Gizmos.DrawLine(center + new Vector3(-gridLevel.CellSize.x / 2, 0, gridLevel.CellSize.y / 2), center + new Vector3(-gridLevel.CellSize.x / 2, 0, -gridLevel.CellSize.y / 2));
-
-                // For each neighbor, draw a small line to the edge of this cell
-                Gizmos.color = Color.white;
-                for (int i = 0; i < cell.neighbors.Length; i++)
-                {
-                    if (cell.neighbors[i] != null)
-                    {
-                        if (i == 0)
-                        { // above
-                            Gizmos.DrawLine(center, new Vector3(center.x, (this.gridLevel.Level - 1) * levelZShift, center.z - gridLevel.CellSize.y / 3));
-                        }
-                        else if (i == 1)
-                        { // left
-                            Gizmos.DrawLine(center, new Vector3(center.x - gridLevel.CellSize.x / 3, (this.gridLevel.Level - 1) * levelZShift, center.z));
-                        }
-                        else if (i == 2)
-                        { // below
-                            Gizmos.DrawLine(center, new Vector3(center.x, (this.gridLevel.Level - 1) * levelZShift, center.z + gridLevel.CellSize.y / 3));
-                        }
-                        else if (i == 3)
-                        { // right
-                            Gizmos.DrawLine(center, new Vector3(center.x + gridLevel.CellSize.x / 3, (this.gridLevel.Level - 1) * levelZShift, center.z));
-                        }
-                    }
-                }
-
-                // Draw a line to the parent cell
-                if (cell.parentCell != null)
-                {
-                    Gizmos.color = Color.red;
-                    Gizmos.DrawLine(center, new Vector3(cell.parentCell.center.x, (cell.parentCell.level.Level - 1) * levelZShift, cell.parentCell.center.y));
-                }
+                cell.SetData(dataName, data);
             }
         }
+
+        /** USE AT YOUR OWN RISK, YOU SHOULD NOT (UNDER ANY CIRCUMSTANCES) BE ADDING DATA TO INDIVIDUAL CELLS. IF YOU NEED TO ADD DATA, JUST ADD IT TO THE ENTIRE GRID OR DEFINE IT IN THE GRID LEVEL. **/
+        public void AddData(Vector2 position, string dataName, CellDataType dataType, AbstractCellData data, bool ignoreChecks = false)
+        {
+            if (!ignoreChecks)
+                Debug.LogWarning("You are adding data to an individual cell in the data structure. This is (REALLY!) not recommended and may cause errors. Use at your own risk! If you need to add data, just add it to the entire grid or define it in the grid level.");
+
+            if (ignoreChecks || CanContainData(dataName, dataType))
+            {
+                GridCell cell = GetCell(position);
+                if (cell != null)
+                {
+                    cell.AddData(dataName, data);
+                }
+            }
+            else
+            {
+                Debug.LogError("Data type " + data.GetType() + " is not supported by grid level " + gridLevel);
+            }
+        }
+
+        // This is ok though
+        public void AddData(string dataName, CellDataType dataType, AbstractCellData data, bool ignoreChecks = false)
+        {
+            if (ignoreChecks || CanContainData(dataName, dataType))
+            {
+                foreach (GridCell cell in cells)
+                {
+                    cell.AddData(dataName, data);
+                }
+            }
+            else
+            {
+                Debug.LogError("Data type " + data.GetType() + " is not supported by grid level " + gridLevel);
+            }
+        }
+
+        /** USE AT YOUR OWN RISK, YOU SHOULD NOT (UNDER ANY CIRCUMSTANCES) BE REMOVING DATA FROM INDIVIDUAL CELLS. IF YOU WANT TO REMOVE DATA JUST REMOVE IT FROM THE ENTIRE GRID. **/
+        public void RemoveData(Vector2 position, string dataName, bool ignoreChecks = false)
+        {
+            if (!ignoreChecks)
+                Debug.LogWarning("You are removing data from an individual cell in the data structure. This is (REALLY!) not recommended and may cause errors. Use at your own risk! If you want to remove data, remove it from the entire grid.");
+
+            GridCell cell = GetCell(position);
+            if (cell != null)
+            {
+                cell.RemoveData(dataName);
+            }
+        }
+
+        // This is ok though
+        public void RemoveData(string dataName)
+        {
+            foreach (GridCell cell in cells)
+            {
+                cell.RemoveData(dataName);
+            }
+        }
+        #endregion
     }
 
     public class GridCell
@@ -378,6 +456,7 @@ namespace SimDataStructure
             }
         }
 
+        #region Cell Querying
         public bool Contains(Vector2 queryPos)
         {
             if (!bounds.Contains(queryPos))
@@ -402,7 +481,23 @@ namespace SimDataStructure
             return null;
         }
 
-        public List<GridCell> GetLowestChild(Vector2 queryPos)
+        public GridCell GetLowestChild(Vector2 queryPos)
+        {
+            GridCell childContainer = GetChild(queryPos);
+
+            if (childContainer != null)
+            {
+                return childContainer.GetLowestChild(queryPos);
+            }
+            else if (this.Contains(queryPos))
+            {
+                return this;
+            }
+
+            return null;
+        }
+
+        public List<GridCell> GetPathToLowestChild(Vector2 queryPos)
         {
             List<GridCell> path = new List<GridCell>();
             GridCell childContainer = GetChild(queryPos);
@@ -410,7 +505,7 @@ namespace SimDataStructure
             if (childContainer != null)
             {
                 path.Add(childContainer);
-                path.AddRange(childContainer.GetLowestChild(queryPos));
+                path.AddRange(childContainer.GetPathToLowestChild(queryPos));
             }
             else if (this.Contains(queryPos))
             {
@@ -419,21 +514,54 @@ namespace SimDataStructure
 
             return path;
         }
+        #endregion
 
-        public void AddData(string name, AbstractCellData data)
-        {
-            this.data.Add(name, data);
-        }
-
-        public GenericDictionary<string, AbstractCellData> GetData()
-        {
-            return this.data;
-        }
-
-        public object GetData(string name)
+        #region Data Querying
+        public AbstractCellData GetData(string name)
         {
             return this.data[name];
         }
+
+        public Dictionary<string, AbstractCellData> GetDataOfType(CellDataType type)
+        {
+            Dictionary<string, AbstractCellData> dataOfType = new Dictionary<string, AbstractCellData>();
+
+            foreach (KeyValuePair<string, AbstractCellData> dataEntry in this.data)
+            {
+                if (dataEntry.Value.type == type)
+                {
+                    dataOfType.Add(dataEntry.Key, dataEntry.Value);
+                }
+            }
+
+            return dataOfType;
+        }
+
+        public GenericDictionary<string, AbstractCellData> GetAllData()
+        {
+            return this.data;
+        }
+        #endregion
+
+        #region Data Management
+        public void SetData(string name, AbstractCellData data)
+        {
+            if (this.data.ContainsKey(name))
+                this.data[name] = data;
+        }
+
+        public void AddData(string name, AbstractCellData data)
+        {
+            // Debug.LogWarning("Data was added to a single grid cell at position " + this.center + " on level " + this.level);
+            this.data.Add(name, data);
+        }
+
+        public void RemoveData(string name)
+        {
+            // Debug.LogWarning("Data was removed from a single grid cell at position " + this.center + " on level " + this.level);
+            this.data.Remove(name);
+        }
+        #endregion
     }
     #endregion
 
@@ -441,8 +569,20 @@ namespace SimDataStructure
     // Data for each cell (only inside cells)
     public abstract class AbstractCellData
     {
+        public CellDataType type;
+
         public AbstractCellData()
         {
+        }
+
+        public CellDataType DataType()
+        {
+            return type;
+        }
+
+        public string DataTypeName()
+        {
+            return type.ToString();
         }
     }
 
@@ -453,6 +593,27 @@ namespace SimDataStructure
         public CellData(T data) : base()
         {
             this.data = data;
+
+            if (typeof(T) == typeof(float))
+            {
+                type = CellDataType.Float;
+            }
+            else if (typeof(T) == typeof(int))
+            {
+                type = CellDataType.Int;
+            }
+            else if (typeof(T) == typeof(bool))
+            {
+                type = CellDataType.Bool;
+            }
+            else if (typeof(T) == typeof(Vector2))
+            {
+                type = CellDataType.Vector2;
+            }
+            else
+            {
+                type = CellDataType.Object;
+            }
         }
 
         public override string ToString()
@@ -483,14 +644,14 @@ namespace SimDataStructure
 
     }
 
-    public class ShaderGridData : AbstractGridData {
+    public class ShaderGridData : AbstractGridData
+    {
         // This class will contain a reference to a compute shader that will be a grid shader that computes some data for each cell
         // This class will contain a method to update the shader
         // This class will contain a method to access the data of the shader
         // This class will contain a method to supply input data to the shader
 
-        
+
     }
-    
     #endregion
 }

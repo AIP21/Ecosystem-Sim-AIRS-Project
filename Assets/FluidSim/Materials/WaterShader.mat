@@ -35,7 +35,7 @@ Material:
     - _SunSpecStr: 0.5
     - _WaterOpacity: 40
     - fresnelFactor: 4
-    - minWaterHeight: 0
+    - minWaterHeight: 1
     - sunSpectralStr: 0.4
     m_Colors:
     - _Color: {r: 1, g: 1, b: 1, a: 1}
