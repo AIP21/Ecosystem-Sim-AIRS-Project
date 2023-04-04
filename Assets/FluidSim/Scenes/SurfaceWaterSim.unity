@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.18028378, g: 0.22571412, b: 0.30692285, a: 1}
+  m_IndirectSpecularColor: {r: 0.18028334, g: 0.22571328, b: 0.3069217, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -228,6 +228,26 @@ PrefabInstance:
       propertyPath: sun
       value: 
       objectReference: {fileID: 2051415026}
+    - target: {fileID: 2566442593908158337, guid: 99e93d985e2bc8b4bbf7a7a4fdf85ebc, type: 3}
+      propertyPath: textureToDraw
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2566442593908158337, guid: 99e93d985e2bc8b4bbf7a7a4fdf85ebc, type: 3}
+      propertyPath: soilEnableFlow
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2566442593908158337, guid: 99e93d985e2bc8b4bbf7a7a4fdf85ebc, type: 3}
+      propertyPath: soilEnableRelease
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2566442593908158337, guid: 99e93d985e2bc8b4bbf7a7a4fdf85ebc, type: 3}
+      propertyPath: soilEnableAbsorption
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2566442593908158337, guid: 99e93d985e2bc8b4bbf7a7a4fdf85ebc, type: 3}
+      propertyPath: soilEnableSaturation
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 2566442593908158339, guid: 99e93d985e2bc8b4bbf7a7a4fdf85ebc, type: 3}
       propertyPath: m_RootOrder
       value: 0

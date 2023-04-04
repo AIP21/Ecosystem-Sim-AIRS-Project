@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class WaterMesh : MonoBehaviour
+public class Sim_SurfaceWaterMesh : MonoBehaviour
 {
     private GameObject waterObject;
     public Material waterMaterial;
@@ -10,7 +10,7 @@ public class WaterMesh : MonoBehaviour
     public Vector2Int meshSize;
     public int meshHeight = 128;
 
-    public ShallowWater fluidSim;
+    public Sim_Water fluidSim;
 
     public void Start()
     {
@@ -112,8 +112,8 @@ public class WaterMesh : MonoBehaviour
 
     public void Update()
     {
-        waterMaterial.SetTexture("waterHeight", fluidSim.waterMap);
-        waterMaterial.SetTexture("waterVelocity", fluidSim.velocityMap);
+        waterMaterial.SetTexture("waterHeight", fluidSim.surfaceWaterMap);
+        waterMaterial.SetTexture("waterVelocity", fluidSim.surfaceVelocityMap);
         waterMaterial.SetTexture("_MainTex", fluidSim.heightmap);
 
         waterMaterial.SetFloat("resolution", (float)fluidSim.resolution);

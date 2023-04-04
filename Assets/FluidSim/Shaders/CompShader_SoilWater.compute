@@ -1,56 +1,46 @@
 #pragma kernel reset
-#pragma kernel computeInput
-#pragma kernel computeEvaporation
+#pragma kernel computeFlux
+#pragma kernel computeFlow
 #pragma kernel applyFreeSlip
-#pragma kernel computeWaterFlow
-#pragma kernel computeWaterHeight
-#pragma kernel computeWaterVelocity
-#pragma kernel computeDiffusedWaterVelocity
+#pragma kernel computeSatuation
 
 Texture2D<float4> heightmap;
-RWTexture2D<float> waterMap;
-RWTexture2D<float> newWaterMap;
+Texture2D<float4> soilDataMap;
+
+RWTexture2D<float> saturationMap;
+RWTexture2D<float> newSaturationMap;
+RWTexture2D<float> surfaceWaterMap;
+RWTexture2D<float> newSurfaceWaterMap;
 RWTexture2D<float4> flowMap; // each float in the float4 is a direction of flow (up, down, left, right)
-RWTexture2D<float4> newFlowMap; // each float in the float4 is a direction of flow (up, down, left, right)
-RWTexture2D<float2> velocityMap;
-RWTexture2D<float2> newVelocityMap;
+RWTexture2D<float4> newFlowMap;
+RWTexture2D<float4> fluxMap; // r = soil holding capacity (affects absorption rate (absorptivity), evaporation rate, flow rate, and max holding capacity), g = soil use
+RWTexture2D<float4> newFluxMap;
 
 // Variables
-float waterDensity;
+float size;
+float surfaceAbsorptionStrength;
 float gravityAcceleration;
 float pipeLength;
 float pipeArea; // should be the pipe length squared
 float epsilon;
-float diffuseAlpha;
-float flowDamping;
-
-// Input
-float2 inputPosition;
-float inputRadius;
-float inputAmount;
-
-float _deltaTime;
-
 float heightmapMultiplier;
-float evaporationConstant;
-
-float size;
+float _deltaTime;
 
 // Total height of a cell (height from heightmap + water height)
 float totalHeight(int2 pos)
 {
     float4 height = heightmap[pos];
-    return ((height.x + height.y + height.z + height.w) * heightmapMultiplier) + waterMap[pos];
+    return ((height.x + height.y + height.z + height.w) * heightmapMultiplier) + saturationMap[pos];
 }
 
 // Returns the calculated flow
-float flowToNeighbor(float flow, float heightDifference)
+float flowToNeighbor(float flow, float heightDifference, float soilDensity)
 {
-    return max(0.0, flow + _deltaTime * pipeArea * ((waterDensity * gravityAcceleration * heightDifference) / (waterDensity * pipeLength)));
+    return max(0.0, flow + _deltaTime * pipeArea * ((soilDensity * gravityAcceleration * heightDifference) / (soilDensity * pipeLength)));
 }
 
 // Gaussian blur function
-float gaussFactor(float2 diff, float radius) 
+float gaussFactor(float2 diff, float radius)
 {
     return exp(-(diff.x * diff.x + diff.y * diff.y) / radius);
 }
@@ -59,25 +49,29 @@ float gaussFactor(float2 diff, float radius)
 [numthreads(8,8,1)]
 void reset (uint3 id : SV_DispatchThreadid)
 {
-    waterMap[id.xy] = 0;
-    newWaterMap[id.xy] = 0;
+    saturationMap[id.xy] = 0;
+    newSaturationMap[id.xy] = 0;
     flowMap[id.xy] = float4(0, 0, 0, 0);
     newFlowMap[id.xy] = float4(0, 0, 0, 0);
-    velocityMap[id.xy] = float2(0, 0);
-    newVelocityMap[id.xy] = float2(0, 0);
 }
 
-// Handle input
+// Handle absoprtion from surface
 [numthreads(8,8,1)]
-void computeInput (uint3 id : SV_DispatchThreadid)
+void computeAbsorption (uint3 id : SV_DispatchThreadid)
 {
     float2 pos = id.xy / size;
+
+    float surfaceWater = surfaceWaterMap[id.xy];
+
+    float soilHoldingCapacity = soilDataMap[id.xy].r;
     
-    // float2 diff = pos - inputPosition;
-    // float waterAmount = (diff.x * diff.x + diff.y * diff.y) < inputRadius * inputRadius ? inputAmount : 0;
-    
-    float waterAmount = gaussFactor(inputPosition - pos, inputRadius * inputRadius) * inputAmount;
-    newWaterMap[id.xy] = waterMap[id.xy] + waterAmount;
+    // Calculate the water this cell will absorb from the surface
+    // This takes into account the soil holding capacity, the current saturation, and the surface water, along with the strength of the absorption
+    float absorption = min(surfaceWater, soilHoldingCapacity - saturationMap[id.xy]) * surfaceAbsorptionStrength;
+
+    // Update the saturation and surface water
+    newSaturationMap[id.xy] = saturationMap[id.xy] + absorption;
+    newSurfaceWaterMap[id.xy] = surfaceWater - absorption;
 }
 
 // Compute evaporation of water
