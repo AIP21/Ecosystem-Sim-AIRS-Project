@@ -1,0 +1,17 @@
+{
+    "name": "Project.Internal.Systems.Lightning",
+    "rootNamespace": "",
+    "references": [
+        "GUID:4237b4c4b1591a542b317b57eda388f6",
+        "GUID:a9e9ff372de84e14e9dafaeffa9e361a"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

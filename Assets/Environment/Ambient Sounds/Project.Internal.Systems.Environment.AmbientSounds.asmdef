@@ -1,0 +1,17 @@
+{
+    "name": "Project.Internal.Systems.Environment.AmbientSounds",
+    "rootNamespace": "",
+    "references": [
+        "GUID:a21640c112d4fdd42b3e44995c81988b",
+        "GUID:a9e9ff372de84e14e9dafaeffa9e361a"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

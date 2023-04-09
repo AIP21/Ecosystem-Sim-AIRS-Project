@@ -1,0 +1,19 @@
+{
+    "name": "Project.Internal.Systems.Environment.Weather",
+    "rootNamespace": "",
+    "references": [
+        "GUID:a21640c112d4fdd42b3e44995c81988b",
+        "GUID:a9e9ff372de84e14e9dafaeffa9e361a",
+        "GUID:5d9ff53d129644c16ad0869983d52e1f",
+        "GUID:8345c9b6f47f7374ba5a14bd3f3ccf3d"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

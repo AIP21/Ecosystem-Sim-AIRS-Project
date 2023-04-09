@@ -1,0 +1,16 @@
+{
+    "name": "Project.Internal.Systems.Environment",
+    "rootNamespace": "",
+    "references": [
+        "GUID:a21640c112d4fdd42b3e44995c81988b"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
