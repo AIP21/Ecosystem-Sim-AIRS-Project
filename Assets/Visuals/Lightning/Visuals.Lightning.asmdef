@@ -1,0 +1,16 @@
+{
+    "name": "Visuals.Lightning",
+    "rootNamespace": "",
+    "references": [
+        "GUID:35bb8336bfe479a458bf2b1c852af789"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

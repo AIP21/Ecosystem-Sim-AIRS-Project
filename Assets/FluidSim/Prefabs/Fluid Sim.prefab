@@ -98,23 +98,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 48fceb84824d81c41a085bda774e1106, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  computeShader: {fileID: 0}
   result: {fileID: 0}
-  surfaceWaterMap: {fileID: 0}
-  newSurfaceWaterMap: {fileID: 0}
-  surfaceFlowMap: {fileID: 0}
-  newSurfaceFlowMap: {fileID: 0}
-  surfaceVelocityMap: {fileID: 0}
-  newSurfaceVelocityMap: {fileID: 0}
-  soilWaterMap: {fileID: 0}
-  newSoilWaterMap: {fileID: 0}
-  soilFlowMap: {fileID: 0}
-  newSoilFlowMap: {fileID: 0}
-  textureToDraw: 0
+  waterMap: {fileID: 0}
+  newWaterMap: {fileID: 0}
+  flowMap: {fileID: 0}
+  newFlowMap: {fileID: 0}
+  velocityMap: {fileID: 0}
+  newVelocityMap: {fileID: 0}
+  soilUseMap: {fileID: 0}
+  newSoilUseMap: {fileID: 0}
+  textureToDraw: 1
   heightmap: {fileID: 2800000, guid: 90c5f3e74c9152949879f49f22891720, type: 3}
   resolution: 1024
+  externalResolution: 256
   timeStep: 0.1
   epsilon: 0.00001
-  surfaceComputeShader: {fileID: 7200000, guid: 1c3b445941b32804dbb9b992ea49c70f, type: 3}
   waterDensity: 1
   gravitationAcceleration: 9.81
   cellHeight: 1
@@ -123,7 +122,9 @@ MonoBehaviour:
   evaporationConstant: 0.01
   heightmapMultiplier: 1
   flowDamping: 0
-  enableInput: 1
+  viscosity: 10.5
+  iterations: 2
+  enableWaterFlux: 1
   enableFlow: 1
   enableHeight: 1
   enableVelocity: 1
@@ -132,16 +133,19 @@ MonoBehaviour:
   sourceRadius: 0.008
   sourceAmount: 1
   sourcePosition: {x: 0, y: 0}
-  soilComputeShader: {fileID: 7200000, guid: 61355b5eb6fb59c48ace0f622d953532, type: 3}
-  soilMap: {fileID: 2800000, guid: c62ee469c9ae53949a32460dfefee106, type: 3}
-  soilGravitationAcceleration: 9.81
-  soilCellHeight: 1
-  soilCellArea: 1
-  soilHeightmapMultiplier: 1
-  soilEnableAbsorption: 1
-  soilEnableRelease: 1
-  soilEnableFlow: 1
-  soilEnableSaturation: 1
+  soilDataMap: {fileID: 0}
+  soilEvaporationConstant: 0.001
+  soilDiffusionConstant: 0.1
+  soilAbsorptionMultiplier: 1
+  soilUseMultiplier: 1
+  soilReleaseMultiplier: 1
+  soilReleaseThreshold: 0.5
+  soilReleaseSurfaceThreshold: 0.1
+  enableSoilUse: 1
+  enableSoilAbsorption: 1
+  enableSoilRelease: 1
+  enableSoilEvaporation: 1
+  enableSoilFlow: 1
   showDebugTextures: 1
 --- !u!114 &1258558761060615783
 MonoBehaviour:

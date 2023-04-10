@@ -29,7 +29,7 @@ Shader "FluidSim/WaterShader"
 		float4 skyColor, waterAbsoprtion;
 		float fresnelFactor, minWaterHeight, sunSpectralStr;
 		
-		uniform sampler2D waterHeight, waterVelocity;
+		uniform sampler2D waterMap, waterVelocity;
 		uniform float resolution;
 		uniform float3 sunDirection;
 		
@@ -53,7 +53,7 @@ Shader "FluidSim/WaterShader"
 			
 			v.tangent = float4(1,0,0,1);
 		
-			v.vertex.y += (GetTotalHeight(tex2Dlod(_MainTex, float4(v.texcoord.xy, 0.0, 0.0)))) + (tex2Dlod(waterHeight, float4(v.texcoord.xy, 0.0, 0.0)).x);
+			v.vertex.y += (GetTotalHeight(tex2Dlod(_MainTex, float4(v.texcoord.xy, 0.0, 0.0)))) + (tex2Dlod(waterMap, float4(v.texcoord.xy, 0.0, 0.0)).x);
 			
 			float4 pos = UnityObjectToClipPos (v.vertex);
 			o.grabUV = ComputeGrabScreenPos(pos);
@@ -68,10 +68,10 @@ Shader "FluidSim/WaterShader"
             float ht2 = GetTotalHeight(tex2D(_MainTex, uv + float2(0, -u)));
             float ht3 = GetTotalHeight(tex2D(_MainTex, uv + float2(0, u)));
       
-            ht0 += tex2D(waterHeight, uv + float2(-u, 0)).x;
-            ht1 += tex2D(waterHeight, uv + float2(u, 0)).x;
-            ht2 += tex2D(waterHeight, uv + float2(0, -u)).x;
-            ht3 += tex2D(waterHeight, uv + float2(0, u)).x;
+            ht0 += tex2D(waterMap, uv + float2(-u, 0)).x;
+            ht1 += tex2D(waterMap, uv + float2(u, 0)).x;
+            ht2 += tex2D(waterMap, uv + float2(0, -u)).x;
+            ht3 += tex2D(waterMap, uv + float2(0, u)).x;
             
             float2 _step = float2(1.0, 0.0);
 
@@ -89,11 +89,11 @@ Shader "FluidSim/WaterShader"
 
 		void surf(Input IN, inout SurfaceOutput o) 
 		{
-			float ht = tex2D(waterHeight, IN.uv_MainTex).x;
+			float ht = tex2D(waterMap, IN.uv_MainTex).x;
 	
 			if (ht < minWaterHeight) discard;
 		
-			float3 N = FindNormal(IN.uv_MainTex, 1.0/resolution);
+			float3 N = FindNormal(IN.uv_MainTex, 1.0 / resolution);
 			
 			float3 V = normalize(_WorldSpaceCameraPos-IN.worldPos).xzy;
 			

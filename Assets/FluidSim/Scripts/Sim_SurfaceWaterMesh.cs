@@ -112,8 +112,8 @@ public class Sim_SurfaceWaterMesh : MonoBehaviour
 
     public void Update()
     {
-        waterMaterial.SetTexture("waterHeight", fluidSim.surfaceWaterMap);
-        waterMaterial.SetTexture("waterVelocity", fluidSim.surfaceVelocityMap);
+        waterMaterial.SetTexture("waterMap", fluidSim.waterMap);
+        waterMaterial.SetTexture("waterVelocity", fluidSim.velocityMap);
         waterMaterial.SetTexture("_MainTex", fluidSim.heightmap);
 
         waterMaterial.SetFloat("resolution", (float)fluidSim.resolution);

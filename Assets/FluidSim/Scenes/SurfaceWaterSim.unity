@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.18028334, g: 0.22571328, b: 0.3069217, a: 1}
+  m_IndirectSpecularColor: {r: 0.18028378, g: 0.22571412, b: 0.30692285, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -229,9 +229,17 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 2051415026}
     - target: {fileID: 2566442593908158337, guid: 99e93d985e2bc8b4bbf7a7a4fdf85ebc, type: 3}
-      propertyPath: textureToDraw
-      value: 1
-      objectReference: {fileID: 0}
+      propertyPath: heightmap
+      value: 
+      objectReference: {fileID: 2800000, guid: 90c5f3e74c9152949879f49f22891720, type: 3}
+    - target: {fileID: 2566442593908158337, guid: 99e93d985e2bc8b4bbf7a7a4fdf85ebc, type: 3}
+      propertyPath: soilDataMap
+      value: 
+      objectReference: {fileID: 2800000, guid: aa4df7f740d550a4ea09c6611eb97ab2, type: 3}
+    - target: {fileID: 2566442593908158337, guid: 99e93d985e2bc8b4bbf7a7a4fdf85ebc, type: 3}
+      propertyPath: computeShader
+      value: 
+      objectReference: {fileID: 7200000, guid: 1c3b445941b32804dbb9b992ea49c70f, type: 3}
     - target: {fileID: 2566442593908158337, guid: 99e93d985e2bc8b4bbf7a7a4fdf85ebc, type: 3}
       propertyPath: soilEnableFlow
       value: 0
@@ -241,12 +249,24 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2566442593908158337, guid: 99e93d985e2bc8b4bbf7a7a4fdf85ebc, type: 3}
+      propertyPath: evaporationConstant
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2566442593908158337, guid: 99e93d985e2bc8b4bbf7a7a4fdf85ebc, type: 3}
       propertyPath: soilEnableAbsorption
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2566442593908158337, guid: 99e93d985e2bc8b4bbf7a7a4fdf85ebc, type: 3}
       propertyPath: soilEnableSaturation
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2566442593908158337, guid: 99e93d985e2bc8b4bbf7a7a4fdf85ebc, type: 3}
+      propertyPath: soilDiffusionConstant
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2566442593908158337, guid: 99e93d985e2bc8b4bbf7a7a4fdf85ebc, type: 3}
+      propertyPath: soilEvaporationConstant
+      value: 0.000001
       objectReference: {fileID: 0}
     - target: {fileID: 2566442593908158339, guid: 99e93d985e2bc8b4bbf7a7a4fdf85ebc, type: 3}
       propertyPath: m_RootOrder

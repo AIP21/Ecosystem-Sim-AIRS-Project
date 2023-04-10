@@ -5,27 +5,29 @@ using UnityEngine;
 public class Sim_Water : MonoBehaviour
 {
     #region Public
+    [Header("Compute Shader")]
+    public ComputeShader computeShader;
 
-    #region RenderTextures
+    #region Render Textures
     [Header("Render Textures")]
     // Surface Water
     public RenderTexture result;
-    public RenderTexture surfaceWaterMap;
-    public RenderTexture newSurfaceWaterMap;
-    public RenderTexture surfaceFlowMap;
-    public RenderTexture newSurfaceFlowMap;
-    public RenderTexture surfaceVelocityMap;
-    public RenderTexture newSurfaceVelocityMap;
+    public RenderTexture waterMap;
+    public RenderTexture newWaterMap;
+    public RenderTexture flowMap;
+    public RenderTexture newFlowMap;
+    public RenderTexture velocityMap;
+    public RenderTexture newVelocityMap;
 
     // Soil Water
     [Space(10)]
-    public RenderTexture soilSaturationMap;
-    public RenderTexture newSoilSaturationMap;
-    public RenderTexture soilFlowMap;
-    public RenderTexture newSoilFlowMap;
+    public RenderTexture soilUseMap; // where water is being consumed (by trees, plants, etc.)
+    public RenderTexture newSoilUseMap; // where water is being consumed (by trees, plants, etc.)
+    public RenderTexture saturationMap;
+    public RenderTexture newSaturationMap;
 
     [Space(10)]
-    [Range(0, 5)]
+    [Range(0, 7)]
     public int textureToDraw = 0;
     #endregion
 
@@ -35,15 +37,13 @@ public class Sim_Water : MonoBehaviour
 
     [Space(10)]
     public int resolution = 1024;
+    public int externalResolution = 256;
     public float timeStep = 0.1f;
     public float epsilon = 1e-5f;
     #endregion
 
     #region Surface Water Settings
     [Header("Surface Water Settings")]
-    public ComputeShader surfaceComputeShader;
-
-    [Space(10)]
     public float waterDensity = 1.0f;
     public float gravitationAcceleration = 9.81f;
     public float cellHeight = 1;
@@ -53,9 +53,11 @@ public class Sim_Water : MonoBehaviour
     [Range(-20, 20)]
     public float heightmapMultiplier = 1.0f;
     public float flowDamping = 0.0f;
+    public float viscosity = 10.5f;
+    public int iterations = 2;
 
     [Space(10)]
-    public bool enableInput = true;
+    public bool enableWaterFlux = true;
     public bool enableFlow = true;
     public bool enableHeight = true;
     public bool enableVelocity = true;
@@ -73,25 +75,29 @@ public class Sim_Water : MonoBehaviour
 
     #region Soil Water Settings
     [Header("Soil Water Settings")]
-    public ComputeShader soilComputeShader;
-    public Texture2D soilMap; // water capacity (affects absorption rate (absorptivity), evaporation rate, flow rate, and max holding capacity)
-    public Texture2D soilUseMap; // where water is being consumed (by trees, plants, etc.)
+    // public ComputeShader computeShader;
+    public Texture2D soilDataMap; // water capacity (affects absorption rate (absorptivity), evaporation rate, flow rate, and max holding capacity)
 
     [Space(10)]
-    public float soilGravitationAcceleration = 9.81f;
-    public float soilCellHeight = 1;
-    public float soilCellArea = 1; // should be the soil cell height squared
-    [Range(-20, 20)]
-    public float soilHeightmapMultiplier = 1.0f;
-    public float soilUseStrength = 1.0f;
+
+    public float soilEvaporationConstant = 0.001f;
+    public float soilDiffusionConstant = 0.1f;
+
+    public float soilAbsorptionMultiplier = 1.0f;
+    public float soilUseMultiplier = 1.0f;
+    public float soilReleaseMultiplier = 1.0f;
+
+    [Tooltip("The minimum amount of soil water that there can be for the soil to be able to release water.")]
+    public float soilReleaseThreshold = 0.5f;
+    [Tooltip("The maximum amount of surface water that can be above soil for the soil to still be able to release water.")]
+    public float soilReleaseSurfaceThreshold = 0.1f;
 
     [Space(10)]
-    public bool soilEnableUse = true;
-    public bool soilEnableAbsorption = true;
-    public bool soilEnableRelease = true;
-    public bool soilEnableEvaporation = true;
-    public bool soilEnableFlow = true;
-    public bool soilEnableSaturation = true;
+    public bool enableSoilUse = true;
+    public bool enableSoilAbsorption = true;
+    public bool enableSoilRelease = true;
+    public bool enableSoilEvaporation = true;
+    public bool enableSoilDiffusion = true;
     #endregion
 
     [Space(25)]
@@ -100,22 +106,14 @@ public class Sim_Water : MonoBehaviour
 
     #region Private
     private int dispatchSize = 0;
-    private int surfaceKernelCount = 0;
+    private int kernelCount = 0;
     private int kernel_reset = 0;
-    private int kernel_input = 0;
-    private int kernel_evaporation = 0;
+    private int kernel_flux = 0;
     private int kernel_slipPass = 0;
     private int kernel_flow = 0;
     private int kernel_height = 0;
     private int kernel_velocity = 0;
     private int kernel_diffusion = 0;
-
-    private int soilKernelCount = 0;
-    private int kernel_soilReset = 0;
-    private int kernel_soilFlux = 0; // Use by plants, release to surface, absorption from surface, and evaporation
-    private int kernel_soilFlow = 0;
-    private int kernel_soilSlipPass = 0;
-    private int kernel_soilSaturation = 0;
     #endregion
 
     private RenderTexture CreateTexture(RenderTextureFormat format, FilterMode filterMode = FilterMode.Point)
@@ -129,9 +127,9 @@ public class Sim_Water : MonoBehaviour
         return dataTex;
     }
 
-    private void DispatchCompute(ComputeShader shader, int kernel)
+    private void DispatchCompute(int kernel)
     {
-        shader.Dispatch(kernel, dispatchSize, dispatchSize, 1);
+        computeShader.Dispatch(kernel, dispatchSize, dispatchSize, 1);
     }
 
     private void Awake()
@@ -140,250 +138,233 @@ public class Sim_Water : MonoBehaviour
 
         // Create render textures
         result = CreateTexture(RenderTextureFormat.ARGBHalf, FilterMode.Bilinear);
-        surfaceWaterMap = CreateTexture(RenderTextureFormat.RFloat);
-        newSurfaceWaterMap = CreateTexture(RenderTextureFormat.RFloat);
-        surfaceFlowMap = CreateTexture(RenderTextureFormat.ARGBHalf);
-        newSurfaceFlowMap = CreateTexture(RenderTextureFormat.ARGBHalf);
-        surfaceVelocityMap = CreateTexture(RenderTextureFormat.RGHalf, FilterMode.Bilinear);
-        newSurfaceVelocityMap = CreateTexture(RenderTextureFormat.RGHalf, FilterMode.Bilinear);
-
-        soilSaturationMap = CreateTexture(RenderTextureFormat.RFloat);
-        newSoilSaturationMap = CreateTexture(RenderTextureFormat.RFloat);
-        soilFlowMap = CreateTexture(RenderTextureFormat.ARGBHalf);
-        newSoilFlowMap = CreateTexture(RenderTextureFormat.ARGBHalf);
+        waterMap = CreateTexture(RenderTextureFormat.RFloat, FilterMode.Bilinear);
+        newWaterMap = CreateTexture(RenderTextureFormat.RFloat, FilterMode.Bilinear);
+        flowMap = CreateTexture(RenderTextureFormat.ARGBHalf, FilterMode.Bilinear);
+        newFlowMap = CreateTexture(RenderTextureFormat.ARGBHalf, FilterMode.Bilinear);
+        velocityMap = CreateTexture(RenderTextureFormat.RGFloat, FilterMode.Bilinear);
+        newVelocityMap = CreateTexture(RenderTextureFormat.RGFloat, FilterMode.Bilinear);
+        saturationMap = CreateTexture(RenderTextureFormat.RFloat, FilterMode.Bilinear);
+        newSaturationMap = CreateTexture(RenderTextureFormat.RFloat, FilterMode.Bilinear);
+        soilUseMap = CreateTexture(RenderTextureFormat.RFloat, FilterMode.Bilinear);
+        newSoilUseMap = CreateTexture(RenderTextureFormat.RFloat, FilterMode.Bilinear);
 
         // Set shader variables
-        surfaceComputeShader.SetFloat("waterDensity", waterDensity);
-        surfaceComputeShader.SetFloat("gravityAcceleration", gravitationAcceleration);
-        surfaceComputeShader.SetFloat("pipeLength", cellHeight);
-        surfaceComputeShader.SetFloat("pipeArea", cellArea);
-        surfaceComputeShader.SetFloat("epsilon", epsilon);
-        surfaceComputeShader.SetFloat("diffuseAlpha", diffuseAlpha);
-        surfaceComputeShader.SetVector("inputPosition", sourcePosition);
-        surfaceComputeShader.SetFloat("inputRadius", sourceRadius);
-        surfaceComputeShader.SetFloat("inputAmount", sourceAmount);
-        surfaceComputeShader.SetFloat("flowDamping", 1.0f - flowDamping);
-        surfaceComputeShader.SetFloat("_deltaTime", timeStep);
-        surfaceComputeShader.SetFloat("heightmapMultiplier", heightmapMultiplier);
-        surfaceComputeShader.SetFloat("evaporationConstant", evaporationConstant);
-        surfaceComputeShader.SetFloat("size", resolution);
+        computeShader.SetFloat("waterDensity", waterDensity);
+        computeShader.SetFloat("gravityAcceleration", gravitationAcceleration);
+        computeShader.SetFloat("pipeLength", cellHeight);
+        computeShader.SetFloat("pipeArea", cellArea);
+        computeShader.SetFloat("epsilon", epsilon);
+        computeShader.SetFloat("diffuseAlpha", diffuseAlpha);
+        computeShader.SetVector("inputPosition", sourcePosition);
+        computeShader.SetFloat("inputRadius", sourceRadius);
+        computeShader.SetFloat("inputAmount", sourceAmount);
+        computeShader.SetFloat("flowDamping", 1.0f - flowDamping);
+        computeShader.SetFloat("_deltaTime", timeStep);
+        computeShader.SetFloat("heightmapMultiplier", heightmapMultiplier);
+        computeShader.SetFloat("evaporationConstant", evaporationConstant);
+        computeShader.SetFloat("size", resolution);
+        computeShader.SetFloat("externalSize", externalResolution);
+        computeShader.SetFloat("soilEvaporationConstant", soilEvaporationConstant);
+        computeShader.SetFloat("soilAbsorptionMultiplier", soilAbsorptionMultiplier);
+        computeShader.SetFloat("soilUseMultiplier", soilUseMultiplier);
+        computeShader.SetFloat("soilReleaseMultiplier", soilReleaseMultiplier);
+        computeShader.SetFloat("soilReleaseThreshold", soilReleaseThreshold);
+        computeShader.SetFloat("soilReleaseSurfaceThreshold", soilReleaseSurfaceThreshold);
+        computeShader.SetFloat("soilDiffusionConstant", soilDiffusionConstant);
 
         // Find shader kernels
-        kernel_reset = surfaceComputeShader.FindKernel("reset"); surfaceKernelCount++;
-        kernel_input = surfaceComputeShader.FindKernel("computeInput"); surfaceKernelCount++;
-        kernel_evaporation = surfaceComputeShader.FindKernel("computeEvaporation"); surfaceKernelCount++;
-        kernel_flow = surfaceComputeShader.FindKernel("computeWaterFlow"); surfaceKernelCount++;
-        kernel_height = surfaceComputeShader.FindKernel("computeWaterHeight"); surfaceKernelCount++;
-        kernel_slipPass = surfaceComputeShader.FindKernel("applyFreeSlip"); surfaceKernelCount++;
-        kernel_velocity = surfaceComputeShader.FindKernel("computeWaterVelocity"); surfaceKernelCount++;
-        kernel_diffusion = surfaceComputeShader.FindKernel("computeDiffusedWaterVelocity"); surfaceKernelCount++;
+        kernel_reset = computeShader.FindKernel("reset"); kernelCount++;
+        kernel_flux = computeShader.FindKernel("computeFlux"); kernelCount++;
+        kernel_flow = computeShader.FindKernel("computeFlow"); kernelCount++;
+        kernel_height = computeShader.FindKernel("computeWaterHeight"); kernelCount++;
+        kernel_slipPass = computeShader.FindKernel("applySlipPass"); kernelCount++;
+        kernel_velocity = computeShader.FindKernel("computeWaterVelocity"); kernelCount++;
+        kernel_diffusion = computeShader.FindKernel("computeDiffusedWaterVelocity"); kernelCount++;
 
-        kernel_soilReset = soilComputeShader.FindKernel("reset"); soilKernelCount++;
-        kernel_soilAbsorption = soilComputeShader.FindKernel("computeAbsorption"); soilKernelCount++;
-        kernel_soilUse = soilComputeShader.FindKernel("computeUse"); soilKernelCount++;
-        kernel_soilRelease = soilComputeShader.FindKernel("computeRelease"); soilKernelCount++;
-        kernel_soilEvaporation = soilComputeShader.FindKernel("computeEvaporation"); soilKernelCount++;
-        kernel_soilFreeSlip = soilComputeShader.FindKernel("applyFreeSlip"); soilKernelCount++;
-        kernel_soilFlow = soilComputeShader.FindKernel("computeFlow"); soilKernelCount++;
-        kernel_soilSaturation = soilComputeShader.FindKernel("computeSaturation"); soilKernelCount++;
-
-        // Setup shader render textures
-        // updateTextures();
+        // Setup shader render textures for resetting them
+        computeShader.SetTexture(kernel_reset, "worldDataMap", heightmap);
+        computeShader.SetTexture(kernel_reset, "result", result);
+        computeShader.SetTexture(kernel_reset, "waterMap", waterMap);
+        computeShader.SetTexture(kernel_reset, "newWaterMap", newWaterMap);
+        computeShader.SetTexture(kernel_reset, "saturationMap", saturationMap);
+        computeShader.SetTexture(kernel_reset, "newSaturationMap", newSaturationMap);
+        computeShader.SetTexture(kernel_reset, "flowMap", flowMap);
+        computeShader.SetTexture(kernel_reset, "newFlowMap", newFlowMap);
+        computeShader.SetTexture(kernel_reset, "velocityMap", velocityMap);
+        computeShader.SetTexture(kernel_reset, "newVelocityMap", newVelocityMap);
 
         // Initialize shader textures
         dispatchSize = Mathf.CeilToInt(resolution / 8);
-        DispatchCompute(surfaceComputeShader, kernel_reset);
-        DispatchCompute(soilComputeShader, kernel_soilReset);
-    }
-
-    private void updateTextures()
-    {
-        for (int kernel = 0; kernel < kernelCount; kernel++)
-        {
-            /* 
-			TODO: OPTIMIZE
-            This example is not optimized, not all kernels read/write into all textures,
-			but I keep it like this for the sake of convenience
-			*/
-            surfaceComputeShader.SetTexture(kernel, "heightmap", heightmap);
-            surfaceComputeShader.SetTexture(kernel, "result", result);
-            surfaceComputeShader.SetTexture(kernel, "waterMap", surfaceWaterMap);
-            surfaceComputeShader.SetTexture(kernel, "newWaterMap", newSurfaceWaterMap);
-            surfaceComputeShader.SetTexture(kernel, "flowMap", surfaceFlowMap);
-            surfaceComputeShader.SetTexture(kernel, "newFlowMap", newSurfaceFlowMap);
-            surfaceComputeShader.SetTexture(kernel, "velocityMap", surfaceVelocityMap);
-            surfaceComputeShader.SetTexture(kernel, "newVelocityMap", newSurfaceVelocityMap);
-        }
+        DispatchCompute(kernel_reset);
     }
 
     public void Update()
     {
         // Set shader variables
-        surfaceComputeShader.SetFloat("waterDensity", waterDensity);
-        surfaceComputeShader.SetFloat("epsilon", epsilon);
-        surfaceComputeShader.SetFloat("diffuseAlpha", diffuseAlpha);
-        surfaceComputeShader.SetFloat("_deltaTime", timeStep);
-        surfaceComputeShader.SetFloat("heightmapMultiplier", heightmapMultiplier);
+        computeShader.SetFloat("waterDensity", waterDensity);
+        computeShader.SetFloat("epsilon", epsilon);
+        computeShader.SetFloat("diffuseAlpha", diffuseAlpha);
+        computeShader.SetFloat("_deltaTime", timeStep);
+        computeShader.SetFloat("heightmapMultiplier", heightmapMultiplier);
 
-        // soilComputeShader.SetFloat();
-
-        if (enableInput)
-            surfaceInput();
-
-        soilWaterFlux();
+        if (enableWaterFlux)
+            waterFlux();
 
         applyFreeSlip();
 
-        surfaceWaterFlow();
-
-        if (soilEnableFlow)
-            soilWaterFlow();
+        waterFlow();
 
         if (enableVelocity)
             surfaceWaterVelocity();
     }
 
-    private void surfaceInput()
+    private void waterFlux()
     {
         if (sourceIsMouse)
         {
             // Add water at the mouse position while clicking
-            surfaceComputeShader.SetVector("inputPosition", new Vector2(Input.mousePosition.x / Screen.width, Input.mousePosition.y / Screen.width));
-            surfaceComputeShader.SetFloat("inputRadius", sourceRadius);
-            surfaceComputeShader.SetFloat("inputAmount", Input.GetMouseButton(0) ? sourceAmount : 0);
+            computeShader.SetVector("inputPosition", new Vector2(Input.mousePosition.x / Screen.width, Input.mousePosition.y / Screen.width));
+            computeShader.SetFloat("inputRadius", sourceRadius);
+            computeShader.SetFloat("inputAmount", Input.GetMouseButton(0) ? sourceAmount : 0);
         }
         else
         {
             // Add water at the source position
-            surfaceComputeShader.SetVector("inputPosition", sourcePosition);
-            surfaceComputeShader.SetFloat("inputRadius", sourceRadius);
-            surfaceComputeShader.SetFloat("inputAmount", sourceAmount);
+            computeShader.SetVector("inputPosition", sourcePosition);
+            computeShader.SetFloat("inputRadius", sourceRadius);
+            computeShader.SetFloat("inputAmount", sourceAmount);
         }
 
-        surfaceComputeShader.SetTexture(kernel_input, "waterMap", surfaceWaterMap);
-        surfaceComputeShader.SetTexture(kernel_input, "newWaterMap", newSurfaceWaterMap);
+        computeShader.SetBool("soilAbsorption", enableSoilAbsorption);
+        computeShader.SetBool("soilUse", enableSoilUse);
+        computeShader.SetBool("soilEvaporation", enableSoilEvaporation);
+        computeShader.SetBool("soilRelease", enableSoilRelease);
+        computeShader.SetFloat("evaporationConstant", evaporationConstant);
 
-        DispatchCompute(kernel_input);
+        computeShader.SetFloat("soilEvaporationConstant", soilEvaporationConstant);
+        computeShader.SetFloat("soilAbsorptionMultiplier", soilAbsorptionMultiplier);
+        computeShader.SetFloat("soilUseMultiplier", soilUseMultiplier);
+        computeShader.SetFloat("soilReleaseMultiplier", soilReleaseMultiplier);
+        computeShader.SetFloat("soilReleaseThreshold", soilReleaseThreshold);
+        computeShader.SetFloat("soilReleaseSurfaceThreshold", soilReleaseSurfaceThreshold);
 
-        Graphics.Blit(newSurfaceWaterMap, surfaceWaterMap);
+        computeShader.SetTexture(kernel_flux, "worldDataMap", heightmap);
+        computeShader.SetTexture(kernel_flux, "waterMap", waterMap);
+        computeShader.SetTexture(kernel_flux, "newWaterMap", newWaterMap);
+        computeShader.SetTexture(kernel_flux, "saturationMap", saturationMap);
+        computeShader.SetTexture(kernel_flux, "newSaturationMap", newSaturationMap);
+        computeShader.SetTexture(kernel_flux, "soilDataMap", soilDataMap);
+        computeShader.SetTexture(kernel_flux, "soilUseMap", soilUseMap);
+        computeShader.SetTexture(kernel_flux, "newSoilUseMap", newSoilUseMap);
 
-        if (evaporationConstant > 0.0f)
-        {
-            surfaceComputeShader.SetFloat("evaporationConstant", evaporationConstant);
+        DispatchCompute(kernel_flux);
 
-            surfaceComputeShader.SetTexture(kernel_evaporation, "waterMap", surfaceWaterMap);
-            surfaceComputeShader.SetTexture(kernel_evaporation, "newWaterMap", newSurfaceWaterMap);
-
-            DispatchCompute(kernel_evaporation);
-
-            Graphics.Blit(newSurfaceWaterMap, surfaceWaterMap);
-        }
-    }
-
-    private void soilWaterFlux()
-    {
-        if (soilEnableAbsorption)
-        {
-            // soilWaterComputeShader.SetFloat();
-
-        }
-
-        if (soilEnableUse)
-        {
-
-        }
-
-        if (soilEnableRelease)
-        {
-
-        }
-
-        if (soilEnableEvaporation)
-        {
-
-        }
+        Graphics.Blit(newWaterMap, waterMap);
+        Graphics.Blit(newSoilUseMap, soilUseMap);
+        Graphics.Blit(newSaturationMap, saturationMap);
     }
 
     private void applyFreeSlip()
     {
         // This function prevents the water from freaking out when it hits a border
-        surfaceComputeShader.SetTexture(kernel_slipPass, "waterMap", surfaceWaterMap);
-        surfaceComputeShader.SetTexture(kernel_slipPass, "newWaterMap", newSurfaceWaterMap);
+        computeShader.SetTexture(kernel_slipPass, "waterMap", waterMap);
+        computeShader.SetTexture(kernel_slipPass, "newWaterMap", newWaterMap);
+        computeShader.SetTexture(kernel_slipPass, "saturationMap", saturationMap);
+        computeShader.SetTexture(kernel_slipPass, "newSaturationMap", newSaturationMap);
 
         DispatchCompute(kernel_slipPass);
-        Graphics.Blit(newSurfaceWaterMap, surfaceWaterMap);
+        
+        Graphics.Blit(newWaterMap, waterMap);
+        Graphics.Blit(newSaturationMap, saturationMap);
     }
 
-    private void surfaceWaterFlow()
+    private void waterFlow()
     {
-        if (enableFlow)
+        if (enableFlow || enableSoilDiffusion)
         {
-            surfaceComputeShader.SetFloat("gravityAcceleration", gravitationAcceleration);
-            surfaceComputeShader.SetFloat("pipeLength", cellHeight);
-            surfaceComputeShader.SetFloat("pipeArea", cellArea);
-            surfaceComputeShader.SetFloat("flowDamping", 1.0f - flowDamping);
+            computeShader.SetBool("surfaceFlow", enableFlow);
+            computeShader.SetBool("soilFlow", enableSoilDiffusion);
 
-            surfaceComputeShader.SetTexture(kernel_flow, "heightmap", heightmap);
-            surfaceComputeShader.SetTexture(kernel_flow, "waterMap", surfaceWaterMap);
-            surfaceComputeShader.SetTexture(kernel_flow, "flowMap", surfaceFlowMap);
-            surfaceComputeShader.SetTexture(kernel_flow, "newFlowMap", newSurfaceFlowMap);
+            computeShader.SetTexture(kernel_flow, "worldDataMap", heightmap);
+            computeShader.SetTexture(kernel_flow, "waterMap", waterMap);
+
+            if (enableFlow)
+            {
+                computeShader.SetTexture(kernel_flow, "flowMap", flowMap);
+                computeShader.SetTexture(kernel_flow, "newFlowMap", newFlowMap);
+
+                computeShader.SetFloat("gravityAcceleration", gravitationAcceleration);
+                computeShader.SetFloat("pipeLength", cellHeight);
+                computeShader.SetFloat("pipeArea", cellArea);
+                computeShader.SetFloat("flowDamping", 1.0f - flowDamping);
+            }
+
+            if (enableSoilDiffusion)
+            {
+                computeShader.SetFloat("soilDiffusionConstant", soilDiffusionConstant);
+
+                computeShader.SetTexture(kernel_flow, "saturationMap", saturationMap);
+                computeShader.SetTexture(kernel_flow, "newSaturationMap", newSaturationMap);
+            }
 
             DispatchCompute(kernel_flow);
 
-            Graphics.Blit(newSurfaceFlowMap, surfaceFlowMap);
+            if (enableFlow)
+                Graphics.Blit(newFlowMap, flowMap);
+
+            if (enableSoilDiffusion)
+                Graphics.Blit(newSaturationMap, saturationMap);
         }
 
+        // Determine the new surface water height from the flow
         if (enableHeight)
         {
-            surfaceComputeShader.SetFloat("pipeLength", cellHeight);
+            computeShader.SetFloat("pipeLength", cellHeight);
 
-            surfaceComputeShader.SetTexture(kernel_height, "heightmap", heightmap);
-            surfaceComputeShader.SetTexture(kernel_height, "flowMap", surfaceFlowMap);
-            surfaceComputeShader.SetTexture(kernel_height, "waterMap", surfaceWaterMap);
-            surfaceComputeShader.SetTexture(kernel_height, "newWaterMap", newSurfaceWaterMap);
-            surfaceComputeShader.SetTexture(kernel_height, "result", result);
+            computeShader.SetTexture(kernel_height, "worldDataMap", heightmap);
+            computeShader.SetTexture(kernel_height, "flowMap", flowMap);
+            computeShader.SetTexture(kernel_height, "waterMap", waterMap);
+            computeShader.SetTexture(kernel_height, "newWaterMap", newWaterMap);
+            computeShader.SetTexture(kernel_height, "result", result);
+            computeShader.SetTexture(kernel_height, "saturationMap", saturationMap);
 
             DispatchCompute(kernel_height);
 
-            Graphics.Blit(newSurfaceWaterMap, surfaceWaterMap);
+            Graphics.Blit(newWaterMap, waterMap);
         }
-    }
-
-    private void soilWaterFlow()
-    {
-
     }
 
     private void surfaceWaterVelocity()
     {
-        surfaceComputeShader.SetFloat("pipeLength", cellHeight);
-        surfaceComputeShader.SetFloat("epsilon", epsilon);
+        computeShader.SetFloat("pipeLength", cellHeight);
+        computeShader.SetFloat("epsilon", epsilon);
 
-        surfaceComputeShader.SetTexture(kernel_velocity, "waterMap", surfaceWaterMap);
-        surfaceComputeShader.SetTexture(kernel_velocity, "newWaterMap", newSurfaceWaterMap);
-        surfaceComputeShader.SetTexture(kernel_velocity, "flowMap", surfaceFlowMap);
-        surfaceComputeShader.SetTexture(kernel_velocity, "velocityMap", surfaceVelocityMap);
+        computeShader.SetTexture(kernel_velocity, "waterMap", waterMap);
+        computeShader.SetTexture(kernel_velocity, "newWaterMap", newWaterMap);
+        computeShader.SetTexture(kernel_velocity, "flowMap", flowMap);
+        computeShader.SetTexture(kernel_velocity, "velocityMap", velocityMap);
 
         DispatchCompute(kernel_velocity);
 
         if (enableVelocityDiffusion)
         {
-            const float viscosity = 10.5f;
-            const int iterations = 2;
             diffuseAlpha = cellArea / (viscosity * timeStep);
 
-            surfaceComputeShader.SetFloat("diffuseAlpha", diffuseAlpha);
+            computeShader.SetFloat("diffuseAlpha", diffuseAlpha);
 
-            surfaceComputeShader.SetTexture(kernel_diffusion, "velocityMap", surfaceVelocityMap);
-            surfaceComputeShader.SetTexture(kernel_diffusion, "newVelocityMap", newSurfaceVelocityMap);
+            computeShader.SetTexture(kernel_diffusion, "velocityMap", velocityMap);
+            computeShader.SetTexture(kernel_diffusion, "newVelocityMap", newVelocityMap);
 
             for (int i = 0; i < iterations; i++)
             {
                 DispatchCompute(kernel_diffusion);
-                Graphics.Blit(newSurfaceVelocityMap, surfaceVelocityMap);
+
+                Graphics.Blit(newVelocityMap, velocityMap);
             }
         }
     }
+
 
 
     public void OnRenderImage(RenderTexture src, RenderTexture dest)
@@ -394,18 +375,21 @@ public class Sim_Water : MonoBehaviour
                 Graphics.Blit(result, dest);
                 break;
             case 2:
-                Graphics.Blit(surfaceFlowMap, dest);
+                Graphics.Blit(flowMap, dest);
                 break;
             case 3:
-                Graphics.Blit(surfaceVelocityMap, dest);
+                Graphics.Blit(waterMap, dest);
                 break;
             case 4:
-                Graphics.Blit(soilSaturationMap, dest);
+                Graphics.Blit(saturationMap, dest);
                 break;
             case 5:
-                Graphics.Blit(soilFlowMap, dest);
+                Graphics.Blit(velocityMap, dest);
                 break;
             case 6:
+                Graphics.Blit(soilUseMap, dest);
+                break;
+            case 7:
                 Graphics.Blit(heightmap, dest);
                 break;
             default:
@@ -418,36 +402,65 @@ public class Sim_Water : MonoBehaviour
     {
         if (showDebugTextures)
         {
-            GUI.Label(new Rect(0, 256, 200, 50), "Water Height");
-            GUI.DrawTexture(new Rect(0, 0, 256, 256), surfaceWaterMap, ScaleMode.ScaleToFit, false);
-            GUI.Label(new Rect(256, 256, 100, 50), "Water Flow");
-            GUI.DrawTexture(new Rect(256, 0, 256, 256), surfaceFlowMap, ScaleMode.ScaleToFit, false);
-            GUI.Label(new Rect(512, 256, 200, 50), "Water Velocity");
-            GUI.DrawTexture(new Rect(512, 0, 256, 256), surfaceVelocityMap, ScaleMode.ScaleToFit, false);
-            GUI.Label(new Rect(768, 256, 200, 50), "Heightmap");
-            GUI.DrawTexture(new Rect(768, 0, 256, 256), heightmap, ScaleMode.ScaleToFit, false);
+            int debugTextureSize = 256;
+            GUI.Label(new Rect(0, debugTextureSize, 200, 50), "Water Map");
+            GUI.DrawTexture(new Rect(0, 0, debugTextureSize, debugTextureSize), waterMap, ScaleMode.ScaleToFit, false);
+
+            GUI.Label(new Rect(debugTextureSize, debugTextureSize, 100, 50), "Water Flow");
+            GUI.DrawTexture(new Rect(debugTextureSize, 0, debugTextureSize, debugTextureSize), flowMap, ScaleMode.ScaleToFit, false);
+
+            GUI.Label(new Rect(debugTextureSize * 2, debugTextureSize, 200, 50), "Water Velocity");
+            GUI.DrawTexture(new Rect(debugTextureSize * 2, 0, debugTextureSize, debugTextureSize), velocityMap, ScaleMode.ScaleToFit, false);
+
+            GUI.Label(new Rect(debugTextureSize * 3, debugTextureSize, 200, 50), "Soil Saturation");
+            GUI.DrawTexture(new Rect(debugTextureSize * 3, 0, debugTextureSize, debugTextureSize), saturationMap, ScaleMode.ScaleToFit, false);
+
+            GUI.Label(new Rect(debugTextureSize * 4, debugTextureSize, 200, 50), "World Data Map (r = height, g = soil water holding capacity)");
+            GUI.DrawTexture(new Rect(debugTextureSize * 5, 0, debugTextureSize, debugTextureSize), heightmap, ScaleMode.ScaleToFit, false);
         }
 
         string drawingTextureName = "Drawing: ";
         switch (textureToDraw)
         {
-            case 0:
-                drawingTextureName += "Water Height";
-                break;
             case 1:
-                drawingTextureName += "Water Flow";
+                drawingTextureName += "Compiled Result (r = Heightmap, g = Surface Water Height, b = Soil Water Saturation)";
                 break;
             case 2:
-                drawingTextureName += "Water Velocity";
+                drawingTextureName += "Surface Water Flow Map";
                 break;
             case 3:
-                drawingTextureName += "Heightmap";
+                drawingTextureName += "Water Data Map";
+                break;
+            case 4:
+                drawingTextureName += "Soil Water Saturation Map";
+                break;
+            case 5:
+                drawingTextureName += "Surface Water Velocity Map";
+                break;
+            case 6:
+                drawingTextureName += "Soil Use Map";
+                break;
+            case 7:
+                drawingTextureName += "World Data Map (r = height, g = soil water holding capacity)";
+                break;
+            default:
+                drawingTextureName += "???";
                 break;
         }
         GUI.Label(new Rect(0, 300, 200, 50), drawingTextureName);
 
         if (GUI.Button(new Rect(0, 512, 100, 50), "Reset"))
         {
+            computeShader.SetTexture(kernel_reset, "worldDataMap", heightmap);
+            computeShader.SetTexture(kernel_reset, "result", result);
+            computeShader.SetTexture(kernel_reset, "waterMap", waterMap);
+            computeShader.SetTexture(kernel_reset, "newWaterMap", newWaterMap);
+            computeShader.SetTexture(kernel_reset, "saturationMap", saturationMap);
+            computeShader.SetTexture(kernel_reset, "newSaturationMap", newSaturationMap);
+            computeShader.SetTexture(kernel_reset, "flowMap", flowMap);
+            computeShader.SetTexture(kernel_reset, "newFlowMap", newFlowMap);
+            computeShader.SetTexture(kernel_reset, "velocityMap", velocityMap);
+            computeShader.SetTexture(kernel_reset, "newVelocityMap", newVelocityMap);
             DispatchCompute(kernel_reset);
         }
     }
