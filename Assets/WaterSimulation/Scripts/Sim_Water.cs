@@ -116,23 +116,7 @@ public class Sim_Water : MonoBehaviour
     private int kernel_diffusion = 0;
     #endregion
 
-    private RenderTexture CreateTexture(RenderTextureFormat format, FilterMode filterMode = FilterMode.Point)
-    {
-        RenderTexture dataTex = new RenderTexture(resolution, resolution, 24, format);
-        dataTex.filterMode = filterMode;
-        dataTex.wrapMode = TextureWrapMode.Clamp;
-        dataTex.enableRandomWrite = true;
-        dataTex.Create();
-
-        return dataTex;
-    }
-
-    private void DispatchCompute(int kernel)
-    {
-        computeShader.Dispatch(kernel, dispatchSize, dispatchSize, 1);
-    }
-
-    private void Awake()
+    private void InitSimulation()
     {
         sourcePosition = new Vector2(0.5f, 0.5f);
 
@@ -199,13 +183,13 @@ public class Sim_Water : MonoBehaviour
         DispatchCompute(kernel_reset);
     }
 
-    public void Update()
+    public void UpdateSimulation(float deltaTime)
     {
         // Set shader variables
         computeShader.SetFloat("waterDensity", waterDensity);
         computeShader.SetFloat("epsilon", epsilon);
         computeShader.SetFloat("diffuseAlpha", diffuseAlpha);
-        computeShader.SetFloat("_deltaTime", timeStep);
+        computeShader.SetFloat("_deltaTime", deltaTime);
         computeShader.SetFloat("heightmapMultiplier", heightmapMultiplier);
 
         if (enableWaterFlux)
@@ -219,6 +203,7 @@ public class Sim_Water : MonoBehaviour
             surfaceWaterVelocity();
     }
 
+    #region Simulation Processes
     private void waterFlux()
     {
         if (sourceIsMouse)
@@ -274,7 +259,7 @@ public class Sim_Water : MonoBehaviour
         computeShader.SetTexture(kernel_slipPass, "newSaturationMap", newSaturationMap);
 
         DispatchCompute(kernel_slipPass);
-        
+
         Graphics.Blit(newWaterMap, waterMap);
         Graphics.Blit(newSaturationMap, saturationMap);
     }
@@ -364,9 +349,27 @@ public class Sim_Water : MonoBehaviour
             }
         }
     }
+    #endregion
 
+    #region Utilities
+    private RenderTexture CreateTexture(RenderTextureFormat format, FilterMode filterMode = FilterMode.Point)
+    {
+        RenderTexture dataTex = new RenderTexture(resolution, resolution, 24, format);
+        dataTex.filterMode = filterMode;
+        dataTex.wrapMode = TextureWrapMode.Clamp;
+        dataTex.enableRandomWrite = true;
+        dataTex.Create();
 
+        return dataTex;
+    }
 
+    private void DispatchCompute(int kernel)
+    {
+        computeShader.Dispatch(kernel, dispatchSize, dispatchSize, 1);
+    }
+    #endregion
+
+    #region Debug
     public void OnRenderImage(RenderTexture src, RenderTexture dest)
     {
         switch (textureToDraw)
@@ -464,4 +467,5 @@ public class Sim_Water : MonoBehaviour
             DispatchCompute(kernel_reset);
         }
     }
+    #endregion
 }

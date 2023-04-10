@@ -1,9 +1,7 @@
 {
-    "name": "DataStructure",
+    "name": "FluidSim",
     "rootNamespace": "",
-    "references": [
-        "GUID:06864d3e2acbf694e95993a7374ac1ec"
-    ],
+    "references": [],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
