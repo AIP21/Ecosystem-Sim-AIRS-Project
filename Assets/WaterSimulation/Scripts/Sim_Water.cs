@@ -2,7 +2,7 @@ using System;
 using System.Collections;
 using UnityEngine;
 
-public class Sim_Water : MonoBehaviour
+public class Sim_Water : MonoBehaviour, IAccessDataStructure
 {
     #region Public
     [Header("Compute Shader")]
@@ -100,8 +100,12 @@ public class Sim_Water : MonoBehaviour
     public bool enableSoilDiffusion = true;
     #endregion
 
-    [Space(25)]
+    [Header("Debug")]
     public bool showDebugTextures = true;
+
+    [Header("Grid Data")]
+    public SimDataStructure dataStructure;
+    // public WaterSimGridData
     #endregion
 
     #region Private
@@ -116,7 +120,7 @@ public class Sim_Water : MonoBehaviour
     private int kernel_diffusion = 0;
     #endregion
 
-    private void InitSimulation()
+    private void Awake()
     {
         sourcePosition = new Vector2(0.5f, 0.5f);
 
@@ -183,8 +187,11 @@ public class Sim_Water : MonoBehaviour
         DispatchCompute(kernel_reset);
     }
 
-    public void UpdateSimulation(float deltaTime)
+    public void FixedUpdate()
     {
+        // TODO: Pull water use data from the data structure
+
+
         // Set shader variables
         computeShader.SetFloat("waterDensity", waterDensity);
         computeShader.SetFloat("epsilon", epsilon);
@@ -201,6 +208,9 @@ public class Sim_Water : MonoBehaviour
 
         if (enableVelocity)
             surfaceWaterVelocity();
+        
+        // TODO: Push new water map data and water use data to the data structure
+        
     }
 
     #region Simulation Processes

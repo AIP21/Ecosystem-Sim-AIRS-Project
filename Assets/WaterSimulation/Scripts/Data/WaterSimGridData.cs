@@ -1,21 +1,13 @@
 using UnityEngine;
 using SimDataStructure;
+using System;
+
 
 namespace WaterSim
 {
     [Serializable]
     public class WaterSimGridData : AbstractGridData
     {
-        public override void Init()
-        {
-            base.Init();
-        }
-
-        public override void Update(float deltaTime)
-        {
-            base.Update(deltaTime);
-        }
-
         public override void InitComputeShader()
         {
             throw new System.NotImplementedException();
@@ -31,7 +23,7 @@ namespace WaterSim
             throw new System.NotImplementedException();
         }
 
-        public override void UpdateShader()
+        public override void UpdateShader(float deltaTime)
         {
             throw new System.NotImplementedException();
         }

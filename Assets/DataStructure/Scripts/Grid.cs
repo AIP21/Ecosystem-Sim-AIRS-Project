@@ -12,14 +12,11 @@ namespace SimDataStructure
         private GridLevel gridLevel;
         public GridLevel GridLevel { get { return gridLevel; } }
 
-        public Grid parentGrid;
-        public Grid childGrid;
+        // public Grid parentGrid;
+        // public Grid childGrid;
 
         private List<GridCell> cells;
         private List<GridCell> childCells;
-
-        // public List<GridCell> Cells { get { return cells; } }
-        // public List<GridCell> ChildCells { get { return childCells; } }
 
         public int xCellCount, yCellCount;
 
@@ -75,6 +72,25 @@ namespace SimDataStructure
                 }
             }
         }
+
+        public void Initialize()
+        {
+            // Initialize the grid data
+            foreach (AbstractGridData data in gridData.Values)
+            {
+                data.Init();
+            }
+        }
+
+        #region Compute Shader Data
+        public void TickGrid(float deltaTime)
+        {
+            foreach (AbstractGridData data in gridData.Values)
+            {
+                data.Update(deltaTime);
+            }
+        }
+        #endregion
 
         #region Cell Queries
         /**

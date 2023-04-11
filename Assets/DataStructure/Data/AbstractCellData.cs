@@ -26,7 +26,7 @@ namespace SimDataStructure
     }
 
     // [CreateAssetMenu(menuName = "Data Structure/Cell Data")]
-    public class CellData<T> : AbstractCellData
+    public class CellData<T> : AbstractCellData, IAccessibleData
     {
         public T data;
 

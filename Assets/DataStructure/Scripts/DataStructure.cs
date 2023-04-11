@@ -15,6 +15,8 @@ namespace SimDataStructure
         public List<GridLevel> Levels;
         public List<Grid> Grids = new List<Grid>();
 
+        public List<IAccessDataStructure> Accessors = new List<IAccessDataStructure>();
+
         public void Awake()
         {
             Stopwatch st = new Stopwatch();

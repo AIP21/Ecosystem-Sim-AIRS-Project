@@ -25,17 +25,16 @@ namespace SimDataStructure
         {
         }
 
-        public override void Init()
+        protected void Init()
         {
             this.InitComputeShader();
             this.CreateComputeBuffers();
             this.CreateRenderTextures();
         }
 
-        public override void Update()
+        protected void Update(float deltaTime)
         {
-            this.UpdateShader();
-
+            this.UpdateShader(deltaTime);
         }
 
         public abstract void InitComputeShader();

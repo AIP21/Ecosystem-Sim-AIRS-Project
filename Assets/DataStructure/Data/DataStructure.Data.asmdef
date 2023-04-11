@@ -1,3 +1,16 @@
 {
-	"name": "DataStructure.Data"
+    "name": "DataStructure.Data",
+    "rootNamespace": "",
+    "references": [
+        "GUID:06864d3e2acbf694e95993a7374ac1ec"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
 }
