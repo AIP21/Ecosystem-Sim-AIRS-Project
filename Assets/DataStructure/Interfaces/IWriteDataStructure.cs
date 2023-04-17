@@ -2,8 +2,9 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using SimDataStructure.Data;
 
-namespace SimDataStructure
+namespace SimDataStructure.Interfaces
 {
     /**
         <summary>
@@ -13,8 +14,8 @@ namespace SimDataStructure
     */
     public interface IWriteDataStructure
     {
-        readonly int writeLevel; // The grid level to write data to
-        readonly List<string> writeDataNames; // The names of the data you are writing to the data structure
+        int writeLevel { get; } // The grid level to write data to
+        List<string> writeDataNames { get; } // The names of the data you are writing to the data structure
 
         /**
             <summary>

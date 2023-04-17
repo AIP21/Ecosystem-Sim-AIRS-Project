@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace SimDataStructure
+namespace SimDataStructure.Interfaces
 {
     public interface IAccessibleData
     {

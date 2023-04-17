@@ -2,7 +2,7 @@ using UnityEngine;
 using System;
 using System.Collections.Generic;
 
-namespace SimDataStructure
+namespace SimDataStructure.Data
 {
     // Data for whole grid (one instance per grid)
     // This class will contain a reference to a compute shader that will be a grid shader that computes some data for each cell
@@ -25,14 +25,14 @@ namespace SimDataStructure
         {
         }
 
-        protected void Init()
+        public virtual void Init()
         {
             this.InitComputeShader();
             this.CreateComputeBuffers();
             this.CreateRenderTextures();
         }
 
-        protected void Update(float deltaTime)
+        public virtual void Tick(float deltaTime)
         {
             this.UpdateShader(deltaTime);
         }

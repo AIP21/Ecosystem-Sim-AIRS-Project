@@ -2,8 +2,9 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using SimDataStructure.Data;
 
-namespace SimDataStructure
+namespace SimDataStructure.Interfaces
 {
     /**
         <summary>
@@ -13,8 +14,8 @@ namespace SimDataStructure
     */
     public interface IReadDataStructure
     {
-        readonly int readLevel; // The grid level to receive data from
-        readonly List<string> readDataNames; // The names of the data to receive
+        int ReadLevel { get; } // The grid level to receive data from
+        List<string> ReadDataNames { get; } // The names of the data to receive
 
         /**
             <summary>

@@ -2,7 +2,7 @@ using UnityEngine;
 using System;
 using System.Collections.Generic;
 
-namespace SimDataStructure
+namespace SimDataStructure.Data
 {
     // Data for each cell (only inside cells)
     [Serializable]
@@ -26,7 +26,7 @@ namespace SimDataStructure
     }
 
     // [CreateAssetMenu(menuName = "Data Structure/Cell Data")]
-    public class CellData<T> : AbstractCellData, IAccessibleData
+    public class CellData<T> : AbstractCellData
     {
         public T data;
 

@@ -1,7 +1,7 @@
 using UnityEngine;
-using SimDataStructure;
 using System;
-
+using SimDataStructure;
+using SimDataStructure.Data;
 
 namespace WaterSim
 {

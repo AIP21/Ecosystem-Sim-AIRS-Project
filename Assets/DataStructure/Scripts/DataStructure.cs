@@ -4,10 +4,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Diagnostics;
 using Debug = UnityEngine.Debug;
+using SimDataStructure.Interfaces;
+using SimDataStructure.Data;
+using Managers.Interfaces;
 
 namespace SimDataStructure
 {
-    public class DataStructure : MonoBehaviour
+    public class DataStructure : MonoBehaviour, ITickableSystem
     {
         [Header("Grids")]
         public Vector2 OverallSize;
@@ -15,7 +18,15 @@ namespace SimDataStructure
         public List<GridLevel> Levels;
         public List<Grid> Grids = new List<Grid>();
 
-        public List<IAccessDataStructure> Accessors = new List<IAccessDataStructure>();
+        public List<IReadDataStructure> ReadingClasses = new List<IReadDataStructure>();
+        public List<IWriteDataStructure> WritingClasses = new List<IWriteDataStructure>();
+
+        public GenericDictionary<int, string> requestedData = new GenericDictionary<int, string>();
+
+        #region Interface Stuff
+        public int TickPriority { get { return 0; } }
+        public int TickInterval { get { return 1; } }
+        #endregion
 
         public void Awake()
         {
@@ -77,7 +88,84 @@ namespace SimDataStructure
                     containerCell.childCells.Add(cell);
                 }
             }
+
+            // Initialize all grids
+            for (int i = 0; i < Grids.Count; i++)
+            {
+                Grids[i].Initialize();
+            }
         }
+
+        #region Systems Management
+        private void setupAccessors()
+        {
+	        foreach (IReadDataStructure reader in readClasses)
+            {
+		        foreach (string dataName in reader.ReadDataNames)
+                {
+                    requestedData.put(reader.ReadLevel, dataName);
+                }
+            }
+
+
+        }
+
+        public void BeginTick()
+        {
+
+            TODO: collect the data ONLY ONCE for all readers that will read THIS TICK
+
+            // Send the data structure to all reading classes (but only if they are going to be ticked now)
+            for (int i = 0; i < ReadingClasses.Count; i++)
+            {
+                IReadDataStructure readingClass = ReadingClasses[i];
+
+                if (readingClass is ITickableSystem)
+                {
+                    ITickableSystem tickable = (ITickableSystem)readingClass;
+                    if (Time.frameCount % tickable.TickInterval == 0){
+                        List<string> dataNames = requestedData.get(readingClass.ReadLevel);
+                        
+
+                        // Send the requested data to the reading class
+                        readingClass.receiveData(Grids[readingClass.ReadLevel].GetAllData(dataNames));
+                    }
+                }
+                else
+                    readingClass.SetDataStructure(this);
+            }
+
+        }
+
+        private List<AbstractGridData> getRequestedData(int level, List<string> dataNames)
+        {
+            List<AbstractGridData> data = new List<AbstractGridData>();
+
+            for (int i = 0; i < this.requestedData; i++)
+            {
+                if ()
+                data.Add(Grids[level].GetData(dataNames[i]));
+            }
+
+            return data;
+        }
+
+        public void Tick()
+        {
+            for (int i = 0; i < WritingClasses.Count; i++)
+            {
+                WritingClasses[i].Tick();
+            }
+        }
+
+        public void EndTick()
+        {
+            for (int i = 0; i < WritingClasses.Count; i++)
+            {
+                WritingClasses[i].EndTick();
+            }
+        }
+        #endregion
 
         #region Cell Queries
         public GridCell GetCell(Vector2 queryPoint, int level)

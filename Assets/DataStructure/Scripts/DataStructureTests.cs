@@ -5,6 +5,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using UnityEngine;
 using Debug = UnityEngine.Debug;
+using SimDataStructure.Interfaces;
+using SimDataStructure.Data;
 
 namespace SimDataStructure
 {

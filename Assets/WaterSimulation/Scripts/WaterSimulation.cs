@@ -1,10 +1,14 @@
+using UnityEngine;
 using System;
 using System.Collections;
-using UnityEngine;
+using System.Collections.Generic;
+using Managers.Interfaces;
+using SimDataStructure.Data;
+using SimDataStructure.Interfaces;
 
 namespace WaterSim
 {
-    public class WaterSimulation : MonoBehaviour, IReadDataStructure, IWriteDataStructure
+    public class WaterSimulation : MonoBehaviour, ITickableSystem, IReadDataStructure, IWriteDataStructure
     {
         #region Public
         [Header("Compute Shader")]
@@ -102,6 +106,11 @@ namespace WaterSim
         public bool enableSoilDiffusion = true;
         #endregion
 
+        #region Interface Stuff
+        public int TickPriority { get { return 1; } }
+        public int TickInterval { get { return 60; } }
+        #endregion
+
         [Header("Debug")]
         public bool showDebugTextures = true;
 
@@ -122,6 +131,10 @@ namespace WaterSim
         private int kernel_height = 0;
         private int kernel_velocity = 0;
         private int kernel_diffusion = 0;
+
+        // Ticking
+        private int TickPriority = 0;
+        private int TickInterval = 1;
         #endregion
 
         private void Awake()
@@ -211,6 +224,21 @@ namespace WaterSim
                 surfaceWaterVelocity();
 
             // TODO: Push new water map data and water use data to the data structure
+
+        }
+
+        public void BeginTick()
+        {
+
+        }
+
+        public void Tick()
+        {
+
+        }
+
+        public void EndTick()
+        {
 
         }
 

@@ -1,6 +1,7 @@
 using UnityEngine;
 using System;
 using System.Collections.Generic;
+using SimDataStructure.Data;
 
 namespace SimDataStructure
 {
@@ -12,8 +13,8 @@ namespace SimDataStructure
         private GridLevel gridLevel;
         public GridLevel GridLevel { get { return gridLevel; } }
 
-        // public Grid parentGrid;
-        // public Grid childGrid;
+        public Grid parentGrid;
+        public Grid childGrid;
 
         private List<GridCell> cells;
         private List<GridCell> childCells;
@@ -36,6 +37,15 @@ namespace SimDataStructure
             this.yCellCount = (int)(size.y / gridLevel.CellSize.y);
 
             populate();
+        }
+
+        public void Initialize()
+        {
+            // Initialize the grid data
+            foreach (AbstractGridData data in gridData.Values)
+            {
+                data.Init();
+            }
         }
 
         private void populate()
@@ -73,21 +83,12 @@ namespace SimDataStructure
             }
         }
 
-        public void Initialize()
-        {
-            // Initialize the grid data
-            foreach (AbstractGridData data in gridData.Values)
-            {
-                data.Init();
-            }
-        }
-
         #region Compute Shader Data
         public void TickGrid(float deltaTime)
         {
             foreach (AbstractGridData data in gridData.Values)
             {
-                data.Update(deltaTime);
+                data.Tick(deltaTime);
             }
         }
         #endregion
