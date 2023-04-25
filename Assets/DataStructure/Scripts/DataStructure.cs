@@ -21,11 +21,15 @@ namespace SimDataStructure
         public List<IReadDataStructure> ReadingClasses = new List<IReadDataStructure>();
         public List<IWriteDataStructure> WritingClasses = new List<IWriteDataStructure>();
 
-        public GenericDictionary<int, string> requestedData = new GenericDictionary<int, string>();
+        private Dictionary<string, AbstractGridData> cachedData = new Dictionary<string, AbstractGridData>();
+
+        public List<IReadDataStructure> willTick = new List<IReadDataStructure>();
 
         #region Interface Stuff
         public int TickPriority { get { return 0; } }
         public int TickInterval { get { return 1; } }
+        public int lastTick { get; set; }
+        public bool willTickNow { get; set; }
         #endregion
 
         public void Awake()
@@ -97,54 +101,46 @@ namespace SimDataStructure
         }
 
         #region Systems Management
-        private void setupAccessors()
-        {
-	        foreach (IReadDataStructure reader in readClasses)
-            {
-		        foreach (string dataName in reader.ReadDataNames)
-                {
-                    requestedData.put(reader.ReadLevel, dataName);
-                }
-            }
-
-
-        }
-
         public void BeginTick()
         {
+            cachedData.Clear();
+            willTick.Clear();
 
-            TODO: collect the data ONLY ONCE for all readers that will read THIS TICK
-
-            // Send the data structure to all reading classes (but only if they are going to be ticked now)
+            // For every reading class, check if is tickabkle class and if so, if it will execute this tick.
+            // If it's not a tickable class, or it is a tickable class and it will tick this tick, send the data to it
             for (int i = 0; i < ReadingClasses.Count; i++)
             {
                 IReadDataStructure readingClass = ReadingClasses[i];
 
-                if (readingClass is ITickableSystem)
+                bool isTickable = readingClass is ITickableSystem;
+
+                if (!(isTickable) || (isTickable && ((ITickableSystem)readingClass).willTickNow))
                 {
-                    ITickableSystem tickable = (ITickableSystem)readingClass;
-                    if (Time.frameCount % tickable.TickInterval == 0){
-                        List<string> dataNames = requestedData.get(readingClass.ReadLevel);
+                    if (isTickable)
+                        willTick.Add(readingClass);
                         
-
-                        // Send the requested data to the reading class
-                        readingClass.receiveData(Grids[readingClass.ReadLevel].GetAllData(dataNames));
-                    }
+                    // Fetch and send the data
+                    readingClass.recieveData(getRequestedData(readingClass.ReadLevel, readingClass.ReadDataNames));
                 }
-                else
-                    readingClass.SetDataStructure(this);
             }
-
         }
 
+        // Returns the cached data requested by a reading class, and caches it if it's not already cached
         private List<AbstractGridData> getRequestedData(int level, List<string> dataNames)
         {
             List<AbstractGridData> data = new List<AbstractGridData>();
 
-            for (int i = 0; i < this.requestedData; i++)
+            for (int e = 0; e < dataNames.Count; e++)
             {
-                if ()
-                data.Add(Grids[level].GetData(dataNames[i]));
+                string dataName = dataNames[e];
+                if (cachedData.ContainsKey(dataName))
+                    data.Add(cachedData[dataName]);
+                else
+                {
+                    AbstractGridData newData = Grids[level].GetData(dataName);
+                    data.Add(newData);
+                    cachedData.Add(dataName, newData);
+                }
             }
 
             return data;

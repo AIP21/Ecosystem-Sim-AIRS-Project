@@ -109,16 +109,20 @@ namespace WaterSim
         #region Interface Stuff
         public int TickPriority { get { return 1; } }
         public int TickInterval { get { return 60; } }
+        public int lastTick { get; set; }
+        public bool willTickNow { get; set; }
         #endregion
 
         [Header("Debug")]
         public bool showDebugTextures = true;
 
         // [Header("Data Structure")]
-        public readonly int readLevel = 0; // The grid level to receive data from
-        public readonly List<string> readDataNames = new List<string>() { "heightmap", "", "waterHeight", "waterFlow", "waterVelocity", "soilSaturation", "soilUse" }; // The names of the data to receive
-        public readonly int writeLevel = 0; // The grid level to write data to
-        public readonly List<string> writeDataNames = new List<string>() { "waterHeight", "waterFlow", "waterVelocity", "soilSaturation", "soilUse" }; // The names of the data you are writing to the data structure
+        public int ReadLevel { get { return 0; } } // The grid level to receive data from
+        private List<string> readDataNames = new List<string>() { "heightmap", "", "waterHeight", "waterFlow", "waterVelocity", "soilSaturation", "soilUse" }
+        public List<string> ReadDataNames  { get { return readDataNames; } } // The names of the data to receive
+        public int WriteLevel  { get { return 0; } } // The grid level to write data to
+        
+        public List<string> WriteDataNames = new List<string>() { "waterHeight", "waterFlow", "waterVelocity", "soilSaturation", "soilUse" }; // The names of the data you are writing to the data structure
         #endregion
 
         #region Private

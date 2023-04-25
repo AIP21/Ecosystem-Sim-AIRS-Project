@@ -10,8 +10,6 @@ namespace Managers {
 
         public List<ITickableSystem> tickableSystems = new List<ITickableSystem>();
         
-        private Dictionary<ITickableSystem, int> lastTicks = new Dictionary<ITickableSystem, int>();
-
         public void Awake() {
             Instance = this;
         }
@@ -20,14 +18,17 @@ namespace Managers {
             List<ITickableSystem> toTick = new List<ITickableSystem>(tickableSystems);
             
             // Figure out which systems need to be ticked this frame
+            int currentTick = Time.frameCount;
             for (int i = 0; i < tickableSystems.Count; i++) {
                 ITickableSystem system = tickableSystems[i];
-                int lastTick = lastTicks.ContainsKey(system) ? lastTicks[system] : 0;
-                int currentTick = Time.frameCount;
+                int lastTick = system.lastTick;
                 int tickInterval = system.TickInterval;
                 if (currentTick - lastTick >= tickInterval) {
-                    lastTicks[system] = currentTick;
+                    system.lastTick = currentTick;
+                    system.willTickNow = true;
                     toTick.Add(system);
+                } else {
+                    system.willTickNow = false;
                 }
             }
             
