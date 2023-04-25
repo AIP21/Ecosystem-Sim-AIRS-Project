@@ -83,16 +83,6 @@ namespace SimDataStructure
             }
         }
 
-        #region Compute Shader Data
-        public void TickGrid(float deltaTime)
-        {
-            foreach (AbstractGridData data in gridData.Values)
-            {
-                data.Tick(deltaTime);
-            }
-        }
-        #endregion
-
         #region Cell Queries
         /**
         Return the cell that contains the query point

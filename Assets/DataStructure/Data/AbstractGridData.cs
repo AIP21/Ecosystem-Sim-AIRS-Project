@@ -25,24 +25,5 @@ namespace SimDataStructure.Data
         {
         }
 
-        public virtual void Init()
-        {
-            this.InitComputeShader();
-            this.CreateComputeBuffers();
-            this.CreateRenderTextures();
-        }
-
-        public virtual void Tick(float deltaTime)
-        {
-            this.UpdateShader(deltaTime);
-        }
-
-        public abstract void InitComputeShader();
-
-        public abstract void CreateRenderTextures();
-
-        public abstract void CreateComputeBuffers();
-
-        public abstract void UpdateShader(float deltaTime);
     }
 }

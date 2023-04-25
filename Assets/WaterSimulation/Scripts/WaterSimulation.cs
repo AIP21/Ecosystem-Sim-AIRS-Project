@@ -118,11 +118,12 @@ namespace WaterSim
 
         // [Header("Data Structure")]
         public int ReadLevel { get { return 0; } } // The grid level to receive data from
-        private List<string> readDataNames = new List<string>() { "heightmap", "", "waterHeight", "waterFlow", "waterVelocity", "soilSaturation", "soilUse" }
-        public List<string> ReadDataNames  { get { return readDataNames; } } // The names of the data to receive
-        public int WriteLevel  { get { return 0; } } // The grid level to write data to
-        
-        public List<string> WriteDataNames = new List<string>() { "waterHeight", "waterFlow", "waterVelocity", "soilSaturation", "soilUse" }; // The names of the data you are writing to the data structure
+        private List<string> _readDataNames = new List<string>() { "heightmap", "waterHeight", "waterFlow", "waterVelocity", "soilSaturation", "soilUse" }; // The names of the data to receive from the data structure
+        public List<string> ReadDataNames { get { return _readDataNames; } }
+
+        public int WriteLevel { get { return 0; } } // The grid level to write data to
+        private List<string> _writeDataNames = new List<string>() { "waterHeight", "waterFlow", "waterVelocity", "soilSaturation", "soilUse" };  // The names of the data this is writing to the data structure  
+        public List<string> WriteDataNames { get { return _writeDataNames; } }
         #endregion
 
         #region Private
@@ -208,7 +209,8 @@ namespace WaterSim
             DispatchCompute(kernel_reset);
         }
 
-        public void FixedUpdate()
+        #region Ticking
+        public void BeginTick()
         {
             // Set shader variables
             computeShader.SetFloat("waterDensity", waterDensity);
@@ -216,7 +218,10 @@ namespace WaterSim
             computeShader.SetFloat("diffuseAlpha", diffuseAlpha);
             computeShader.SetFloat("_deltaTime", deltaTime);
             computeShader.SetFloat("heightmapMultiplier", heightmapMultiplier);
+        }
 
+        public void Tick()
+        {
             if (enableWaterFlux)
                 waterFlux();
 
@@ -226,25 +231,53 @@ namespace WaterSim
 
             if (enableVelocity)
                 surfaceWaterVelocity();
-
-            // TODO: Push new water map data and water use data to the data structure
-
-        }
-
-        public void BeginTick()
-        {
-
-        }
-
-        public void Tick()
-        {
-
         }
 
         public void EndTick()
         {
 
         }
+        #endregion
+
+        #region Data Structure
+        public void recieveData(List<AbstractGridData> data)
+        {
+            // List<string> _readDataNames = new List<string>() { "heightmap", "waterHeight", "waterFlow", "waterVelocity", "soilSaturation", "soilUse" };
+
+            for (int i = 0; i < ReadDataNames.Count; i++)
+            {
+                if (data[i] != null)
+                {
+                    switch (ReadDataNames[i])
+                    {
+                        case "heightmap":
+                            heightmap = data[i].getTexture();
+                            break;
+                        case "waterHeight":
+                            waterMap = data[i].getTexture();
+                            break;
+                        case "waterFlow":
+                            flowMap = data[i].getTexture();
+                            break;
+                        case "waterVelocity":
+                            velocityMap = data[i].getTexture();
+                            break;
+                        case "soilSaturation":
+                            saturationMap = data[i].getTexture();
+                            break;
+                        case "soilUse":
+                            soilUseMap = data[i].getTexture();
+                            break;
+                    }
+                }
+            }
+        }
+
+        public List<AbstractGridData> sendData()
+        {
+            return null;
+        }
+        #endregion
 
         #region Simulation Processes
         private void waterFlux()

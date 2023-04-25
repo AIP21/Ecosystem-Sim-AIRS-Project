@@ -23,11 +23,9 @@ namespace SimDataStructure
 
         private Dictionary<string, AbstractGridData> cachedData = new Dictionary<string, AbstractGridData>();
 
-        public List<IReadDataStructure> willTick = new List<IReadDataStructure>();
-
         #region Interface Stuff
         public int TickPriority { get { return 0; } }
-        public int TickInterval { get { return 1; } }
+        public int TickInterval { get { return -1; } } // -1 because should always be highest priority
         public int lastTick { get; set; }
         public bool willTickNow { get; set; }
         #endregion
@@ -104,61 +102,80 @@ namespace SimDataStructure
         public void BeginTick()
         {
             cachedData.Clear();
-            willTick.Clear();
 
             // For every reading class, check if is tickabkle class and if so, if it will execute this tick.
             // If it's not a tickable class, or it is a tickable class and it will tick this tick, send the data to it
             for (int i = 0; i < ReadingClasses.Count; i++)
             {
-                IReadDataStructure readingClass = ReadingClasses[i];
+                IReadDataStructure reader = ReadingClasses[i];
 
-                bool isTickable = readingClass is ITickableSystem;
+                bool isTickable = reader is ITickableSystem;
 
-                if (!(isTickable) || (isTickable && ((ITickableSystem)readingClass).willTickNow))
+                if (!(isTickable) || (isTickable && ((ITickableSystem)reader).willTickNow))
                 {
-                    if (isTickable)
-                        willTick.Add(readingClass);
-                        
                     // Fetch and send the data
-                    readingClass.recieveData(getRequestedData(readingClass.ReadLevel, readingClass.ReadDataNames));
+                    sendRequestedData(reader);
                 }
             }
         }
 
-        // Returns the cached data requested by a reading class, and caches it if it's not already cached
-        private List<AbstractGridData> getRequestedData(int level, List<string> dataNames)
+        public void Tick()
+        {
+
+        }
+
+        public void EndTick()
+        {
+            // For every writing class, check if is tickabkle class and if so, if it will execute this tick.
+            // If it's not a tickable class, or it is a tickable class and it will tick this tick, read the data from it
+            for (int i = 0; i < WritingClasses.Count; i++)
+            {
+                IWriteDataStructure writer = WritingClasses[i];
+
+                bool isTickable = writer is ITickableSystem;
+
+                if (!(isTickable) || (isTickable && ((ITickableSystem)writer).willTickNow))
+                {
+                    // Write the data from the writing class to the data structure
+                    recieveDataFromWriter(writer);
+                }
+            }
+        }
+
+
+        // Fetches the requested data from the data structure, caches it if not already, and sends it to the reading class
+        private void sendRequestedData(IReadDataStructure reader)
         {
             List<AbstractGridData> data = new List<AbstractGridData>();
 
-            for (int e = 0; e < dataNames.Count; e++)
+            for (int e = 0; e < reader.ReadDataNames.Count; e++)
             {
-                string dataName = dataNames[e];
+                string dataName = reader.ReadDataNames[e];
                 if (cachedData.ContainsKey(dataName))
+                {
                     data.Add(cachedData[dataName]);
+                }
                 else
                 {
-                    AbstractGridData newData = Grids[level].GetData(dataName);
+                    AbstractGridData newData = Grids[reader.ReadLevel].GetData(dataName);
                     data.Add(newData);
                     cachedData.Add(dataName, newData);
                 }
             }
 
-            return data;
+            // Send the data
+            reader.recieveData(data);
         }
 
-        public void Tick()
+        // Reads the new data from a writing class and writes it to the data structure
+        // TODO: Make it only write ONCE, not once for every data name. It'll override it anyways so it is currently wasting writes just for them to be overriden
+        private void recieveDataFromWriter(IWriteDataStructure writer)
         {
-            for (int i = 0; i < WritingClasses.Count; i++)
-            {
-                WritingClasses[i].Tick();
-            }
-        }
+            List<AbstractGridData> dataToWrite = writer.writeData();
 
-        public void EndTick()
-        {
-            for (int i = 0; i < WritingClasses.Count; i++)
+            for (int i = 0; i < writer.WriteDataNames.Count; i++)
             {
-                WritingClasses[i].EndTick();
+                SetData(writer.WriteLevel, writer.WriteDataNames[i], dataToWrite[i]);
             }
         }
         #endregion

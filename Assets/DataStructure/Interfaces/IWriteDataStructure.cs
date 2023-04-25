@@ -14,8 +14,8 @@ namespace SimDataStructure.Interfaces
     */
     public interface IWriteDataStructure
     {
-        int writeLevel { get; } // The grid level to write data to
-        List<string> writeDataNames { get; } // The names of the data you are writing to the data structure
+        int WriteLevel { get; } // The grid level to write data to
+        List<string> WriteDataNames { get; } // The names of the data you are writing to the data structure
 
         /**
             <summary>

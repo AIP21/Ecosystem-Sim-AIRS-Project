@@ -12,7 +12,7 @@ namespace WaterSim
         public Vector2Int meshSize;
         public int meshHeight = 128;
 
-        public Sim_Water fluidSim;
+        public WaterSimulation fluidSim;
 
         public void Start()
         {

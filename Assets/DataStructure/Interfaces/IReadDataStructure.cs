@@ -15,7 +15,7 @@ namespace SimDataStructure.Interfaces
     public interface IReadDataStructure
     {
         int ReadLevel { get; } // The grid level to receive data from
-        List<string> ReadDataNames { get; } // The names of the data to receive
+        List<string> ReadDataNames { get; } // The names of the data to receive from the data structure
 
         /**
             <summary>
