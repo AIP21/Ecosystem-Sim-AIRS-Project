@@ -7,8 +7,8 @@ namespace Managers.Interfaces {
         int lastTick { get; set; }
         bool willTickNow { get; set; }
 
-        void BeginTick();
-        void Tick();
-        void EndTick();
+        void BeginTick(float deltaTime);
+        void Tick(float deltaTime);
+        void EndTick(float deltaTime);
     }
 }

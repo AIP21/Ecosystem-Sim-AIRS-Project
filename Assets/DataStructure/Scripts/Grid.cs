@@ -39,14 +39,6 @@ namespace SimDataStructure
             populate();
         }
 
-        public void Initialize()
-        {
-            // Initialize the grid data
-            foreach (AbstractGridData data in gridData.Values)
-            {
-                data.Init();
-            }
-        }
 
         private void populate()
         {
@@ -80,6 +72,14 @@ namespace SimDataStructure
                         cells[cells.Count - 2].neighbors[3] = cell;
                     }
                 }
+            }
+        }
+
+        public void Release()
+        {
+            foreach (AbstractGridData data in gridData.Values)
+            {
+                data.Release();
             }
         }
 
@@ -138,6 +138,11 @@ namespace SimDataStructure
         #endregion
 
         #region Data Queries
+        public AbstractGridData GetGridData(string dataName)
+        {
+            return gridData[dataName];
+        }
+
         public AbstractCellData GetData(Vector2 position, string dataName)
         {
             GridCell cell = GetCell(position);
@@ -176,6 +181,11 @@ namespace SimDataStructure
         public bool CanContainData(string dataName, CellDataType type)
         {
             return gridLevel.CanContainData(dataName, type);
+        }
+
+        public void SetGridData(string dataName, AbstractGridData data)
+        {
+            gridData[dataName] = data;
         }
 
         public void SetData(Vector2 position, string dataName, AbstractCellData data)

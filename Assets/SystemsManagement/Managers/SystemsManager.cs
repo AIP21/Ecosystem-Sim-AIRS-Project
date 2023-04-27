@@ -15,6 +15,8 @@ namespace Managers {
         }
 
         public void FixedUpdate() {
+            float deltaT = Time.fixedDeltaTime;
+            
             List<ITickableSystem> toTick = new List<ITickableSystem>(tickableSystems);
             
             // Figure out which systems need to be ticked this frame
@@ -37,15 +39,15 @@ namespace Managers {
 
             // Tick all manager systems that need to be ticked this frame
             for (int i = 0; i < toTick.Count; i++) {
-                toTick[i].BeginTick();
+                toTick[i].BeginTick(deltaT);
             }
 
             for (int i = 0; i < toTick.Count; i++) {
-                toTick[i].Tick();
+                toTick[i].Tick(deltaT);
             }
 
             for (int i = 0; i < toTick.Count; i++) {
-                toTick[i].EndTick();
+                toTick[i].EndTick(deltaT);
             }
         }
     }

@@ -18,12 +18,12 @@ namespace WaterSim
         [Header("Render Textures")]
         // Surface Water
         public RenderTexture result;
-        public RenderTexture waterMap;
-        public RenderTexture newWaterMap;
-        public RenderTexture flowMap;
-        public RenderTexture newFlowMap;
-        public RenderTexture velocityMap;
-        public RenderTexture newVelocityMap;
+        public TextureGridData waterMap;
+        public TextureGridData newWaterMap;
+        public TextureGridData flowMap;
+        public TextureGridData newFlowMap;
+        public TextureGridData velocityMap;
+        public TextureGridData newVelocityMap;
 
         // Soil Water
         [Space(10)]
@@ -106,13 +106,6 @@ namespace WaterSim
         public bool enableSoilDiffusion = true;
         #endregion
 
-        #region Interface Stuff
-        public int TickPriority { get { return 1; } }
-        public int TickInterval { get { return 60; } }
-        public int lastTick { get; set; }
-        public bool willTickNow { get; set; }
-        #endregion
-
         [Header("Debug")]
         public bool showDebugTextures = true;
 
@@ -137,9 +130,12 @@ namespace WaterSim
         private int kernel_velocity = 0;
         private int kernel_diffusion = 0;
 
-        // Ticking
-        private int TickPriority = 0;
-        private int TickInterval = 1;
+        #region Interface Stuff
+        public int TickPriority { get { return 1; } }
+        public int TickInterval { get { return 60; } }
+        public int lastTick { get; set; }
+        public bool willTickNow { get; set; }
+        #endregion
         #endregion
 
         private void Awake()
@@ -210,7 +206,7 @@ namespace WaterSim
         }
 
         #region Ticking
-        public void BeginTick()
+        public void BeginTick(float deltaTime)
         {
             // Set shader variables
             computeShader.SetFloat("waterDensity", waterDensity);
@@ -220,7 +216,7 @@ namespace WaterSim
             computeShader.SetFloat("heightmapMultiplier", heightmapMultiplier);
         }
 
-        public void Tick()
+        public void Tick(float deltaTime)
         {
             if (enableWaterFlux)
                 waterFlux();
@@ -233,7 +229,7 @@ namespace WaterSim
                 surfaceWaterVelocity();
         }
 
-        public void EndTick()
+        public void EndTick(float deltaTime)
         {
 
         }
@@ -246,8 +242,9 @@ namespace WaterSim
 
             for (int i = 0; i < ReadDataNames.Count; i++)
             {
-                if (data[i] != null)
+                if (data[i] != null && data is BufferGridData)
                 {
+                    BufferGridData buffer = (BufferGridData)data[i];
                     switch (ReadDataNames[i])
                     {
                         case "heightmap":
@@ -273,7 +270,7 @@ namespace WaterSim
             }
         }
 
-        public List<AbstractGridData> sendData()
+        public List<AbstractGridData> writeData()
         {
             return null;
         }

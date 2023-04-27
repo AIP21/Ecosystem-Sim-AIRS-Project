@@ -16,8 +16,10 @@ namespace SimDataStructure
         public Vector2 OverallSize;
         [Tooltip("Highest level grid is the largest grid and has the highest index")]
         public List<GridLevel> Levels;
-        public List<Grid> Grids = new List<Grid>();
+        [SerializeField]
+        private List<Grid> Grids = new List<Grid>();
 
+        [Header("Data")]
         public List<IReadDataStructure> ReadingClasses = new List<IReadDataStructure>();
         public List<IWriteDataStructure> WritingClasses = new List<IWriteDataStructure>();
 
@@ -91,15 +93,15 @@ namespace SimDataStructure
                 }
             }
 
-            // Initialize all grids
-            for (int i = 0; i < Grids.Count; i++)
-            {
-                Grids[i].Initialize();
-            }
+            // // Initialize all grids
+            // for (int i = 0; i < Grids.Count; i++)
+            // {
+            //     Grids[i].Initialize();
+            // }
         }
 
         #region Systems Management
-        public void BeginTick()
+        public void BeginTick(float deltaTime)
         {
             cachedData.Clear();
 
@@ -119,12 +121,12 @@ namespace SimDataStructure
             }
         }
 
-        public void Tick()
+        public void Tick(float deltaTime)
         {
 
         }
 
-        public void EndTick()
+        public void EndTick(float deltaTime)
         {
             // For every writing class, check if is tickabkle class and if so, if it will execute this tick.
             // If it's not a tickable class, or it is a tickable class and it will tick this tick, read the data from it
@@ -154,10 +156,11 @@ namespace SimDataStructure
                 if (cachedData.ContainsKey(dataName))
                 {
                     data.Add(cachedData[dataName]);
+                    print("A system has requested data that has already been requested. Please avoid this by making sure data is used by only one system per tick.");
                 }
                 else
                 {
-                    AbstractGridData newData = Grids[reader.ReadLevel].GetData(dataName);
+                    AbstractGridData newData = Grids[reader.ReadLevel].GetGridData(dataName);
                     data.Add(newData);
                     cachedData.Add(dataName, newData);
                 }
@@ -175,7 +178,7 @@ namespace SimDataStructure
 
             for (int i = 0; i < writer.WriteDataNames.Count; i++)
             {
-                SetData(writer.WriteLevel, writer.WriteDataNames[i], dataToWrite[i]);
+                setGridData(writer.WriteLevel, writer.WriteDataNames[i], dataToWrite[i]);
             }
         }
         #endregion
@@ -203,35 +206,40 @@ namespace SimDataStructure
         #endregion
 
         #region Data Queries
-        public AbstractCellData GetData(Vector2 position, int level, string dataName)
-        {
-            return Grids[level]?.GetData(position, dataName);
-        }
+        // public AbstractCellData GetData(Vector2 position, int level, string dataName)
+        // {
+        //     return Grids[level]?.GetData(position, dataName);
+        // }
 
-        public Dictionary<string, AbstractCellData> GetDataOfType(Vector2 position, int level, CellDataType type)
-        {
-            return Grids[level]?.GetDataOfType(position, type);
-        }
+        // public Dictionary<string, AbstractCellData> GetDataOfType(Vector2 position, int level, CellDataType type)
+        // {
+        //     return Grids[level]?.GetDataOfType(position, type);
+        // }
 
-        public GenericDictionary<string, AbstractCellData> GetAllData(Vector2 position, int level)
-        {
-            return Grids[level]?.GetAllData(position);
-        }
+        // public GenericDictionary<string, AbstractCellData> GetAllData(Vector2 position, int level)
+        // {
+        //     return Grids[level]?.GetAllData(position);
+        // }
         #endregion
 
         #region Data Management
-        public void SetData(Vector2 position, int level, string dataName, AbstractCellData data)
+        private void setGridData(int level, string name, AbstractGridData data)
+        {
+            Grids[level].SetGridData(name, data);
+        }
+
+        private void setData(Vector2 position, int level, string dataName, AbstractCellData data)
         {
             Grids[level].SetData(position, dataName, data);
         }
 
-        public void SetData(int level, string dataName, AbstractCellData data)
+        private void setData(int level, string dataName, AbstractCellData data)
         {
             Grids[level].SetData(dataName, data);
         }
 
         /** USE AT YOUR OWN RISK, YOU SHOULD NOT (UNDER ANY CIRCUMSTANCES) BE ADDING DATA TO INDIVIDUAL CELLS. IF YOU NEED TO ADD DATA, JUST ADD IT TO THE ENTIRE GRID OR DEFINE IT IN THE GRID LEVEL. **/
-        public void AddData(Vector2 position, int level, string dataName, CellDataType dataType, AbstractCellData data, bool ignoreChecks = false)
+        private void addData(Vector2 position, int level, string dataName, CellDataType dataType, AbstractCellData data, bool ignoreChecks = false)
         {
             if (!ignoreChecks)
                 Debug.LogWarning("You are adding data to an individual cell in the data structure. This is (REALLY!) not recommended and may cause errors. Use at your own risk! If you need to add data, just add it to the entire grid or define it in the grid level.");
@@ -240,13 +248,13 @@ namespace SimDataStructure
         }
 
         // This is ok though
-        public void AddData(int level, string dataName, CellDataType dataType, AbstractCellData data, bool ignoreChecks = false)
+        private void addData(int level, string dataName, CellDataType dataType, AbstractCellData data, bool ignoreChecks = false)
         {
             Grids[level].AddData(dataName, dataType, data, ignoreChecks);
         }
 
         /** USE AT YOUR OWN RISK, YOU SHOULD NOT (UNDER ANY CIRCUMSTANCES) BE REMOVING DATA FROM INDIVIDUAL CELLS. IF YOU WANT TO REMOVE DATA JUST REMOVE IT FROM THE ENTIRE GRID. **/
-        public void RemoveData(Vector2 position, int level, string dataName, bool ignoreChecks = false)
+        private void removeData(Vector2 position, int level, string dataName, bool ignoreChecks = false)
         {
             if (!ignoreChecks)
                 Debug.LogWarning("You are removing data from an individual cell in the data structure. This is (REALLY!) not recommended and may cause errors. Use at your own risk! If you want to remove data, remove it from the entire grid.");
@@ -255,9 +263,17 @@ namespace SimDataStructure
         }
 
         // This is ok though
-        public void RemoveData(int level, string dataName)
+        private void removeData(int level, string dataName)
         {
             Grids[level].RemoveData(dataName);
+        }
+        
+        private void OnDestroy()
+        {
+            for (int i = 0; i < Grids.Count; i++)
+            {
+                Grids[i].Release();
+            }
         }
         #endregion
     }
