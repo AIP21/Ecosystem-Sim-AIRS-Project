@@ -14,13 +14,13 @@ namespace SimDataStructure.Data
         public TextureGridData(int resolution, RenderTextureFormat format, FilterMode filterMode = FilterMode.Point)
         {
             this.resolution = resolution;
-            this.renderTexture = this.CreateTexture(format, filterMode);
+            this.renderTexture = this.createTexture(format, filterMode);
         }
 
         // Return a copy of the texture
         public RenderTexture GetData()
         {
-            RenderTexture copy = CreateTexture(this.renderTexture.format, this.renderTexture.filterMode);
+            RenderTexture copy = createTexture(this.renderTexture.format, this.renderTexture.filterMode);
 
             Graphics.Blit(this.renderTexture, copy);
 
@@ -41,7 +41,7 @@ namespace SimDataStructure.Data
             }
         }
 
-        public RenderTexture CreateTexture(RenderTextureFormat format, FilterMode filterMode = FilterMode.Point)
+        private RenderTexture createTexture(RenderTextureFormat format, FilterMode filterMode = FilterMode.Point)
         {
             RenderTexture rt = new RenderTexture(resolution, resolution, 24, format);
             rt.filterMode = filterMode;

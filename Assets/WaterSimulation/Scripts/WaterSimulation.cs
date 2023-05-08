@@ -18,12 +18,14 @@ namespace WaterSim
         [Header("Render Textures")]
         // Surface Water
         public RenderTexture result;
-        public TextureGridData waterMap;
-        public TextureGridData newWaterMap;
-        public TextureGridData flowMap;
-        public TextureGridData newFlowMap;
-        public TextureGridData velocityMap;
-        public TextureGridData newVelocityMap;
+
+        public Dictionary<String, TextureGridData> gridDatas = new Dictionary<String, TextureGridData>();
+        public RenderTexture waterMap;
+        public RenderTexture newWaterMap;
+        public RenderTexture flowMap;
+        public RenderTexture newFlowMap;
+        public RenderTexture velocityMap;
+        public RenderTexture newVelocityMap;
 
         // Soil Water
         [Space(10)]
@@ -111,7 +113,7 @@ namespace WaterSim
 
         // [Header("Data Structure")]
         public int ReadLevel { get { return 0; } } // The grid level to receive data from
-        private List<string> _readDataNames = new List<string>() { "heightmap", "waterHeight", "waterFlow", "waterVelocity", "soilSaturation", "soilUse" }; // The names of the data to receive from the data structure
+        private List<string> _readDataNames = new List<string>() {"waterHeight", "waterFlow", "waterVelocity", "soilSaturation", "soilUse" }; // The names of the data to receive from the data structure
         public List<string> ReadDataNames { get { return _readDataNames; } }
 
         public int WriteLevel { get { return 0; } } // The grid level to write data to
@@ -143,17 +145,28 @@ namespace WaterSim
             sourcePosition = new Vector2(0.5f, 0.5f);
 
             // Create render textures
-            result = CreateTexture(RenderTextureFormat.ARGBHalf, FilterMode.Bilinear);
-            waterMap = CreateTexture(RenderTextureFormat.RFloat, FilterMode.Bilinear);
-            newWaterMap = CreateTexture(RenderTextureFormat.RFloat, FilterMode.Bilinear);
-            flowMap = CreateTexture(RenderTextureFormat.ARGBHalf, FilterMode.Bilinear);
-            newFlowMap = CreateTexture(RenderTextureFormat.ARGBHalf, FilterMode.Bilinear);
-            velocityMap = CreateTexture(RenderTextureFormat.RGFloat, FilterMode.Bilinear);
-            newVelocityMap = CreateTexture(RenderTextureFormat.RGFloat, FilterMode.Bilinear);
-            saturationMap = CreateTexture(RenderTextureFormat.RFloat, FilterMode.Bilinear);
-            newSaturationMap = CreateTexture(RenderTextureFormat.RFloat, FilterMode.Bilinear);
-            soilUseMap = CreateTexture(RenderTextureFormat.RFloat, FilterMode.Bilinear);
-            newSoilUseMap = CreateTexture(RenderTextureFormat.RFloat, FilterMode.Bilinear);
+            result = createTexture(RenderTextureFormat.ARGBHalf, FilterMode.Bilinear);
+
+            // Create data
+            gridDatas.Add("waterHeight", new TextureGridData(resolution, RenderTextureFormat.RFloat, FilterMode.Bilinear));
+            waterMap = gridDatas["waterHeight"].GetData();
+            newWaterMap = createTexture(RenderTextureFormat.RFloat, FilterMode.Bilinear);
+
+            gridDatas.Add("waterFlow", new TextureGridData(resolution, RenderTextureFormat.ARGBHalf, FilterMode.Bilinear));
+            flowMap = gridDatas["waterFlow"].GetData();
+            newFlowMap = createTexture(RenderTextureFormat.ARGBHalf, FilterMode.Bilinear);
+
+            gridDatas.Add("waterVelocity", new TextureGridData(resolution, RenderTextureFormat.RGFloat, FilterMode.Bilinear));
+            velocityMap = gridDatas["waterVelocity"].GetData();
+            newVelocityMap = createTexture(RenderTextureFormat.RGFloat, FilterMode.Bilinear);
+
+            gridDatas.Add("soilSaturation", new TextureGridData(resolution, RenderTextureFormat.RFloat, FilterMode.Bilinear));
+            saturationMap = gridDatas["soilSaturation"].GetData();
+            newSaturationMap = createTexture(RenderTextureFormat.RFloat, FilterMode.Bilinear);
+            
+            gridDatas.Add("soilUse", new TextureGridData(resolution, RenderTextureFormat.RFloat, FilterMode.Bilinear));
+            soilUseMap = gridDatas["soilUse"].GetData();
+            newSoilUseMap = createTexture(RenderTextureFormat.RFloat, FilterMode.Bilinear);
 
             // Set shader variables
             computeShader.SetFloat("waterDensity", waterDensity);
@@ -202,6 +215,7 @@ namespace WaterSim
 
             // Initialize shader textures
             dispatchSize = Mathf.CeilToInt(resolution / 8);
+            
             DispatchCompute(kernel_reset);
         }
 
@@ -238,41 +252,70 @@ namespace WaterSim
         #region Data Structure
         public void recieveData(List<AbstractGridData> data)
         {
-            // List<string> _readDataNames = new List<string>() { "heightmap", "waterHeight", "waterFlow", "waterVelocity", "soilSaturation", "soilUse" };
-
             for (int i = 0; i < ReadDataNames.Count; i++)
             {
-                if (data[i] != null && data is BufferGridData)
+                AbstractGridData abstractData = data[i];
+                TextureGridData dat = abstractData is TextureGridData ? (TextureGridData)abstractData : null;
+
+                if (dat == null)
+                    continue;
+
+                switch (ReadDataNames[i])
                 {
-                    BufferGridData buffer = (BufferGridData)data[i];
-                    switch (ReadDataNames[i])
-                    {
-                        case "heightmap":
-                            heightmap = data[i].getTexture();
-                            break;
-                        case "waterHeight":
-                            waterMap = data[i].getTexture();
-                            break;
-                        case "waterFlow":
-                            flowMap = data[i].getTexture();
-                            break;
-                        case "waterVelocity":
-                            velocityMap = data[i].getTexture();
-                            break;
-                        case "soilSaturation":
-                            saturationMap = data[i].getTexture();
-                            break;
-                        case "soilUse":
-                            soilUseMap = data[i].getTexture();
-                            break;
-                    }
+                    case "waterHeight":
+                        waterMap = dat.GetData();
+                        break;
+                    case "waterFlow":
+                        flowMap = dat.GetData();
+                        break;
+                    case "waterVelocity":
+                        velocityMap = dat.GetData();
+                        break;
+                    case "soilSaturation":
+                        saturationMap = dat.GetData();
+                        break;
+                    case "soilUse":
+                        soilUseMap = dat.GetData();
+                        break;
                 }
             }
         }
 
         public List<AbstractGridData> writeData()
         {
-            return null;
+            List<AbstractGridData> toWrite = new List<AbstractGridData>();
+            
+            for (int i = 0; i < WriteDataNames.Count; i++)
+            {
+                TextureGridData data = gridDatas[WriteDataNames[i]];
+
+                if (data != null && data is TextureGridData)
+                {
+                    switch(WriteDataNames[i])
+                    {
+                        Set these to theit new--- versions
+                        case "waterHeight":
+                            data.SetData(newWaterMap);
+                            break;
+                        case "waterFlow":
+                            data.SetData(flowMap);
+                            break;
+                        case "waterVelocity":
+                            data.SetData(velocityMap);
+                            break;
+                        case "soilSaturation":
+                            data.SetData(saturationMap);
+                            break;
+                        case "soilUse":
+                            data.SetData(soilUseMap);
+                            break;
+                    }
+
+                    toWrite.Add(data);
+                }
+            }
+
+            return toWrite;
         }
         #endregion
 
@@ -425,15 +468,15 @@ namespace WaterSim
         #endregion
 
         #region Utilities
-        private RenderTexture CreateTexture(RenderTextureFormat format, FilterMode filterMode = FilterMode.Point)
+        private RenderTexture createTexture(RenderTextureFormat format, FilterMode filterMode = FilterMode.Point)
         {
-            RenderTexture dataTex = new RenderTexture(resolution, resolution, 24, format);
-            dataTex.filterMode = filterMode;
-            dataTex.wrapMode = TextureWrapMode.Clamp;
-            dataTex.enableRandomWrite = true;
-            dataTex.Create();
+            RenderTexture rt = new RenderTexture(resolution, resolution, 24, format);
+            rt.filterMode = filterMode;
+            rt.wrapMode = TextureWrapMode.Clamp;
+            rt.enableRandomWrite = true;
+            rt.Create();
 
-            return dataTex;
+            return rt;
         }
 
         private void DispatchCompute(int kernel)

@@ -153,10 +153,11 @@ namespace SimDataStructure
             for (int e = 0; e < reader.ReadDataNames.Count; e++)
             {
                 string dataName = reader.ReadDataNames[e];
+                
                 if (cachedData.ContainsKey(dataName))
                 {
                     data.Add(cachedData[dataName]);
-                    print("A system has requested data that has already been requested. Please avoid this by making sure data is used by only one system per tick.");
+                    // print("A system has requested data that has already been requested. Please avoid this by making sure data is used by only one system per tick.");
                 }
                 else
                 {
@@ -170,7 +171,7 @@ namespace SimDataStructure
             reader.recieveData(data);
         }
 
-        // Reads the new data from a writing class and writes it to the data structure
+        // Recieves the new data from a writing class and writes it to the data structure
         // TODO: Make it only write ONCE, not once for every data name. It'll override it anyways so it is currently wasting writes just for them to be overriden
         private void recieveDataFromWriter(IWriteDataStructure writer)
         {

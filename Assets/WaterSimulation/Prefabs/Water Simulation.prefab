@@ -1,0 +1,97 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &6456605025595122871
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6456605025595122869}
+  - component: {fileID: 6456605025595122868}
+  m_Layer: 0
+  m_Name: Water Simulation
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6456605025595122869
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6456605025595122871}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &6456605025595122868
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6456605025595122871}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2423190bdc600854ab8fb8c7150a0c41, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  computeShader: {fileID: 7200000, guid: 1c3b445941b32804dbb9b992ea49c70f, type: 3}
+  result: {fileID: 0}
+  waterMap: {fileID: 0}
+  newWaterMap: {fileID: 0}
+  flowMap: {fileID: 0}
+  newFlowMap: {fileID: 0}
+  velocityMap: {fileID: 0}
+  newVelocityMap: {fileID: 0}
+  soilUseMap: {fileID: 0}
+  newSoilUseMap: {fileID: 0}
+  saturationMap: {fileID: 0}
+  newSaturationMap: {fileID: 0}
+  textureToDraw: 0
+  heightmap: {fileID: 2800000, guid: 90c5f3e74c9152949879f49f22891720, type: 3}
+  resolution: 1024
+  externalResolution: 256
+  timeStep: 0.1
+  epsilon: 0.00001
+  waterDensity: 1
+  gravitationAcceleration: 9.81
+  cellHeight: 1
+  cellArea: 1
+  diffuseAlpha: 1
+  evaporationConstant: 0.01
+  heightmapMultiplier: 1
+  flowDamping: 0
+  viscosity: 10.5
+  iterations: 2
+  enableWaterFlux: 1
+  enableFlow: 1
+  enableHeight: 1
+  enableVelocity: 1
+  enableVelocityDiffusion: 1
+  sourceIsMouse: 0
+  sourceRadius: 0.008
+  sourceAmount: 1
+  sourcePosition: {x: 0, y: 0}
+  soilDataMap: {fileID: 2800000, guid: 90c5f3e74c9152949879f49f22891720, type: 3}
+  soilEvaporationConstant: 0.001
+  soilDiffusionConstant: 0.1
+  soilAbsorptionMultiplier: 1
+  soilUseMultiplier: 1
+  soilReleaseMultiplier: 1
+  soilReleaseThreshold: 0.5
+  soilReleaseSurfaceThreshold: 0.1
+  enableSoilUse: 1
+  enableSoilAbsorption: 1
+  enableSoilRelease: 1
+  enableSoilEvaporation: 1
+  enableSoilDiffusion: 1
+  showDebugTextures: 1

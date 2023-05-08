@@ -14,11 +14,7 @@ namespace SimDataStructure.Data
 
         private ComputeBuffer computeBuffer;
 
-        public BufferGridData()
-        {
-        }
-
-        public void InitBuffer(int width, int height, int contentSize = sizeof(float) * 4)
+        public BufferGridData(int width, int height, int contentSize = sizeof(float) * 4)
         {
             this.width = width;
             this.height = height;
@@ -49,6 +45,21 @@ namespace SimDataStructure.Data
                 this.computeBuffer.Release();
                 this.computeBuffer = null;
             }
+        }
+
+        public int GetWidth()
+        {
+            return this.width;
+        }
+        
+        public int GetHeight()
+        {
+            return this.height;
+        }
+
+        public int GetContentSize()
+        {
+            return this.contentSize;
         }
     }
 }
