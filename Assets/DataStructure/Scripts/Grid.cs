@@ -39,7 +39,6 @@ namespace SimDataStructure
             populate();
         }
 
-
         private void populate()
         {
             for (int y = 0; y < yCellCount; y++)
@@ -75,17 +74,24 @@ namespace SimDataStructure
             }
         }
 
-        public void Release()
+        /**
+        <summary>
+            Dispose all the data in this grid (only use this if you know what you're doing)
+        </summary>
+        **/
+        public void Dispose()
         {
             foreach (AbstractGridData data in gridData.Values)
             {
-                data.Release();
+                data.Dispose();
             }
         }
 
         #region Cell Queries
         /**
+        <summary>
         Return the cell that contains the query point
+        </summary>
         **/
         public GridCell GetCell(Vector2 queryPoint)
         {
@@ -99,7 +105,9 @@ namespace SimDataStructure
         }
 
         /**
+        <summary>
         Return the lowest-level cell that contains the query point
+        </summary>
         **/
         public GridCell GetLowestCell(Vector2 queryPoint)
         {
@@ -113,7 +121,9 @@ namespace SimDataStructure
         }
 
         /**
+        <summary>
         Return the path of cells to the lowest-level cell that contains the query point
+        </summary>
         **/
         public List<GridCell> GetPathToLowestCell(Vector2 queryPoint)
         {
@@ -129,7 +139,9 @@ namespace SimDataStructure
         }
 
         /**
+        <summary>
         Return all the cells
+        </summary>
         **/
         public List<GridCell> Cells()
         {
@@ -138,14 +150,30 @@ namespace SimDataStructure
         #endregion
 
         #region Data Queries
+        /**
+        <summary>
+            Return the grid data with the given name. 
+            Returns null if the data does not exist.
+        </summary>
+        **/
         public AbstractGridData GetGridData(string dataName)
         {
-            return gridData[dataName];
+            if (gridData.ContainsKey(dataName))
+                return gridData[dataName];
+            else
+                return null;
         }
 
+        /**
+        <summary>
+            Return the cell data with the given position and name. 
+            Returns null if the data does not exist.
+        </summary>
+        **/
         public AbstractCellData GetData(Vector2 position, string dataName)
         {
             GridCell cell = GetCell(position);
+
             if (cell != null)
             {
                 return cell.GetData(dataName);
@@ -154,9 +182,16 @@ namespace SimDataStructure
             return null;
         }
 
+        /**
+        <summary>
+            Return the cell data with the given position and type. 
+            Returns null if no data exists.
+        </summary>
+        **/
         public Dictionary<string, AbstractCellData> GetDataOfType(Vector2 position, CellDataType type)
         {
             GridCell cell = GetCell(position);
+
             if (cell != null)
             {
                 return cell.GetDataOfType(type);
@@ -165,9 +200,16 @@ namespace SimDataStructure
             return null;
         }
 
+        /**
+        <summary>
+            Return ALL the cell data with the given position. 
+            Returns null if no data exists.
+        </summary>
+        **/
         public GenericDictionary<string, AbstractCellData> GetAllData(Vector2 position)
         {
             GridCell cell = GetCell(position);
+
             if (cell != null)
             {
                 return cell.GetAllData();
@@ -178,25 +220,69 @@ namespace SimDataStructure
         #endregion
 
         #region Data Management
+        /**
+        <summary>
+            Return true if the grid level this grid belongs to can contain data with the given name and type
+        </summary>
+        **/
         public bool CanContainData(string dataName, CellDataType type)
         {
             return gridLevel.CanContainData(dataName, type);
         }
 
-        public void SetGridData(string dataName, AbstractGridData data)
+        /**
+        <summary>
+            Set the grid data with the given name to the given data.
+        </summary>
+        **/
+        public void SetGridData(string dataName, object data)
         {
-            gridData[dataName] = data;
+            if (gridData.ContainsKey(dataName))
+            {
+                gridData[dataName].SetData(data);
+            } else {
+                Debug.Log("Grid data \"" + dataName + "\" does not exist.");
+            }
         }
 
+        /**
+        <summary>
+            Set the grid data with the given name to the given data.
+        </summary>
+        **/
+        public void SetGridData(string dataName, AbstractGridData data)
+        {
+            if (gridData.ContainsKey(dataName))
+            {
+                // gridData[dataName].Dispose();
+                gridData[dataName].SetData(data);
+            }
+            else
+            {
+                gridData.Add(dataName, data);
+            }
+        }
+
+        /**
+        <summary>
+            Set the cell data with the given position and name to the given data.
+        </summary>
+        **/
         public void SetData(Vector2 position, string dataName, AbstractCellData data)
         {
             GridCell cell = GetCell(position);
+
             if (cell != null)
             {
                 cell.SetData(dataName, data);
             }
         }
 
+        /**
+        <summary>
+            Set the data with the given name in every cell in this grid to the given data.
+        </summary>
+        **/
         public void SetData(string dataName, AbstractCellData data)
         {
             foreach (GridCell cell in cells)
@@ -205,7 +291,11 @@ namespace SimDataStructure
             }
         }
 
-        /** USE AT YOUR OWN RISK, YOU SHOULD NOT (UNDER ANY CIRCUMSTANCES) BE ADDING DATA TO INDIVIDUAL CELLS. IF YOU NEED TO ADD DATA, JUST ADD IT TO THE ENTIRE GRID OR DEFINE IT IN THE GRID LEVEL. **/
+        /**
+        <summary>
+         USE AT YOUR OWN RISK, YOU SHOULD NOT (UNDER ANY CIRCUMSTANCES) BE ADDING DATA TO INDIVIDUAL CELLS. IF YOU NEED TO ADD DATA, JUST ADD IT TO THE ENTIRE GRID OR DEFINE IT IN THE GRID LEVEL.
+        </summary>
+        **/
         public void AddData(Vector2 position, string dataName, CellDataType dataType, AbstractCellData data, bool ignoreChecks = false)
         {
             if (!ignoreChecks)
@@ -225,7 +315,11 @@ namespace SimDataStructure
             }
         }
 
-        // This is ok though
+        /**
+        <summary>
+            This is ok though
+        </summary>
+        **/
         public void AddData(string dataName, CellDataType dataType, AbstractCellData data, bool ignoreChecks = false)
         {
             if (ignoreChecks || CanContainData(dataName, dataType))
@@ -241,7 +335,11 @@ namespace SimDataStructure
             }
         }
 
-        /** USE AT YOUR OWN RISK, YOU SHOULD NOT (UNDER ANY CIRCUMSTANCES) BE REMOVING DATA FROM INDIVIDUAL CELLS. IF YOU WANT TO REMOVE DATA JUST REMOVE IT FROM THE ENTIRE GRID. **/
+        /**
+        <summary>
+         USE AT YOUR OWN RISK, YOU SHOULD NOT (UNDER ANY CIRCUMSTANCES) BE REMOVING DATA FROM INDIVIDUAL CELLS. IF YOU WANT TO REMOVE DATA JUST REMOVE IT FROM THE ENTIRE GRID.
+         </summary>
+        **/
         public void RemoveData(Vector2 position, string dataName, bool ignoreChecks = false)
         {
             if (!ignoreChecks)
@@ -254,7 +352,11 @@ namespace SimDataStructure
             }
         }
 
-        // This is ok though
+        /**
+        <summary>
+            This is ok though
+        </summary>
+        **/
         public void RemoveData(string dataName)
         {
             foreach (GridCell cell in cells)

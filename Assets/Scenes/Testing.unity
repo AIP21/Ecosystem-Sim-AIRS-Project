@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.12731704, g: 0.13414727, b: 0.121078536, a: 1}
+  m_IndirectSpecularColor: {r: 0.12731749, g: 0.13414757, b: 0.1210787, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -172,6 +172,108 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 36751346e59f29e409b3874b0603be45, type: 2}
   - {fileID: 11400000, guid: a8156ca0bf27694458adbefdae0a24e1, type: 2}
   - {fileID: 11400000, guid: 5d57596dba7f4ac4582655b943c0fedc, type: 2}
+  InitializingObjects:
+  - {fileID: 6456605024775582197}
+  ReadingObjects:
+  - {fileID: 6456605024775582197}
+  WritingObjects:
+  - {fileID: 6456605024775582197}
+--- !u!1 &525463473
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 525463474}
+  - component: {fileID: 525463476}
+  - component: {fileID: 525463475}
+  m_Layer: 0
+  m_Name: Water Sim Debug
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!4 &525463474
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 525463473}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 638825940}
+  m_RootOrder: 4
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!20 &525463475
+Camera:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 525463473}
+  m_Enabled: 1
+  serializedVersion: 2
+  m_ClearFlags: 1
+  m_BackGroundColor: {r: 0.19215687, g: 0.3019608, b: 0.4745098, a: 0}
+  m_projectionMatrixMode: 1
+  m_GateFitMode: 2
+  m_FOVAxisMode: 0
+  m_SensorSize: {x: 36, y: 24}
+  m_LensShift: {x: 0, y: 0}
+  m_FocalLength: 50
+  m_NormalizedViewPortRect:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 1
+    height: 1
+  near clip plane: 0.3
+  far clip plane: 1000
+  field of view: 60
+  orthographic: 0
+  orthographic size: 5
+  m_Depth: 0
+  m_CullingMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_RenderingPath: -1
+  m_TargetTexture: {fileID: 0}
+  m_TargetDisplay: 0
+  m_TargetEye: 3
+  m_HDR: 1
+  m_AllowMSAA: 1
+  m_AllowDynamicResolution: 0
+  m_ForceIntoRT: 0
+  m_OcclusionCulling: 1
+  m_StereoConvergence: 10
+  m_StereoSeparation: 0.022
+--- !u!114 &525463476
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 525463473}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 80ea57996f7202249938fc66fdfcbd4e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  textureToDraw: 1
+  showDebugTextures: 1
+  resolution: 1024
+  waterMap: {fileID: 0}
+  flowMap: {fileID: 0}
+  velocityMap: {fileID: 0}
+  soilUseMap: {fileID: 0}
+  saturationMap: {fileID: 0}
 --- !u!1 &582991950
 GameObject:
   m_ObjectHideFlags: 0
@@ -216,9 +318,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 36b1f1d4fbabb9444bb1305de913d34a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  tickableObjects:
+  TickableObjects:
   - {fileID: 282096875}
-  - {fileID: 1364809028}
+  - {fileID: 6456605024775582197}
 --- !u!1 &638825939
 GameObject:
   m_ObjectHideFlags: 0
@@ -250,77 +352,11 @@ Transform:
   - {fileID: 582991951}
   - {fileID: 282096876}
   - {fileID: 1597987556}
-  - {fileID: 1364809027}
+  - {fileID: 6456605024775582199}
+  - {fileID: 525463474}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1001 &1364809026
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    m_TransformParent: {fileID: 638825940}
-    m_Modifications:
-    - target: {fileID: 6456605025595122869, guid: 2203fda62e853af4a909b4477943d7e9, type: 3}
-      propertyPath: m_RootOrder
-      value: 3
-      objectReference: {fileID: 0}
-    - target: {fileID: 6456605025595122869, guid: 2203fda62e853af4a909b4477943d7e9, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6456605025595122869, guid: 2203fda62e853af4a909b4477943d7e9, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6456605025595122869, guid: 2203fda62e853af4a909b4477943d7e9, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6456605025595122869, guid: 2203fda62e853af4a909b4477943d7e9, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 6456605025595122869, guid: 2203fda62e853af4a909b4477943d7e9, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6456605025595122869, guid: 2203fda62e853af4a909b4477943d7e9, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6456605025595122869, guid: 2203fda62e853af4a909b4477943d7e9, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6456605025595122869, guid: 2203fda62e853af4a909b4477943d7e9, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6456605025595122869, guid: 2203fda62e853af4a909b4477943d7e9, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6456605025595122869, guid: 2203fda62e853af4a909b4477943d7e9, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6456605025595122871, guid: 2203fda62e853af4a909b4477943d7e9, type: 3}
-      propertyPath: m_Name
-      value: Water Simulation
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: 2203fda62e853af4a909b4477943d7e9, type: 3}
---- !u!4 &1364809027 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 6456605025595122869, guid: 2203fda62e853af4a909b4477943d7e9, type: 3}
-  m_PrefabInstance: {fileID: 1364809026}
-  m_PrefabAsset: {fileID: 0}
---- !u!1 &1364809028 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 6456605025595122871, guid: 2203fda62e853af4a909b4477943d7e9, type: 3}
-  m_PrefabInstance: {fileID: 1364809026}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1597987555
 GameObject:
   m_ObjectHideFlags: 0
@@ -365,24 +401,100 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2a84a96a7aae4d64da2599285d913e77, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ds: {fileID: 282096877}
-  DrawAll: 1
-  DrawRelationshipLines: 0
-  DrawParentLines: 0
-  LevelZShift: 3
-  DoQueryTest: 1
-  QueryTestCount: 100000
-  DoAddDataTest: 1
-  AddDataTestCount: 100000
-  DoRemoveDataTest: 1
-  RemoveDataTestCount: 100000
-  DoModifyDataTest: 1
-  ModifyDataTestCount: 100000
-  TestLevel: -1
-  QuerySingleCellTest: 0
-  QuerySingleCellLevel: 0
-  QuerySingleCellPosition: {x: 0, y: 0}
-  TestedCellData:
-    list: []
-    keyCollision: 0
-  TestedCellCount: 0
+--- !u!1 &6456605024775582197
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6456605024775582199}
+  - component: {fileID: 6456605024775582198}
+  m_Layer: 0
+  m_Name: Water Simulation
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &6456605024775582198
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6456605024775582197}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2423190bdc600854ab8fb8c7150a0c41, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  computeShader: {fileID: 7200000, guid: 1c3b445941b32804dbb9b992ea49c70f, type: 3}
+  result: {fileID: 0}
+  waterMap: {fileID: 0}
+  DSWaterMap: {fileID: 0}
+  newWaterMap: {fileID: 0}
+  flowMap: {fileID: 0}
+  DSFlowMap: {fileID: 0}
+  newFlowMap: {fileID: 0}
+  velocityMap: {fileID: 0}
+  newVelocityMap: {fileID: 0}
+  DSVelocityMap: {fileID: 0}
+  soilUseMap: {fileID: 0}
+  newSoilUseMap: {fileID: 0}
+  saturationMap: {fileID: 0}
+  newSaturationMap: {fileID: 0}
+  DSSaturationMap: {fileID: 0}
+  heightmap: {fileID: 2800000, guid: 90c5f3e74c9152949879f49f22891720, type: 3}
+  resolution: 1024
+  externalResolution: 256
+  timeStep: 0.1
+  epsilon: 0.00001
+  waterDensity: 1
+  gravitationAcceleration: 9.81
+  cellHeight: 1
+  cellArea: 1
+  diffuseAlpha: 1
+  evaporationConstant: 0.00001
+  heightmapMultiplier: 1
+  flowDamping: 0
+  viscosity: 10.5
+  diffusionIterations: 2
+  enableWaterFlux: 1
+  enableFlow: 1
+  enableHeight: 1
+  enableVelocity: 1
+  enableVelocityDiffusion: 1
+  sourceIsMouse: 1
+  sourceRadius: 0.02
+  sourceAmount: 1
+  sourcePosition: {x: 0, y: 0}
+  soilDataMap: {fileID: 2800000, guid: c62ee469c9ae53949a32460dfefee106, type: 3}
+  soilEvaporationConstant: 0.0005
+  soilDiffusionConstant: 0.1
+  soilAbsorptionMultiplier: 0.0005
+  soilUseMultiplier: 1
+  soilReleaseMultiplier: 1
+  soilReleaseThreshold: 0.5
+  soilReleaseSurfaceThreshold: 0.1
+  enableSoilUse: 1
+  enableSoilAbsorption: 1
+  enableSoilRelease: 1
+  enableSoilEvaporation: 1
+  enableSoilDiffusion: 1
+--- !u!4 &6456605024775582199
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6456605024775582197}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 638825940}
+  m_RootOrder: 3
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}

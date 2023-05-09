@@ -56,7 +56,6 @@ MonoBehaviour:
   newSoilUseMap: {fileID: 0}
   saturationMap: {fileID: 0}
   newSaturationMap: {fileID: 0}
-  textureToDraw: 0
   heightmap: {fileID: 2800000, guid: 90c5f3e74c9152949879f49f22891720, type: 3}
   resolution: 1024
   externalResolution: 256
@@ -71,7 +70,7 @@ MonoBehaviour:
   heightmapMultiplier: 1
   flowDamping: 0
   viscosity: 10.5
-  iterations: 2
+  diffusionIterations: 2
   enableWaterFlux: 1
   enableFlow: 1
   enableHeight: 1
@@ -94,4 +93,3 @@ MonoBehaviour:
   enableSoilRelease: 1
   enableSoilEvaporation: 1
   enableSoilDiffusion: 1
-  showDebugTextures: 1

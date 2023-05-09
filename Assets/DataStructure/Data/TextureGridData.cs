@@ -17,22 +17,51 @@ namespace SimDataStructure.Data
             this.renderTexture = this.createTexture(format, filterMode);
         }
 
-        // Return a copy of the texture
-        public RenderTexture GetData()
+        /**
+        <summary>
+            Copies the data from this TextureGridData to the given RenderTexture.
+            This just does Graphics.Blit() to copy over the data.
+        </summary>
+        **/
+        public override void GetData(object target)
         {
-            RenderTexture copy = createTexture(this.renderTexture.format, this.renderTexture.filterMode);
+            if (this.renderTexture == null)
+            {
+                Debug.LogError("TextureGridData.SetData: RenderTexture is null");
+                return;
+            }
 
-            Graphics.Blit(this.renderTexture, copy);
-
-            return copy;
+            if (target != null && target is RenderTexture)
+            {
+                Graphics.Blit(this.renderTexture, (RenderTexture)target);
+            }
+            else
+            {
+                Debug.LogError("TextureGridData.GetData: target is null or not a RenderTexture");
+            }
         }
 
-        public void SetData(RenderTexture toSet)
+        /**
+        <summary>
+            Copies the data from the given RenderTexture to this TextureGridData.
+            This just does Graphics.Blit() to copy over the data.
+        </summary>
+        **/
+        public override void SetData(object source)
         {
-            this.renderTexture = (RenderTexture)toSet;
+            if (this.renderTexture == null)
+            {
+                Debug.LogError("TextureGridData.SetData: RenderTexture is null");
+                return;
+            }
+
+            if (source != null && source is RenderTexture)
+            {
+                Graphics.Blit((RenderTexture)source, this.renderTexture);
+            }
         }
 
-        public override void Release()
+        public override void Dispose()
         {
             if (this.renderTexture != null)
             {

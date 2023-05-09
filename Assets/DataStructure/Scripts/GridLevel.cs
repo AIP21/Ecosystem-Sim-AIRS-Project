@@ -12,8 +12,6 @@ namespace SimDataStructure
         public Vector2 CellSize;
 
         public GenericDictionary<string, CellDataType> CellDataTypes = new GenericDictionary<string, CellDataType>();
-        
-        public GenericDictionary<string, CellDataType> GPUData = new GenericDictionary<string, CellDataType>();
 
         public bool CanContainData(string dataName, CellDataType dataType)
         {

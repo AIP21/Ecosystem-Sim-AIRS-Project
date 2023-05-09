@@ -9,13 +9,11 @@ namespace SimDataStructure.Interfaces
     /**
         <summary>
             For a class to be able to write data to the data structure, it needs to implement the IWriteDataStructure interface.
-            The implementing class can write data to ONLY one grid level
         </summary>
     */
     public interface IWriteDataStructure
     {
-        int WriteLevel { get; } // The grid level to write data to
-        List<string> WriteDataNames { get; } // The names of the data you are writing to the data structure
+        Dictionary<string, int> WriteDataNames { get; } // The levels and names of the data you are writing to the data structure
 
         /**
             <summary>
@@ -23,7 +21,8 @@ namespace SimDataStructure.Interfaces
                 This function should return a list of the data that the implementing class wants to write to the data structure.
                 The returned list of data MUST be the same length as the writeDataNames list and the index of each item in the returned list MUST correspond to its respective index in the writeDataNames list.
             </summary>
+        //TODO: If this is slow, then change this to just return a list of objects
         */
-        List<AbstractGridData> writeData();
+        Dictionary<Tuple<string, int>, object> writeData();
     }
 }
