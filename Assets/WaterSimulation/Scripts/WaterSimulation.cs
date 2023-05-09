@@ -291,7 +291,7 @@ namespace WaterSim
         }
 
         public void receiveData(List<AbstractGridData> data)
-        {            
+        {
             int i = 0;
 
             foreach (string name in ReadDataNames.Keys)

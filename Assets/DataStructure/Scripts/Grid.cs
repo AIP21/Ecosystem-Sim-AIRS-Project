@@ -176,7 +176,7 @@ namespace SimDataStructure
 
             if (cell != null)
             {
-                return cell.GetData(dataName);
+                return cell.GetCellData(dataName);
             }
 
             return null;
@@ -194,7 +194,7 @@ namespace SimDataStructure
 
             if (cell != null)
             {
-                return cell.GetDataOfType(type);
+                return cell.GetCellDataOfType(type);
             }
 
             return null;
@@ -212,7 +212,7 @@ namespace SimDataStructure
 
             if (cell != null)
             {
-                return cell.GetAllData();
+                return cell.GetAllCellData();
             }
 
             return null;
@@ -268,13 +268,13 @@ namespace SimDataStructure
             Set the cell data with the given position and name to the given data.
         </summary>
         **/
-        public void SetData(Vector2 position, string dataName, AbstractCellData data)
+        public void SetCellData(Vector2 position, string dataName, AbstractCellData data)
         {
             GridCell cell = GetCell(position);
 
             if (cell != null)
             {
-                cell.SetData(dataName, data);
+                cell.SetCellData(dataName, data);
             }
         }
 
@@ -287,7 +287,7 @@ namespace SimDataStructure
         {
             foreach (GridCell cell in cells)
             {
-                cell.SetData(dataName, data);
+                cell.SetCellData(dataName, data);
             }
         }
 
@@ -306,7 +306,7 @@ namespace SimDataStructure
                 GridCell cell = GetCell(position);
                 if (cell != null)
                 {
-                    cell.AddData(dataName, data);
+                    cell.AddCellData(dataName, data);
                 }
             }
             else
@@ -326,7 +326,7 @@ namespace SimDataStructure
             {
                 foreach (GridCell cell in cells)
                 {
-                    cell.AddData(dataName, data);
+                    cell.AddCellData(dataName, data);
                 }
             }
             else
@@ -348,7 +348,7 @@ namespace SimDataStructure
             GridCell cell = GetCell(position);
             if (cell != null)
             {
-                cell.RemoveData(dataName);
+                cell.RemoveCellData(dataName);
             }
         }
 
@@ -361,7 +361,7 @@ namespace SimDataStructure
         {
             foreach (GridCell cell in cells)
             {
-                cell.RemoveData(dataName);
+                cell.RemoveCellData(dataName);
             }
         }
         #endregion
@@ -391,33 +391,33 @@ namespace SimDataStructure
             this.level = level;
             this.bounds = new Bounds(center, level.CellSize);
 
-            this.setupLevelData();
+            // this.setupLevelData();
         }
 
-        private void setupLevelData()
-        {
-            foreach (KeyValuePair<string, CellDataType> dataEntry in level.CellDataTypes)
-            {
-                switch (dataEntry.Value)
-                {
-                    case CellDataType.Float:
-                        this.AddData(dataEntry.Key, new CellData<float>(4.20f));
-                        break;
-                    case CellDataType.Int:
-                        this.AddData(dataEntry.Key, new CellData<int>(69));
-                        break;
-                    case CellDataType.Bool:
-                        this.AddData(dataEntry.Key, new CellData<bool>(true));
-                        break;
-                    case CellDataType.Vector2:
-                        this.AddData(dataEntry.Key, new CellData<Vector2>(new Vector2(6, 9)));
-                        break;
-                    case CellDataType.Object:
-                        this.AddData(dataEntry.Key, new CellData<object>(null));
-                        break;
-                }
-            }
-        }
+        // private void setupLevelData()
+        // {
+        //     foreach (KeyValuePair<string, CellDataType> dataEntry in level.CellDataTypes)
+        //     {
+        //         switch (dataEntry.Value)
+        //         {
+        //             case CellDataType.Float:
+        //                 this.AddData(dataEntry.Key, new CellData<float>(4.20f));
+        //                 break;
+        //             case CellDataType.Int:
+        //                 this.AddData(dataEntry.Key, new CellData<int>(69));
+        //                 break;
+        //             case CellDataType.Bool:
+        //                 this.AddData(dataEntry.Key, new CellData<bool>(true));
+        //                 break;
+        //             case CellDataType.Vector2:
+        //                 this.AddData(dataEntry.Key, new CellData<Vector2>(new Vector2(6, 9)));
+        //                 break;
+        //             case CellDataType.Object:
+        //                 this.AddData(dataEntry.Key, new CellData<object>(null));
+        //                 break;
+        //         }
+        //     }
+        // }
 
         #region Cell Querying
         public bool Contains(Vector2 queryPos)
@@ -480,48 +480,72 @@ namespace SimDataStructure
         #endregion
 
         #region Data Querying
-        public AbstractCellData GetData(string name)
+        /**
+        <summary>
+            Get the cell data of a given name from this cell
+        </summary>
+        **/
+        public AbstractCellData GetCellData(string name)
         {
             return this.data[name];
         }
 
-        public Dictionary<string, AbstractCellData> GetDataOfType(CellDataType type)
+        /**
+        <summary>
+            Get all the cell data from this cell
+        </summary>
+        **/
+        public GenericDictionary<string, AbstractCellData> GetAllCellData()
         {
-            Dictionary<string, AbstractCellData> dataOfType = new Dictionary<string, AbstractCellData>();
+            return this.data;
+        }
+        
+        /**
+        <summary>
+            Get the names of all data in the cell that of the given type.
+
+            Returns an empty list if this cell does not contain any data of that type.
+        </summary>
+        **/
+        public string GetDataNames<T>(T data)
+        {
+            List<string> names = new List<string>();
 
             foreach (KeyValuePair<string, AbstractCellData> dataEntry in this.data)
             {
-                if (dataEntry.Value.type == type)
+                if (dataEntry.Value is T)
                 {
-                    dataOfType.Add(dataEntry.Key, dataEntry.Value);
+                    names.Add(dataEntry.Key);
                 }
             }
 
-            return dataOfType;
-        }
-
-        public GenericDictionary<string, AbstractCellData> GetAllData()
-        {
-            return this.data;
+            return names;
         }
         #endregion
 
         #region Data Management
-        public void SetData(string name, AbstractCellData data)
+        /**
+        <summary>
+            Set the given data to this cell using the given name
+
+            If the data of the given name already exists, it will be overwritten
+        </summary>
+        **/
+        public void SetCellData(string name, AbstractCellData data)
         {
             if (this.data.ContainsKey(name))
                 this.data[name] = data;
+            else
+                this.data.Add(name, data);
         }
 
-        public void AddData(string name, AbstractCellData data)
+        /**
+        <summary>
+            Remove the data of the given name from this cell
+        </summary>
+        **/
+        public void RemoveCellData(string name)
         {
-            // Debug.LogWarning("Data was added to a single grid cell at position " + this.center + " on level " + this.level);
-            this.data.Add(name, data);
-        }
-
-        public void RemoveData(string name)
-        {
-            // Debug.LogWarning("Data was removed from a single grid cell at position " + this.center + " on level " + this.level);
             this.data.Remove(name);
         }
         #endregion

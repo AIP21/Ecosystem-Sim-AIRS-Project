@@ -1,12 +1,12 @@
-using System.Linq;
-using UnityEngine;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using Debug = UnityEngine.Debug;
-using SimDataStructure.Interfaces;
-using SimDataStructure.Data;
+using System.Linq;
 using Managers.Interfaces;
+using SimDataStructure.Data;
+using SimDataStructure.Interfaces;
+using UnityEngine;
+using Debug = UnityEngine.Debug;
 
 namespace SimDataStructure
 {
@@ -44,29 +44,7 @@ namespace SimDataStructure
             this.populateGrids(Levels);
 
             // Initialize all the grid data
-            for (int i = 0; i < InitializingObjects.Count; i++)
-            {
-                ISetupDataStructure initializer = InitializingObjects[i].GetComponent<ISetupDataStructure>();
-
-                if (initializer == null)
-                {
-                    Debug.LogError("DataStructure: GameObject " + InitializingObjects[i].name + " does not have a component that implements ISetupDataStructure");
-                }
-
-                Dictionary<Tuple<string, int>, AbstractGridData> data = initializer.initializeData();
-
-                foreach (KeyValuePair<Tuple<string, int>, AbstractGridData> entry in data)
-                {
-                    // Check if the level is valid
-                    if (entry.Key.Item2 < 0 || entry.Key.Item2 >= Grids.Count)
-                    {
-                        Debug.LogError("DataStructure: GameObject " + InitializingObjects[i].name + " returned a data object to with an invalid level: " + entry.Key.Item2 + " (should be between 0 and " + (Grids.Count - 1) + ")");
-                        continue;
-                    }
-
-                    Grids[entry.Key.Item2].SetGridData(entry.Key.Item1, entry.Value);
-                }
-            }
+            this.initializeGridData();
 
             st.Stop();
 
@@ -153,6 +131,33 @@ namespace SimDataStructure
             // {
             //     Grids[i].Initialize();
             // }
+        }
+
+        private void initializeGridData()
+        {
+            for (int i = 0; i < InitializingObjects.Count; i++)
+            {
+                ISetupDataStructure initializer = InitializingObjects[i].GetComponent<ISetupDataStructure>();
+
+                if (initializer == null)
+                {
+                    Debug.LogError("DataStructure: GameObject " + InitializingObjects[i].name + " does not have a component that implements ISetupDataStructure");
+                }
+
+                Dictionary<Tuple<string, int>, AbstractGridData> data = initializer.initializeData();
+
+                foreach (KeyValuePair<Tuple<string, int>, AbstractGridData> entry in data)
+                {
+                    // Check if the level is valid
+                    if (entry.Key.Item2 < 0 || entry.Key.Item2 >= Grids.Count)
+                    {
+                        Debug.LogError("DataStructure: GameObject " + InitializingObjects[i].name + " returned a data object to with an invalid level: " + entry.Key.Item2 + " (should be between 0 and " + (Grids.Count - 1) + ")");
+                        continue;
+                    }
+
+                    Grids[entry.Key.Item2].SetGridData(entry.Key.Item1, entry.Value);
+                }
+            }
         }
 
         #region Systems Management
@@ -272,68 +277,73 @@ namespace SimDataStructure
         }
         #endregion
 
-        #region Data Queries (no longer used)
-        // public AbstractCellData GetData(Vector2 position, int level, string dataName)
-        // {
-        //     return Grids[level]?.GetData(position, dataName);
-        // }
+        #region Cell Data Queries
+        /**
+        <summary>
+            Get the cell data of a given name from the cell at a specific position on a specific level.
+        </summary>
+        **/
+        public AbstractCellData GetCellData(Vector2 position, int level, string dataName)
+        {
+            return Grids[level]?.GetData(position, dataName);
+        }
 
-        // public Dictionary<string, AbstractCellData> GetDataOfType(Vector2 position, int level, CellDataType type)
-        // {
-        //     return Grids[level]?.GetDataOfType(position, type);
-        // }
-
-        // public GenericDictionary<string, AbstractCellData> GetAllData(Vector2 position, int level)
-        // {
-        //     return Grids[level]?.GetAllData(position);
-        // }
+        /**
+        <summary>
+            Get all the cell data from the cell at a specific position on a specific level.
+        </summary>
+        **/
+        public GenericDictionary<string, AbstractCellData> GetCellData(Vector2 position, int level)
+        {
+            return Grids[level]?.GetAllData(position);
+        }
         #endregion
 
         #region Data Management
+        /**
+        <summary>
+            Set the grid data of a given name on a given level to the given data.
+        </summary>
+
+        <param name="level">The level to set the data on.</param>
+        <param name="name">The name of the data you are setting.</param>
+        <param name="data">The data to set to the grid. It is an object, but should be of the type AbstractGridData.</param>
+        **/
         private void setGridData(int level, string name, object data)
         {
             Grids[level].SetGridData(name, data);
         }
 
-        private void setData(Vector2 position, int level, string dataName, AbstractCellData data)
+        /**
+        <summary>
+            Add the given cell data to a cell at a specific position on a specific level.
+        </summary>
+        **/
+        private void addCellData(Vector2 position, int level, string dataName, AbstractCellData data)
         {
-            Grids[level].SetData(position, dataName, data);
+            Grids[level].AddData(position, dataName, data);
         }
 
-        private void setData(int level, string dataName, AbstractCellData data)
+        /**
+        <summary>
+            Remove the cell data of a given name from a cell at a specific position on a specific level.
+        </summary>
+        **/
+        private void removeCellData(Vector2 position, int level, string dataName)
         {
-            Grids[level].SetData(dataName, data);
+            Grids[level].RemoveData(position, dataName);
         }
 
-        /** USE AT YOUR OWN RISK, YOU SHOULD NOT (UNDER ANY CIRCUMSTANCES) BE ADDING DATA TO INDIVIDUAL CELLS. IF YOU NEED TO ADD DATA, JUST ADD IT TO THE ENTIRE GRID OR DEFINE IT IN THE GRID LEVEL. **/
-        private void addData(Vector2 position, int level, string dataName, CellDataType dataType, AbstractCellData data, bool ignoreChecks = false)
-        {
-            if (!ignoreChecks)
-                Debug.LogWarning("You are adding data to an individual cell in the data structure. This is (REALLY!) not recommended and may cause errors. Use at your own risk! If you need to add data, just add it to the entire grid or define it in the grid level.");
-
-            Grids[level].AddData(position, dataName, dataType, data, ignoreChecks);
-        }
-
-        // This is ok though
-        private void addData(int level, string dataName, CellDataType dataType, AbstractCellData data, bool ignoreChecks = false)
-        {
-            Grids[level].AddData(dataName, dataType, data, ignoreChecks);
-        }
-
-        /** USE AT YOUR OWN RISK, YOU SHOULD NOT (UNDER ANY CIRCUMSTANCES) BE REMOVING DATA FROM INDIVIDUAL CELLS. IF YOU WANT TO REMOVE DATA JUST REMOVE IT FROM THE ENTIRE GRID. **/
-        private void removeData(Vector2 position, int level, string dataName, bool ignoreChecks = false)
-        {
-            if (!ignoreChecks)
-                Debug.LogWarning("You are removing data from an individual cell in the data structure. This is (REALLY!) not recommended and may cause errors. Use at your own risk! If you want to remove data, remove it from the entire grid.");
-
-            Grids[level].RemoveData(position, dataName, ignoreChecks);
-        }
-
-        // This is ok though
-        private void removeData(int level, string dataName)
+        /**
+        <summary>
+            Remove the cell data of the given name from every cell on a specific level.
+        </summary>
+        **/
+        private void removeCellData(int level, string dataName)
         {
             Grids[level].RemoveData(dataName);
         }
+        #endregion
 
         private void OnDestroy()
         {
@@ -342,6 +352,5 @@ namespace SimDataStructure
                 Grids[i].Dispose();
             }
         }
-        #endregion
     }
 }
