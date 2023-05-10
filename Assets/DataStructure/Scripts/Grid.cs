@@ -76,6 +76,19 @@ namespace SimDataStructure
 
         /**
         <summary>
+            Move every non-static cell data to a new cell if it moved out of its original cell
+        </summary>
+        **/
+        public void UpdateCellData()
+        {
+            // Move every non-static cell data to a new cell if it moved out of its original cell
+            // This is done by removing the data from the old cell and adding it to the new cell
+
+            // TODO: Maybe use a system where the data notifies the grid when it moves (on endTick, and the DS updates the grid on beginTick)?
+        }
+
+        /**
+        <summary>
             Dispose all the data in this grid (only use this if you know what you're doing)
         </summary>
         **/
@@ -166,54 +179,56 @@ namespace SimDataStructure
 
         /**
         <summary>
-            Return the cell data with the given position and name. 
-            Returns null if the data does not exist.
+            Return all the cell data with the given name from the cell at the given position.
+            Returns null if the data or cell does not exist.
         </summary>
         **/
-        public AbstractCellData GetData(Vector2 position, string dataName)
+        public List<AbstractCellData> GetCellData(Vector2 position, string dataName)
         {
             GridCell cell = GetCell(position);
 
             if (cell != null)
-            {
                 return cell.GetCellData(dataName);
-            }
 
             return null;
         }
 
         /**
         <summary>
-            Return the cell data with the given position and type. 
-            Returns null if no data exists.
+            Return all the cell data with the given name from every cell in this grid.
+            Returns null if no cell in this grid contains the data with the given name.
         </summary>
         **/
-        public Dictionary<string, AbstractCellData> GetDataOfType(Vector2 position, CellDataType type)
+        public List<AbstractCellData> GetCellData(string dataName)
         {
-            GridCell cell = GetCell(position);
+            List<AbstractCellData> data = new List<AbstractCellData>();
 
-            if (cell != null)
+            foreach (GridCell cell in cells)
             {
-                return cell.GetCellDataOfType(type);
+                List<AbstractCellData> cellData = cell.GetCellData(dataName);
+
+                if (cellData != null)
+                    data.AddRange(cellData);
             }
 
-            return null;
+            if (data.Count == 0)
+                return null;
+
+            return data;
         }
 
         /**
         <summary>
-            Return ALL the cell data with the given position. 
-            Returns null if no data exists.
+            Return ALL the cell data from the cell with the given position. 
+            Returns null if no data or cell exists.
         </summary>
         **/
-        public GenericDictionary<string, AbstractCellData> GetAllData(Vector2 position)
+        public Dictionary<string, List<AbstractCellData>> GetAllCellData(Vector2 position)
         {
             GridCell cell = GetCell(position);
 
             if (cell != null)
-            {
                 return cell.GetAllCellData();
-            }
 
             return null;
         }
@@ -225,7 +240,7 @@ namespace SimDataStructure
             Return true if the grid level this grid belongs to can contain data with the given name and type
         </summary>
         **/
-        public bool CanContainData(string dataName, CellDataType type)
+        public bool CanContainData(string dataName, Type type)
         {
             return gridLevel.CanContainData(dataName, type);
         }
@@ -240,9 +255,9 @@ namespace SimDataStructure
             if (gridData.ContainsKey(dataName))
             {
                 gridData[dataName].SetData(data);
-            } else {
-                Debug.Log("Grid data \"" + dataName + "\" does not exist.");
             }
+            else
+                Debug.Log("Grid data \"" + dataName + "\" does not exist.");
         }
 
         /**
@@ -258,111 +273,100 @@ namespace SimDataStructure
                 gridData[dataName].SetData(data);
             }
             else
-            {
                 gridData.Add(dataName, data);
-            }
         }
 
         /**
         <summary>
-            Set the cell data with the given position and name to the given data.
+            Set the cell data list with the given position and name to the given data list.
         </summary>
         **/
-        public void SetCellData(Vector2 position, string dataName, AbstractCellData data)
+        public void SetCellData(Vector2 position, string dataName, List<AbstractCellData> data)
         {
             GridCell cell = GetCell(position);
 
             if (cell != null)
-            {
                 cell.SetCellData(dataName, data);
-            }
         }
 
         /**
         <summary>
-            Set the data with the given name in every cell in this grid to the given data.
+            Set the data list with the given name in every cell in this grid to the given data list.
         </summary>
         **/
-        public void SetData(string dataName, AbstractCellData data)
+        public void SetCellData(string dataName, List<AbstractCellData> data)
         {
-            foreach (GridCell cell in cells)
-            {
-                cell.SetCellData(dataName, data);
-            }
-        }
-
-        /**
-        <summary>
-         USE AT YOUR OWN RISK, YOU SHOULD NOT (UNDER ANY CIRCUMSTANCES) BE ADDING DATA TO INDIVIDUAL CELLS. IF YOU NEED TO ADD DATA, JUST ADD IT TO THE ENTIRE GRID OR DEFINE IT IN THE GRID LEVEL.
-        </summary>
-        **/
-        public void AddData(Vector2 position, string dataName, CellDataType dataType, AbstractCellData data, bool ignoreChecks = false)
-        {
-            if (!ignoreChecks)
-                Debug.LogWarning("You are adding data to an individual cell in the data structure. This is (REALLY!) not recommended and may cause errors. Use at your own risk! If you need to add data, just add it to the entire grid or define it in the grid level.");
-
-            if (ignoreChecks || CanContainData(dataName, dataType))
-            {
-                GridCell cell = GetCell(position);
-                if (cell != null)
-                {
-                    cell.AddCellData(dataName, data);
-                }
-            }
-            else
-            {
-                Debug.LogError("Data type " + data.GetType() + " is not supported by grid level " + gridLevel);
-            }
-        }
-
-        /**
-        <summary>
-            This is ok though
-        </summary>
-        **/
-        public void AddData(string dataName, CellDataType dataType, AbstractCellData data, bool ignoreChecks = false)
-        {
-            if (ignoreChecks || CanContainData(dataName, dataType))
+            if (CanContainData(dataName, data.GetType()))
             {
                 foreach (GridCell cell in cells)
-                {
-                    cell.AddCellData(dataName, data);
-                }
+                    cell.SetCellData(dataName, data);
             }
             else
-            {
                 Debug.LogError("Data type " + data.GetType() + " is not supported by grid level " + gridLevel);
-            }
         }
 
         /**
         <summary>
-         USE AT YOUR OWN RISK, YOU SHOULD NOT (UNDER ANY CIRCUMSTANCES) BE REMOVING DATA FROM INDIVIDUAL CELLS. IF YOU WANT TO REMOVE DATA JUST REMOVE IT FROM THE ENTIRE GRID.
-         </summary>
-        **/
-        public void RemoveData(Vector2 position, string dataName, bool ignoreChecks = false)
-        {
-            if (!ignoreChecks)
-                Debug.LogWarning("You are removing data from an individual cell in the data structure. This is (REALLY!) not recommended and may cause errors. Use at your own risk! If you want to remove data, remove it from the entire grid.");
-
-            GridCell cell = GetCell(position);
-            if (cell != null)
-            {
-                cell.RemoveCellData(dataName);
-            }
-        }
-
-        /**
-        <summary>
-            This is ok though
+            Add a data object to the data list with the given name of the cell that contains the data's position.
         </summary>
         **/
-        public void RemoveData(string dataName)
+        public void AddCellData(string dataName, AbstractCellData data)
+        {
+            GridCell cell = GetCell(data.Position);
+
+            if (cell != null)
+                cell.AddCellData(dataName, data);
+        }
+
+        /**
+        <summary>
+            Remove a specific data object with the given name from the cell at the given position (if that cell contains that data object with that name).
+        </summary>
+        
+
+        <returns>
+            True if the data was removed, false otherwise.
+        </returns>
+        **/
+        public bool RemoveCellData(string dataName, AbstractCellData data)
+        {
+            GridCell cell = GetCell(data.Position);
+
+            if (cell != null)
+                return cell.RemoveCellData(dataName);
+
+            return false;
+        }
+
+        /**
+        <summary>
+            Remove the data with the given name from the cell at the given position (if that cell contains data of that name).
+        </summary>
+        
+
+        <returns>
+            True if the data was removed, false otherwise.
+        </returns>
+        **/
+        public bool RemoveCellData(Vector2 position, string dataName)
+        {
+            GridCell cell = GetCell(position);
+
+            if (cell != null)
+                return cell.RemoveCellData(dataName);
+
+            return false;
+        }
+
+        /**
+        <summary>
+            Remove the data with the given name from every cell in this grid (if that cell contains data of that name).
+        </summary>
+        **/
+        public void RemoveCellData(string dataName)
         {
             foreach (GridCell cell in cells)
-            {
                 cell.RemoveCellData(dataName);
-            }
         }
         #endregion
     }
@@ -382,7 +386,7 @@ namespace SimDataStructure
 
         #region Private
         // Data
-        private GenericDictionary<string, AbstractCellData> data = new GenericDictionary<string, AbstractCellData>();
+        private Dictionary<string, List<AbstractCellData>> data = new Dictionary<string, List<AbstractCellData>>();
         #endregion
 
         public GridCell(GridLevel level, Vector2 center)
@@ -390,34 +394,7 @@ namespace SimDataStructure
             this.center = center;
             this.level = level;
             this.bounds = new Bounds(center, level.CellSize);
-
-            // this.setupLevelData();
         }
-
-        // private void setupLevelData()
-        // {
-        //     foreach (KeyValuePair<string, CellDataType> dataEntry in level.CellDataTypes)
-        //     {
-        //         switch (dataEntry.Value)
-        //         {
-        //             case CellDataType.Float:
-        //                 this.AddData(dataEntry.Key, new CellData<float>(4.20f));
-        //                 break;
-        //             case CellDataType.Int:
-        //                 this.AddData(dataEntry.Key, new CellData<int>(69));
-        //                 break;
-        //             case CellDataType.Bool:
-        //                 this.AddData(dataEntry.Key, new CellData<bool>(true));
-        //                 break;
-        //             case CellDataType.Vector2:
-        //                 this.AddData(dataEntry.Key, new CellData<Vector2>(new Vector2(6, 9)));
-        //                 break;
-        //             case CellDataType.Object:
-        //                 this.AddData(dataEntry.Key, new CellData<object>(null));
-        //                 break;
-        //         }
-        //     }
-        // }
 
         #region Cell Querying
         public bool Contains(Vector2 queryPos)
@@ -485,8 +462,16 @@ namespace SimDataStructure
             Get the cell data of a given name from this cell
         </summary>
         **/
-        public AbstractCellData GetCellData(string name)
+        public List<AbstractCellData> GetCellData(string name)
         {
+            if (!this.data.ContainsKey(name))
+            {
+                Debug.Log("Cell does not contain data of name " + name);
+
+                FIX THIS!!! // For some reason, even though im adding the data to the cell, it's not being found when I try to get it
+                return null;
+            }
+
             return this.data[name];
         }
 
@@ -495,43 +480,52 @@ namespace SimDataStructure
             Get all the cell data from this cell
         </summary>
         **/
-        public GenericDictionary<string, AbstractCellData> GetAllCellData()
+        public Dictionary<string, List<AbstractCellData>> GetAllCellData()
         {
             return this.data;
         }
-        
+
         /**
         <summary>
-            Get the names of all data in the cell that of the given type.
-
-            Returns an empty list if this cell does not contain any data of that type.
+            Get all the cell data that moved out of this cell
         </summary>
         **/
-        public string GetDataNames<T>(T data)
+        public Dictionary<string, List<AbstractCellData>> GetDataThatLeftCell()
         {
-            List<string> names = new List<string>();
+            Dictionary<string, List<AbstractCellData>> dataThatLeftCell = new Dictionary<string, List<AbstractCellData>>();
 
-            foreach (KeyValuePair<string, AbstractCellData> dataEntry in this.data)
+            foreach (KeyValuePair<string, List<AbstractCellData>> datumPair in data)
             {
-                if (dataEntry.Value is T)
+                foreach (AbstractCellData datum in datumPair.Value)
                 {
-                    names.Add(dataEntry.Key);
+                    if (!this.Contains(datum.Position))
+                    {
+                        if (dataThatLeftCell.ContainsKey(datumPair.Key))
+                            dataThatLeftCell[datumPair.Key].Add(datum);
+                        else
+                        {
+                            List<AbstractCellData> newList = new List<AbstractCellData>();
+                            newList.Add(datum);
+
+                            dataThatLeftCell.Add(datumPair.Key, newList);
+                        }
+                    }
                 }
             }
 
-            return names;
+            return dataThatLeftCell;
         }
         #endregion
 
         #region Data Management
         /**
         <summary>
-            Set the given data to this cell using the given name
+            Set the given list of data to this cell using the given name
 
-            If the data of the given name already exists, it will be overwritten
+            If a list of data of the given name already exists, it will be overwritten
         </summary>
         **/
-        public void SetCellData(string name, AbstractCellData data)
+        public void SetCellData(string name, List<AbstractCellData> data)
         {
             if (this.data.ContainsKey(name))
                 this.data[name] = data;
@@ -541,12 +535,91 @@ namespace SimDataStructure
 
         /**
         <summary>
-            Remove the data of the given name from this cell
+            Add the given data to this cell using the given name
         </summary>
         **/
-        public void RemoveCellData(string name)
+        public void AddCellData(string name, AbstractCellData data)
         {
-            this.data.Remove(name);
+            if (this.data.ContainsKey(name))
+                this.data[name].Add(data);
+            else
+            {
+                List<AbstractCellData> list = new List<AbstractCellData>();
+                list.Add(data);
+                this.data.Add(name, list);
+
+                Debug.Log("Created new list for " + name + " ::: " + this.data[name]);
+            }
+        }
+
+        /**
+        <summary>
+            Remove the data of the given name from this cell
+        </summary>
+
+        <returns>
+            True if the data was removed, false otherwise
+        </returns>
+        **/
+        public bool RemoveCellData(string name)
+        {
+            if (this.data.ContainsKey(name))
+            {
+                this.data.Remove(name);
+                return true;
+            }
+            else
+                return false;
+        }
+
+        /**
+        <summary>
+            Remove the given data of the given name from this cell
+        </summary>
+
+        <returns>
+            True if the data was removed, false otherwise
+        </returns>
+        **/
+        public bool RemoveCellData(string name, AbstractCellData data)
+        {
+            if (this.data.ContainsKey(name) && this.data[name].Contains(data))
+            {
+                this.data[name].Remove(data);
+                return true;
+            }
+            else
+                return false;
+        }
+
+        /**
+        <summary>
+            Remove all the given data from this cell
+        </summary>
+
+        <returns>
+            True if every element of the given data was removed, false otherwise
+        </returns>
+        **/
+        public bool RemoveCellData(Dictionary<string, List<AbstractCellData>> toRemove)
+        {
+            bool allRemoved = true;
+
+            foreach (string name in toRemove.Keys)
+            {
+                foreach (AbstractCellData datum in toRemove[name])
+                {
+                    if (!this.RemoveCellData(name, datum))
+                        allRemoved = false;
+                }
+            }
+
+            return allRemoved;
+        }
+
+        public void ClearCellData()
+        {
+            this.data.Clear();
         }
         #endregion
     }

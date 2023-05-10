@@ -8,10 +8,10 @@ namespace SimDataStructure.Interfaces
 {
     /**
         <summary>
-            For a class to be able to write data to the data structure, it needs to implement the IWriteDataStructure interface.
+            For a class to be able to write data to the data structure, it needs to implement the IWriteGridData interface.
         </summary>
     */
-    public interface IWriteDataStructure
+    public interface IWriteGridData
     {
         Dictionary<string, int> WriteDataNames { get; } // The levels and names of the data you are writing to the data structure
 

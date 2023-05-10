@@ -1,14 +1,28 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using Managers.Interfaces;
 using SimDataStructure.Data;
-using SimDataStructure.Interfaces;
 using UnityEngine;
 
-namespace TreeGrowth {
-    public class TreeCellData : CellData<Object> {
-        public TreeCellData(Object data) : base(data) {
+namespace TreeGrowth
+{
+    [System.Serializable]
+    public class TreeCellData : AbstractCellData
+    {
+        [SerializeField]
+        private Mesh treeMesh;
+        [SerializeField]
+        private MeshCollider treeCollider;
+
+        [SerializeField]
+        [SerializeReference]
+        private TreeParameters treeParameters;
+
+        public TreeCellData(GameObject treeObj, Mesh mesh, MeshCollider collider, TreeParameters parameters) : base(treeObj)
+        {
+            treeMesh = mesh;
+            treeCollider = collider;
+            treeParameters = parameters;
         }
     }
 }

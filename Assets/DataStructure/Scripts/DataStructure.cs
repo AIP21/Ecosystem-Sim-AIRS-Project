@@ -23,10 +23,13 @@ namespace SimDataStructure
         public List<GameObject> InitializingObjects = new List<GameObject>();
         public List<GameObject> ReadingObjects = new List<GameObject>();
         public List<GameObject> WritingObjects = new List<GameObject>();
-        private List<IReadDataStructure> readingClasses = new List<IReadDataStructure>();
-        private List<IWriteDataStructure> writingClasses = new List<IWriteDataStructure>();
+        private List<IReadGridData> gridReadingClasses = new List<IReadGridData>();
+        private List<IWriteGridData> gridWritingClasses = new List<IWriteGridData>();
+        private List<IReadCellData> cellReadingClasses = new List<IReadCellData>();
+        private List<IWriteCellData> cellWritingClasses = new List<IWriteCellData>();
 
-        private Dictionary<string, AbstractGridData> cachedData = new Dictionary<string, AbstractGridData>();
+        private Dictionary<string, AbstractGridData> cachedGridData = new Dictionary<string, AbstractGridData>();
+        private Dictionary<string, List<AbstractCellData>> cachedCellData = new Dictionary<string, List<AbstractCellData>>();
 
         #region Interface Stuff
         public float TickPriority { get { return -1; } } // -1 because should always be highest priority
@@ -48,34 +51,46 @@ namespace SimDataStructure
 
             st.Stop();
 
-            Debug.Log("Data structure initialized successfully in " + st.ElapsedMilliseconds + " ms");
+            Debug.Log("Data structure initialized successfully. Took: " + st.ElapsedMilliseconds + "ms");
         }
 
         public void Start()
         {
+            print("Data Structure started scanning reader and writer gameObjects");
+
+            Stopwatch st = new Stopwatch();
+            st.Start();
+
             for (int i = 0; i < ReadingObjects.Count; i++)
             {
-                IReadDataStructure[] readers = ReadingObjects[i].GetComponents<IReadDataStructure>();
+                IReadGridData[] gridReaders = ReadingObjects[i].GetComponents<IReadGridData>();
+                gridReadingClasses.AddRange(gridReaders);
 
-                if (readers == null || readers.Length == 0)
+                IReadCellData[] cellReaders = ReadingObjects[i].GetComponents<IReadCellData>();
+                cellReadingClasses.AddRange(cellReaders);
+
+                if ((gridReaders == null || gridReaders.Length == 0) && (cellReaders == null || cellReaders.Length == 0))
                 {
-                    Debug.LogError("DataStructure: GameObject " + ReadingObjects[i].name + " does not have any components that implement IReadDataStructure");
+                    Debug.LogError("DataStructure: GameObject " + ReadingObjects[i].name + " does not have any components that implement IReadGridData or IReadCellData");
                 }
-
-                readingClasses.AddRange(readers);
             }
 
             for (int i = 0; i < WritingObjects.Count; i++)
             {
-                IWriteDataStructure[] writers = WritingObjects[i].GetComponents<IWriteDataStructure>();
+                IWriteGridData[] gridWriters = WritingObjects[i].GetComponents<IWriteGridData>();
+                gridWritingClasses.AddRange(gridWriters);
 
-                if (writers == null || writers.Length == 0)
+                IWriteCellData[] cellWriters = WritingObjects[i].GetComponents<IWriteCellData>();
+                cellWritingClasses.AddRange(cellWriters);
+
+                if ((gridWriters == null || gridWriters.Length == 0) && (cellWriters == null || cellWriters.Length == 0))
                 {
-                    Debug.LogError("DataStructure: GameObject " + WritingObjects[i].name + " does not have any components that implement IWriteDataStructure");
+                    Debug.LogError("DataStructure: GameObject " + ReadingObjects[i].name + " does not have any components that implement IWriteGridData or IWriteCellData");
                 }
-
-                writingClasses.AddRange(writers);
             }
+
+            st.Stop();
+            print("Data Structure finished scanning reader and writer gameObjects. Took: " + st.ElapsedMilliseconds + "ms");
         }
 
         /*
@@ -137,11 +152,11 @@ namespace SimDataStructure
         {
             for (int i = 0; i < InitializingObjects.Count; i++)
             {
-                ISetupDataStructure initializer = InitializingObjects[i].GetComponent<ISetupDataStructure>();
+                ISetupGridData initializer = InitializingObjects[i].GetComponent<ISetupGridData>();
 
                 if (initializer == null)
                 {
-                    Debug.LogError("DataStructure: GameObject " + InitializingObjects[i].name + " does not have a component that implements ISetupDataStructure");
+                    Debug.LogError("DataStructure: GameObject " + InitializingObjects[i].name + " does not have a component that implements ISetupGridData");
                 }
 
                 Dictionary<Tuple<string, int>, AbstractGridData> data = initializer.initializeData();
@@ -165,20 +180,36 @@ namespace SimDataStructure
         {
             // print("DS BeginTick");
 
-            cachedData.Clear();
+            cachedGridData.Clear();
+            cachedCellData.Clear();
 
-            // For every reading class, check if is tickable class and if so, if it will execute this tick.
+            // For every grid reading class, check if is tickable class and if so, if it will execute this tick.
             // If it's not a tickable class, or it is a tickable class and it will tick this tick, send the data to it
-            for (int i = 0; i < readingClasses.Count; i++)
+            for (int i = 0; i < gridReadingClasses.Count; i++)
             {
-                IReadDataStructure reader = readingClasses[i];
+                IReadGridData reader = gridReadingClasses[i];
 
                 ITickableSystem tickable = reader as ITickableSystem;
 
                 if ((tickable != null && tickable.willTickNow)) // tickable == null || 
                 {
                     // Fetch and send the data
-                    sendRequestedData(reader);
+                    sendRequestedGridData(reader);
+                }
+            }
+
+            // For every cell reading class, check if is tickable class and if so, if it will execute this tick.
+            // If it's not a tickable class, or it is a tickable class and it will tick this tick, send the data to it
+            for (int i = 0; i < cellReadingClasses.Count; i++)
+            {
+                IReadCellData reader = cellReadingClasses[i];
+
+                ITickableSystem tickable = reader as ITickableSystem;
+
+                if ((tickable != null && tickable.willTickNow)) // tickable == null || 
+                {
+                    // Fetch and send the data
+                    sendRequestedCellData(reader);
                 }
             }
         }
@@ -192,25 +223,46 @@ namespace SimDataStructure
         {
             // print("DS EndTick");
 
-            // For every writing class, check if is tickable class and if so, if it will execute this tick.
+            // TODO: Move every non-static cell data to a new cell if it moved
+            // Update grid cells (move every non-static cell data to a new cell if it moved)
+            // foreach (Grid grid in Grids){
+            //     grid.UpdateCellData();
+            // }
+
+            // For every grid writing class, check if is tickable class and if so, if it will execute this tick.
             // If it's not a tickable class, or it is a tickable class and it will tick this tick, read the data from it
-            for (int i = 0; i < writingClasses.Count; i++)
+            for (int i = 0; i < gridWritingClasses.Count; i++)
             {
-                IWriteDataStructure writer = writingClasses[i];
+                IWriteGridData writer = gridWritingClasses[i];
 
                 ITickableSystem tickable = writer as ITickableSystem;
 
                 if ((tickable != null && tickable.willTickNow)) // tickable == null || 
                 {
                     // Write the data from the writing class to the data structure
-                    receiveDataFromWriter(writer);
+                    receiveGridDataFromWriter(writer);
+                }
+            }
+
+            // For every cell writing class, check if is tickable class and if so, if it will execute this tick.
+            // If it's not a tickable class, or it is a tickable class and it will tick this tick, read the data from it
+            for (int i = 0; i < cellWritingClasses.Count; i++)
+            {
+                IWriteCellData writer = cellWritingClasses[i];
+
+                ITickableSystem tickable = writer as ITickableSystem;
+
+                if ((tickable != null && tickable.willTickNow)) // tickable == null || 
+                {
+                    // Write the data from the writing class to the data structure
+                    receiveCellDataFromWriter(writer);
                 }
             }
         }
 
-
+        #region IO for Grid Data
         // Fetches the requested data from the data structure, caches it if not already, and sends it to the reading class
-        private void sendRequestedData(IReadDataStructure reader)
+        private void sendRequestedGridData(IReadGridData reader)
         {
             List<AbstractGridData> data = new List<AbstractGridData>();
 
@@ -218,17 +270,17 @@ namespace SimDataStructure
             {
                 int level = reader.ReadDataNames[name];
 
-                if (cachedData.ContainsKey(name))
+                if (cachedGridData.ContainsKey(name))
                 {
                     // Add the cached data to the list of data to send
-                    data.Add(cachedData[name]);
+                    data.Add(cachedGridData[name]);
 
                     // print("A system has requested data that has already been requested. Please avoid this by making sure data is used by only one system per tick.");
                 }
                 else
                 {
                     AbstractGridData newData = Grids[level].GetGridData(name);
-                    cachedData.Add(name, newData);
+                    cachedGridData.Add(name, newData);
 
                     // Add the data to the list of data to send
                     data.Add(newData);
@@ -241,7 +293,9 @@ namespace SimDataStructure
 
         // Receives the new data from a writing class and writes it to the data structure
         // TODO: Make it only write ONCE, not once for every data name. It'll override it anyways so it is currently wasting writes just for them to be overwritten
-        private void receiveDataFromWriter(IWriteDataStructure writer)
+
+        // TODO: Change it to not pass a tuple and just the level to write it on, int is the key and the value is a list of data
+        private void receiveGridDataFromWriter(IWriteGridData writer)
         {
             Dictionary<Tuple<string, int>, object> dataToWrite = writer.writeData();
 
@@ -255,48 +309,105 @@ namespace SimDataStructure
         }
         #endregion
 
-        #region Cell Queries
-        public GridCell GetCell(Vector2 queryPoint, int level)
+        #region IO for Cell Data
+        // Fetches the requested cell data from the data structure, caches it if not already, and sends it to the reading class
+        private void sendRequestedCellData(IReadCellData reader)
         {
-            return Grids[level].GetCell(queryPoint);
+            // List<Dictionary<int, List<AbstractCellData>>> data = new List<Dictionary<int, List<AbstractCellData>>>(); // (CURRENTLY NOT USED!) This is for if we want to pass cell index for some reason
+            List<List<AbstractCellData>> data = new List<List<AbstractCellData>>();
+
+            foreach (string name in reader.ReadDataNames.Keys)
+            {
+                int level = reader.ReadDataNames[name];
+
+                if (cachedCellData.ContainsKey(name))
+                {
+                    // Add the cached data to the list of data to send
+                    data.Add(cachedCellData[name]);
+                }
+                else
+                {
+                    List<AbstractCellData> cellData = Grids[level].GetCellData(name);
+                    // print("Cell data: " + cellData.Count);
+
+                    cachedCellData.Add(name, cellData);
+
+                    // Add the data to the list of data to send
+                    data.Add(cellData);
+                }
+            }
+
+            // Send the data
+            reader.receiveCellData(data);
         }
 
-        public GridCell GetLowestCell(Vector2 queryPoint, int startingLevel)
+        // Receives the new cell data from a writing class and writes it to the data structure
+        private void receiveCellDataFromWriter(IWriteCellData writer)
         {
-            return Grids[startingLevel].GetLowestCell(queryPoint);
-        }
+            Dictionary<Tuple<string, int>, List<AbstractCellData>> dataToAdd = writer.writeCellDataToAdd();
 
-        public GridCell GetCells(Vector2 queryPoint, int startingLevel)
-        {
-            return Grids[startingLevel].GetLowestCell(queryPoint);
-        }
+            foreach (Tuple<string, int> dataPointer in dataToAdd.Keys)
+            {
+                string name = dataPointer.Item1;
+                int level = dataPointer.Item2;
 
-        public List<GridCell> GetPathToLowestCell(Vector2 queryPoint, int startingLevel)
-        {
-            return Grids[startingLevel].GetPathToLowestCell(queryPoint);
+                addCellData(level, name, dataToAdd[dataPointer]);
+            }
+
+            Dictionary<Tuple<string, int>, List<AbstractCellData>> dataToRemove = writer.writeCellDataToRemove();
+            foreach (Tuple<string, int> dataPointer in dataToAdd.Keys)
+            {
+                string name = dataPointer.Item1;
+                int level = dataPointer.Item2;
+
+                removeCellData(level, name, dataToAdd[dataPointer]);
+            }
         }
         #endregion
+        #endregion
 
-        #region Cell Data Queries
-        /**
-        <summary>
-            Get the cell data of a given name from the cell at a specific position on a specific level.
-        </summary>
-        **/
-        public AbstractCellData GetCellData(Vector2 position, int level, string dataName)
-        {
-            return Grids[level]?.GetData(position, dataName);
-        }
+        #region Cell Queries (no longer used. Also should not be used)
+        // public GridCell GetCell(Vector2 queryPoint, int level)
+        // {
+        //     return Grids[level].GetCell(queryPoint);
+        // }
 
-        /**
-        <summary>
-            Get all the cell data from the cell at a specific position on a specific level.
-        </summary>
-        **/
-        public GenericDictionary<string, AbstractCellData> GetCellData(Vector2 position, int level)
-        {
-            return Grids[level]?.GetAllData(position);
-        }
+        // public GridCell GetLowestCell(Vector2 queryPoint, int startingLevel)
+        // {
+        //     return Grids[startingLevel].GetLowestCell(queryPoint);
+        // }
+
+        // public GridCell GetCells(Vector2 queryPoint, int startingLevel)
+        // {
+        //     return Grids[startingLevel].GetLowestCell(queryPoint);
+        // }
+
+        // public List<GridCell> GetPathToLowestCell(Vector2 queryPoint, int startingLevel)
+        // {
+        //     return Grids[startingLevel].GetPathToLowestCell(queryPoint);
+        // }
+        #endregion
+
+        #region Cell Data Queries (no longer used. Also should not be used)
+        // /**
+        // <summary>
+        //     Get the cell data of a given name from the cell at a specific position on a specific level.
+        // </summary>
+        // **/
+        // public List<AbstractCellData> GetCellData(Vector2 position, int level, string dataName)
+        // {
+        //     return Grids[level]?.GetCellData(position, dataName);
+        // }
+
+        // /**
+        // <summary>
+        //     Get all the cell data from the cell at a specific position on a specific level.
+        // </summary>
+        // **/
+        // public GenericDictionary<string, List<AbstractCellData>> GetCellData(Vector2 position, int level)
+        // {
+        //     return Grids[level]?.GetAllCellData(position);
+        // }
         #endregion
 
         #region Data Management
@@ -316,22 +427,28 @@ namespace SimDataStructure
 
         /**
         <summary>
-            Add the given cell data to a cell at a specific position on a specific level.
+            Add the given dictionary of cell data and its position to a cell at that position on a specific level.
         </summary>
         **/
-        private void addCellData(Vector2 position, int level, string dataName, AbstractCellData data)
+        private void addCellData(int level, string dataName, List<AbstractCellData> data)
         {
-            Grids[level].AddData(position, dataName, data);
+            Grid grid = Grids[level];
+
+            foreach (AbstractCellData datum in data)
+                grid.AddCellData(dataName, datum);
         }
 
         /**
         <summary>
-            Remove the cell data of a given name from a cell at a specific position on a specific level.
+            Remove the data in the given dictionary of cell data and its position from a cell at that position on a specific level.
         </summary>
         **/
-        private void removeCellData(Vector2 position, int level, string dataName)
+        private void removeCellData(int level, string dataName, List<AbstractCellData> data)
         {
-            Grids[level].RemoveData(position, dataName);
+            Grid grid = Grids[level];
+
+            foreach (AbstractCellData datum in data)
+                grid.RemoveCellData(dataName, datum);
         }
 
         /**
@@ -341,16 +458,14 @@ namespace SimDataStructure
         **/
         private void removeCellData(int level, string dataName)
         {
-            Grids[level].RemoveData(dataName);
+            Grids[level].RemoveCellData(dataName);
         }
         #endregion
 
         private void OnDestroy()
         {
-            for (int i = 0; i < Grids.Count; i++)
-            {
-                Grids[i].Dispose();
-            }
+            foreach (Grid grid in Grids)
+                grid.Dispose();
         }
     }
 }

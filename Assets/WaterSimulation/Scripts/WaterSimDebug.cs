@@ -7,7 +7,7 @@ using SimDataStructure.Data;
 
 namespace WaterSim
 {
-    public class WaterSimDebug : MonoBehaviour, ITickableSystem, IReadDataStructure
+    public class WaterSimDebug : MonoBehaviour, ITickableSystem, IReadGridData
     {
         [Space(10)]
         [Range(0, 7)]

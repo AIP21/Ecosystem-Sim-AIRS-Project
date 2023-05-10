@@ -16,7 +16,7 @@ namespace SimDataStructure.Interfaces
             An implementing class should initialize only the data that it or its corresponding system will use.
         </summary>
     */
-    public interface ISetupDataStructure
+    public interface ISetupGridData
     {
         /**
             <summary>

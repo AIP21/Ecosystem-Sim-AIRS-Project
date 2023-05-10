@@ -1,3 +1,4 @@
+using System.Linq;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -8,31 +9,36 @@ using UnityEngine;
 
 namespace TreeGrowth
 {
-    public class TreeManager : MonoBehaviour, ITickableSystem, IReadDataStructure, IWriteDataStructure, ISetupDataStructure
+    public class TreeManager : MonoBehaviour, ITickableSystem, IReadCellData, IWriteCellData
     {
+        #region Public
+        [SerializeReference]
+        public List<TreeCellData> trees = new List<TreeCellData>();
+        [SerializeReference]
+        public List<TreeCellData> newTrees = new List<TreeCellData>();
+        [SerializeReference]
+        public List<TreeCellData> nulledTrees = new List<TreeCellData>();
+
+        public bool first = true;
+        public GameObject testTree;
+
+        #endregion
 
         #region Private
-
-
         #region Interface Stuff
         // [Header("Data Structure")]
         private Dictionary<string, int> _readDataNames = new Dictionary<string, int>() {
-            { "waterHeight", 0 },
-            { "waterFlow", 0 },
-            { "waterVelocity", 0 },
-            { "soilSaturation", 1 }, // 2
-            { "soilUse", 2 } // 4
-        };  // The names of the data this is reading from the data structure
+            { "trees", 1 }, // 2
+        };  // The names of the cell data this is reading from the data structure, along with its grid level
         public Dictionary<string, int> ReadDataNames { get { return _readDataNames; } }
 
         private Dictionary<string, int> _writeDataNames = new Dictionary<string, int>(){
-            { "waterHeight", 0 },
-            { "waterFlow", 0 },
-            { "waterVelocity", 0 },
-            { "soilSaturation", 1 }, // 2
-            { "soilUse", 2 } // 4
-        };  // The names of the data this is writing to the data structure
+            { "trees", 1 }, // 2
+        };  // The names of the cell data this is writing to the data structure, along with its grid level
         public Dictionary<string, int> WriteDataNames { get { return _writeDataNames; } }
+
+        private string readWriteName = "";
+        private int readWriteLevel = 0;
 
         public float TickPriority { get { return 2; } }
         public int TickInterval { get { return 5; } }
@@ -43,18 +49,39 @@ namespace TreeGrowth
 
         private void Awake()
         {
-
+            readWriteName = WriteDataNames.Keys.ElementAt(0);
+            readWriteLevel = WriteDataNames[readWriteName];
         }
 
         #region Ticking
         public void BeginTick(float deltaTime)
         {
-
+            this.newTrees.Clear();
+            this.nulledTrees.Clear();
         }
 
         public void Tick(float deltaTime)
         {
+            if (first == true)
+            {
+                first = false;
 
+                TreeGenerator gen = testTree.GetComponent<TreeGenerator>();
+                gen.StartCoroutine(gen.BuildCoroutine());
+
+                Mesh mesh = testTree.GetComponent<MeshFilter>().mesh;
+                MeshCollider collider = testTree.GetComponent<MeshCollider>();
+
+                TreeCellData tree = new TreeCellData(testTree, mesh, collider, null);
+
+                newTrees.Add(tree);
+            }
+
+            // Tick each tree
+            foreach (TreeCellData tree in trees)
+            {
+                tickTree(tree);
+            }
         }
 
         public void EndTick(float deltaTime)
@@ -64,129 +91,61 @@ namespace TreeGrowth
         #endregion
 
         #region Data Structure
-        public Dictionary<Tuple<string, int>, AbstractGridData> initializeData()
+        public void receiveCellData(List<List<AbstractCellData>> sentData)
         {
-            Dictionary<Tuple<string, int>, AbstractGridData> data = new Dictionary<Tuple<string, int>, AbstractGridData>();
+            // All we request is the list of trees, so we can just get the first list
+            List<AbstractCellData> treeData = sentData[0];
 
-            foreach (string name in ReadDataNames.Keys)
+            if (treeData == null)
             {
-                switch (name)
-                {
-                    case "waterHeight":
-                        // data.Add(new Tuple<string, int>(name, ReadDataNames[name]), new TextureGridData(resolution, RenderTextureFormat.RFloat, FilterMode.Bilinear));
-                        break;
-                    case "waterFlow":
-                        // data.Add(new Tuple<string, int>(name, ReadDataNames[name]), new TextureGridData(resolution, RenderTextureFormat.ARGBHalf, FilterMode.Bilinear));
-                        break;
-                    case "waterVelocity":
-                        // data.Add(new Tuple<string, int>(name, ReadDataNames[name]), new TextureGridData(resolution, RenderTextureFormat.RGFloat, FilterMode.Bilinear));
-                        break;
-                    case "soilSaturation":
-                        // data.Add(new Tuple<string, int>(name, ReadDataNames[name]), new TextureGridData(resolution, RenderTextureFormat.RFloat, FilterMode.Bilinear));
-                        break;
-                    case "soilUse":
-                        // data.Add(new Tuple<string, int>(name, ReadDataNames[name]), new TextureGridData(resolution, RenderTextureFormat.RFloat, FilterMode.Bilinear));
-                        break;
-                    default:
-                        break;
-                }
+                print("Tree data is null. " + sentData.Count);
+                return;
             }
+
+            // Clear the current list of trees
+            trees.Clear();
+
+            // Add all the trees to the list
+            foreach (AbstractCellData data in treeData)
+            {
+                trees.Add((TreeCellData)data);
+            }
+        }
+
+        public Dictionary<Tuple<string, int>, List<AbstractCellData>> writeCellDataToAdd()
+        {
+            Dictionary<Tuple<string, int>, List<AbstractCellData>> data = new Dictionary<Tuple<string, int>, List<AbstractCellData>>();
+
+            // Add the data
+            List<AbstractCellData> treeData = new List<AbstractCellData>();
+
+            foreach (TreeCellData tree in this.newTrees)
+                treeData.Add(tree);
+
+            data.Add(new Tuple<string, int>(readWriteName, readWriteLevel), treeData);
 
             return data;
         }
 
-        public void receiveData(List<AbstractGridData> data)
+        public Dictionary<Tuple<string, int>, List<AbstractCellData>> writeCellDataToRemove()
         {
-            int i = 0;
+            Dictionary<Tuple<string, int>, List<AbstractCellData>> data = new Dictionary<Tuple<string, int>, List<AbstractCellData>>();
 
-            foreach (string name in ReadDataNames.Keys)
-            {
-                AbstractGridData abstractData = data[i];
-                TextureGridData dat = abstractData is TextureGridData ? (TextureGridData)abstractData : null;
+            // Add the data
+            List<AbstractCellData> treeData = new List<AbstractCellData>();
 
-                if (dat == null)
-                {
-                    print("Received NULL data");
-                    continue;
-                }
-                // else if (dat.GetData() == null)
-                // {
-                //     print("Received data has NULL data");
-                //     continue;
-                // }
+            foreach (TreeCellData tree in this.nulledTrees)
+                treeData.Add(tree);
 
-                // Copy the received data to the appropriate texture
-                switch (name)
-                {
-                    case "waterHeight":
-                        // print("Receiving waterHeight map");
-                        // dat.GetData(waterMap);
+            data.Add(new Tuple<string, int>(readWriteName, readWriteLevel), treeData);
 
-                        break;
-                    case "waterFlow":
-                        // print("Receiving waterFlow map");
-                        // dat.GetData(flowMap);
-
-                        break;
-                    case "waterVelocity":
-                        // print("Receiving waterVelocity map");
-                        // dat.GetData(velocityMap);
-
-                        break;
-                    case "soilSaturation":
-                        // print("Receiving soilSaturation map");
-                        // dat.GetData(saturationMap);
-
-                        break;
-                    case "soilUse":
-                        // print("Receiving soilUse map");
-                        // dat.GetData(soilUseMap);
-
-                        break;
-                }
-
-                i++;
-            }
-        }
-
-        public Dictionary<Tuple<string, int>, object> writeData()
-        {
-            Dictionary<Tuple<string, int>, object> toWrite = new Dictionary<Tuple<string, int>, object>();
-
-            foreach (string name in WriteDataNames.Keys)
-            {
-                switch (name)
-                {
-                    case "waterHeight":
-                        // print("Writing waterHeight map");
-                        // toWrite.Add(new Tuple<string, int>(name, WriteDataNames[name]), newWaterMap);
-
-                        break;
-                    case "waterFlow":
-                        // print("Writing waterFlow map");
-                        // toWrite.Add(new Tuple<string, int>(name, WriteDataNames[name]), newFlowMap);
-
-                        break;
-                    case "waterVelocity":
-                        // print("Writing waterVelocity map");
-                        // toWrite.Add(new Tuple<string, int>(name, WriteDataNames[name]), newVelocityMap);
-
-                        break;
-                    case "soilSaturation":
-                        // print("Writing soilSaturation map");
-                        // toWrite.Add(new Tuple<string, int>(name, WriteDataNames[name]), newSaturationMap);
-
-                        break;
-                    case "soilUse":
-                        // print("Writing soilUse map");
-                        // toWrite.Add(new Tuple<string, int>(name, WriteDataNames[name]), newSoilUseMap);
-
-                        break;
-                }
-            }
-
-            return toWrite;
+            return data;
         }
         #endregion
+
+        private void tickTree(TreeCellData tree)
+        {
+
+        }
     }
 }

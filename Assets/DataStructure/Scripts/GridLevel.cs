@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using SimDataStructure.Data;
+using System;
 
 namespace SimDataStructure
 {
@@ -11,9 +12,9 @@ namespace SimDataStructure
         public int Level;
         public Vector2 CellSize;
 
-        public GenericDictionary<string, CellDataType> CellDataTypes = new GenericDictionary<string, CellDataType>();
+        public GenericDictionary<string, Type> CellDataTypes = new GenericDictionary<string, Type>();
 
-        public bool CanContainData(string dataName, CellDataType dataType)
+        public bool CanContainData(string dataName, Type dataType)
         {
             return CellDataTypes.ContainsKey(dataName) && CellDataTypes[dataName] == dataType;
         }

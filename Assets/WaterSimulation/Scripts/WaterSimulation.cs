@@ -8,7 +8,7 @@ using SimDataStructure.Interfaces;
 
 namespace WaterSim
 {
-    public class WaterSimulation : MonoBehaviour, ITickableSystem, IReadDataStructure, IWriteDataStructure, ISetupDataStructure
+    public class WaterSimulation : MonoBehaviour, ITickableSystem, IReadGridData, IWriteGridData, ISetupGridData
     {
         #region Public
         [Header("Compute Shader")]

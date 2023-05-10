@@ -8,66 +8,98 @@ namespace SimDataStructure.Data
     [Serializable]
     public abstract class AbstractCellData
     {
-        public CellDataType type;
+        /**
+        <summary>
+            Whether this cell data is static.
 
-        public AbstractCellData()
+            A static cell data means that it's gameObject does not move around, and so would always in the same cell.
+        </summary>
+        **/
+        private bool isStatic;
+
+        private GameObject gameObject;
+
+        private Transform transform;
+
+        public AbstractCellData(GameObject gameObject)
         {
+            this.gameObject = gameObject;
+            this.transform = gameObject.transform;
         }
 
-        public CellDataType DataType()
-        {
-            return type;
-        }
+        #region Getters and Setters
+        /**
+        <summary>
+            Whether this cell data is static.
 
-        public string DataTypeName()
-        {
-            return type.ToString();
-        }
+            A static cell data means that it's gameObject does not move around, and so would always in the same cell.
+        </summary>
+        **/
+        public bool IsStatic { get { return isStatic; } }
+
+        public GameObject GameObject { get { return gameObject; } }
+
+        public Transform Transform { get { return transform; } }
+
+        public Vector3 Position { get { return transform.position; } }
+        #endregion
     }
 
-    // [CreateAssetMenu(menuName = "Data Structure/Cell Data")]
-    public class CellData<T> : AbstractCellData
-    {
-        public T data;
+    // // [CreateAssetMenu(menuName = "Data Structure/Cell Data")]
+    // public class CellData<T> : AbstractCellData
+    // {
+    //     public CellDataType type;
 
-        public CellData(T data) : base()
-        {
-            this.data = data;
+    //     public T data;
 
-            if (typeof(T) == typeof(float))
-            {
-                type = CellDataType.Float;
-            }
-            else if (typeof(T) == typeof(int))
-            {
-                type = CellDataType.Int;
-            }
-            else if (typeof(T) == typeof(bool))
-            {
-                type = CellDataType.Bool;
-            }
-            else if (typeof(T) == typeof(Vector2))
-            {
-                type = CellDataType.Vector2;
-            }
-            else
-            {
-                type = CellDataType.Object;
-            }
-        }
+    //     public CellData(T data) : base()
+    //     {
+    //         this.data = data;
 
-        public override string ToString()
-        {
-            return data.ToString();
-        }
-    }
+    //         if (typeof(T) == typeof(float))
+    //         {
+    //             type = CellDataType.Float;
+    //         }
+    //         else if (typeof(T) == typeof(int))
+    //         {
+    //             type = CellDataType.Int;
+    //         }
+    //         else if (typeof(T) == typeof(bool))
+    //         {
+    //             type = CellDataType.Bool;
+    //         }
+    //         else if (typeof(T) == typeof(Vector2))
+    //         {
+    //             type = CellDataType.Vector2;
+    //         }
+    //         else
+    //         {
+    //             type = CellDataType.Object;
+    //         }
+    //     }
 
-    public enum CellDataType
-    {
-        Float,
-        Int,
-        Bool,
-        Vector2,
-        Object
-    }
+    //     public override string ToString()
+    //     {
+    //         return data.ToString();
+    //     }
+
+    //     public CellDataType DataType()
+    //     {
+    //         return type;
+    //     }
+
+    //     public string DataTypeName()
+    //     {
+    //         return type.ToString();
+    //     }
+    // }
+
+    // public enum CellDataType
+    // {
+    //     Float,
+    //     Int,
+    //     Bool,
+    //     Vector2,
+    //     Object
+    // }
 }
