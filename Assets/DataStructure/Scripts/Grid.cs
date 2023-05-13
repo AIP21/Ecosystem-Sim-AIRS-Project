@@ -5,6 +5,7 @@ using SimDataStructure.Data;
 
 namespace SimDataStructure
 {
+    [Serializable]
     public class Grid
     {
         #region Variables
@@ -223,7 +224,7 @@ namespace SimDataStructure
             Returns null if no data or cell exists.
         </summary>
         **/
-        public Dictionary<string, List<AbstractCellData>> GetAllCellData(Vector2 position)
+        public GenericDictionary<string, List<AbstractCellData>> GetAllCellData(Vector2 position)
         {
             GridCell cell = GetCell(position);
 
@@ -371,6 +372,7 @@ namespace SimDataStructure
         #endregion
     }
 
+    [Serializable]
     public class GridCell
     {
         #region Public
@@ -386,7 +388,7 @@ namespace SimDataStructure
 
         #region Private
         // Data
-        private Dictionary<string, List<AbstractCellData>> data = new Dictionary<string, List<AbstractCellData>>();
+        private GenericDictionary<string, List<AbstractCellData>> data = new GenericDictionary<string, List<AbstractCellData>>();
         #endregion
 
         public GridCell(GridLevel level, Vector2 center)
@@ -465,12 +467,7 @@ namespace SimDataStructure
         public List<AbstractCellData> GetCellData(string name)
         {
             if (!this.data.ContainsKey(name))
-            {
-                Debug.Log("Cell does not contain data of name " + name);
-
-                FIX THIS!!! // For some reason, even though im adding the data to the cell, it's not being found when I try to get it
                 return null;
-            }
 
             return this.data[name];
         }
@@ -480,7 +477,7 @@ namespace SimDataStructure
             Get all the cell data from this cell
         </summary>
         **/
-        public Dictionary<string, List<AbstractCellData>> GetAllCellData()
+        public GenericDictionary<string, List<AbstractCellData>> GetAllCellData()
         {
             return this.data;
         }
@@ -547,8 +544,6 @@ namespace SimDataStructure
                 List<AbstractCellData> list = new List<AbstractCellData>();
                 list.Add(data);
                 this.data.Add(name, list);
-
-                Debug.Log("Created new list for " + name + " ::: " + this.data[name]);
             }
         }
 

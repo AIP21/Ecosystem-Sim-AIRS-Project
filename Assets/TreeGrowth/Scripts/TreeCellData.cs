@@ -15,14 +15,44 @@ namespace TreeGrowth
         private MeshCollider treeCollider;
 
         [SerializeField]
+        private TreeGenerator generator;
+
+        [SerializeField]
         [SerializeReference]
         private TreeParameters treeParameters;
 
-        public TreeCellData(GameObject treeObj, Mesh mesh, MeshCollider collider, TreeParameters parameters) : base(treeObj)
+        public TreeCellData(GameObject treeObj, TreeGenerator generator, Mesh mesh, MeshCollider collider, TreeParameters parameters) : base(treeObj)
         {
-            treeMesh = mesh;
-            treeCollider = collider;
-            treeParameters = parameters;
+            this.generator = generator;
+            this.treeMesh = mesh;
+            this.treeCollider = collider;
+            this.treeParameters = parameters;
         }
+
+        #region Getters and Setters
+        public Mesh TreeMesh
+        {
+            get { return treeMesh; }
+            set { treeMesh = value; }
+        }
+
+        public MeshCollider TreeCollider
+        {
+            get { return treeCollider; }
+            set { treeCollider = value; }
+        }
+
+        public TreeGenerator Generator
+        {
+            get { return generator; }
+            set { generator = value; }
+        }
+
+        public TreeParameters TreeParameters
+        {
+            get { return treeParameters; }
+            set { treeParameters = value; }
+        }
+        #endregion
     }
 }

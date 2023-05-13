@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Linq;
 using System;
 using System.Collections;
@@ -20,7 +21,9 @@ namespace TreeGrowth
         public List<TreeCellData> nulledTrees = new List<TreeCellData>();
 
         public bool first = true;
-        public GameObject testTree;
+        public GameObject TestTreePrefab;
+
+        public Bounds initialTreeGenerationBounds = new Bounds(new Vector3(-50, 0, -50), new Vector3(50, 0, 50));
 
         #endregion
 
@@ -66,15 +69,7 @@ namespace TreeGrowth
             {
                 first = false;
 
-                TreeGenerator gen = testTree.GetComponent<TreeGenerator>();
-                gen.StartCoroutine(gen.BuildCoroutine());
-
-                Mesh mesh = testTree.GetComponent<MeshFilter>().mesh;
-                MeshCollider collider = testTree.GetComponent<MeshCollider>();
-
-                TreeCellData tree = new TreeCellData(testTree, mesh, collider, null);
-
-                newTrees.Add(tree);
+                createInitialTrees();
             }
 
             // Tick each tree
@@ -97,19 +92,14 @@ namespace TreeGrowth
             List<AbstractCellData> treeData = sentData[0];
 
             if (treeData == null)
-            {
-                print("Tree data is null. " + sentData.Count);
                 return;
-            }
 
             // Clear the current list of trees
             trees.Clear();
 
             // Add all the trees to the list
             foreach (AbstractCellData data in treeData)
-            {
                 trees.Add((TreeCellData)data);
-            }
         }
 
         public Dictionary<Tuple<string, int>, List<AbstractCellData>> writeCellDataToAdd()
@@ -122,7 +112,8 @@ namespace TreeGrowth
             foreach (TreeCellData tree in this.newTrees)
                 treeData.Add(tree);
 
-            data.Add(new Tuple<string, int>(readWriteName, readWriteLevel), treeData);
+            if (treeData.Count > 0)
+                data.Add(new Tuple<string, int>(readWriteName, readWriteLevel), treeData);
 
             return data;
         }
@@ -137,15 +128,36 @@ namespace TreeGrowth
             foreach (TreeCellData tree in this.nulledTrees)
                 treeData.Add(tree);
 
-            data.Add(new Tuple<string, int>(readWriteName, readWriteLevel), treeData);
+            if (treeData.Count > 0)
+                data.Add(new Tuple<string, int>(readWriteName, readWriteLevel), treeData);
 
             return data;
         }
         #endregion
 
+        private void createInitialTrees()
+        {
+            for (int i = 0; i < 100; i++)
+            {
+                Vector3 randPos = new Vector3(UnityEngine.Random.Range(initialTreeGenerationBounds.min.x, initialTreeGenerationBounds.max.x), 0, UnityEngine.Random.Range(initialTreeGenerationBounds.min.z, initialTreeGenerationBounds.max.z));
+
+                GameObject testTree = Instantiate(this.TestTreePrefab, randPos, Quaternion.identity);
+
+                TreeGenerator gen = testTree.GetComponent<TreeGenerator>();
+                gen.StartCoroutine(gen.BuildCoroutine());
+
+                Mesh mesh = testTree.GetComponent<MeshFilter>().mesh;
+                MeshCollider collider = testTree.GetComponent<MeshCollider>();
+
+                TreeCellData tree = new TreeCellData(testTree, gen, mesh, collider, null);
+
+                newTrees.Add(tree);
+            }
+        }
+
         private void tickTree(TreeCellData tree)
         {
-
+            // if ()
         }
     }
 }

@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -12,17 +13,22 @@ namespace SimDataStructure
 {
     public class DataStructure : MonoBehaviour, ITickableSystem
     {
+        #region Public
         [Header("Grids")]
         public Vector2 OverallSize;
         [Tooltip("Highest level grid is the largest grid and has the highest index")]
         public List<GridLevel> Levels;
+        public List<Grid> Grids { get; private set; }
         [SerializeField]
-        private List<Grid> Grids = new List<Grid>();
+        private List<Grid> grids = new List<Grid>();
 
         [Header("Data")]
         public List<GameObject> InitializingObjects = new List<GameObject>();
         public List<GameObject> ReadingObjects = new List<GameObject>();
         public List<GameObject> WritingObjects = new List<GameObject>();
+        #endregion
+
+        #region Private
         private List<IReadGridData> gridReadingClasses = new List<IReadGridData>();
         private List<IWriteGridData> gridWritingClasses = new List<IWriteGridData>();
         private List<IReadCellData> cellReadingClasses = new List<IReadCellData>();
@@ -30,12 +36,45 @@ namespace SimDataStructure
 
         private Dictionary<string, AbstractGridData> cachedGridData = new Dictionary<string, AbstractGridData>();
         private Dictionary<string, List<AbstractCellData>> cachedCellData = new Dictionary<string, List<AbstractCellData>>();
+        #endregion
 
         #region Interface Stuff
         public float TickPriority { get { return -1; } } // -1 because should always be highest priority
         public int TickInterval { get { return 0; } }
         public int ticksSinceLastTick { get; set; }
         public bool willTickNow { get; set; }
+        #endregion
+
+        #region Debug
+        [Header("Debug")]
+        public bool CalculateDebugInfo = false;
+
+        [Space(10)]
+        public float gridReadsPerTick = 0;
+        public float gridWritesPerTick = 0;
+        public float gridActivityPerTick = 0;
+        [Space(5)]
+        public float cellReadsPerTick = 0;
+        public float cellWritesPerTick = 0;
+        public float cellActivityPerTick = 0;
+
+        [Space(10)]
+        public float gridReadTimePerTick = 0;
+        public float gridWriteTimePerTick = 0;
+        [Space(5)]
+        public float cellReadTimePerTick = 0;
+        public float cellWriteTimePerTick = 0;
+
+        private List<float> _gridReadsPerTick = new List<float>();
+        private List<float> _gridWritesPerTick = new List<float>();
+        private List<float> _cellReadsPerTick = new List<float>();
+        private List<float> _cellWritesPerTick = new List<float>();
+
+        private List<float> _gridReadTimePerTick = new List<float>();
+        private List<float> _gridWriteTimePerTick = new List<float>();
+
+        private List<float> _cellReadTimePerTick = new List<float>();
+        private List<float> _cellWriteTimePerTick = new List<float>();
         #endregion
 
         public void Awake()
@@ -104,23 +143,23 @@ namespace SimDataStructure
             // Create grids
             for (int i = 0; i < levels.Count; i++)
             {
-                Grids.Add(new Grid(OverallSize, levels[i]));
+                grids.Add(new Grid(OverallSize, levels[i]));
             }
 
             // Populate grids from lowest level to highest level
-            for (int i = 0; i < Grids.Count; i++)
+            for (int i = 0; i < grids.Count; i++)
             {
-                Grid grid = Grids[i];
+                Grid grid = grids[i];
 
                 // Set the child grid of the grid below this one
-                grid.childGrid = i == 0 ? null : Grids[i - 1];
+                grid.childGrid = i == 0 ? null : grids[i - 1];
 
                 // If this is the highest level grid, skip
-                if (i == Grids.Count - 1)
+                if (i == grids.Count - 1)
                     continue;
 
                 // Get the grid above this one (parent grid) and set it as the parent grid
-                Grid gridAbove = Grids[i + 1];
+                Grid gridAbove = grids[i + 1];
                 grid.parentGrid = gridAbove;
 
                 // Go through each cell in this grid
@@ -164,13 +203,13 @@ namespace SimDataStructure
                 foreach (KeyValuePair<Tuple<string, int>, AbstractGridData> entry in data)
                 {
                     // Check if the level is valid
-                    if (entry.Key.Item2 < 0 || entry.Key.Item2 >= Grids.Count)
+                    if (entry.Key.Item2 < 0 || entry.Key.Item2 >= grids.Count)
                     {
-                        Debug.LogError("DataStructure: GameObject " + InitializingObjects[i].name + " returned a data object to with an invalid level: " + entry.Key.Item2 + " (should be between 0 and " + (Grids.Count - 1) + ")");
+                        Debug.LogError("DataStructure: GameObject " + InitializingObjects[i].name + " returned a data object to with an invalid level: " + entry.Key.Item2 + " (should be between 0 and " + (grids.Count - 1) + ")");
                         continue;
                     }
 
-                    Grids[entry.Key.Item2].SetGridData(entry.Key.Item1, entry.Value);
+                    grids[entry.Key.Item2].SetGridData(entry.Key.Item1, entry.Value);
                 }
             }
         }
@@ -183,6 +222,17 @@ namespace SimDataStructure
             cachedGridData.Clear();
             cachedCellData.Clear();
 
+            int gridReadCount = 0;
+            int cellReadCount = 0;
+
+            Stopwatch st = null;
+
+            if (CalculateDebugInfo)
+            {
+                st = new Stopwatch();
+                st.Start();
+            }
+
             // For every grid reading class, check if is tickable class and if so, if it will execute this tick.
             // If it's not a tickable class, or it is a tickable class and it will tick this tick, send the data to it
             for (int i = 0; i < gridReadingClasses.Count; i++)
@@ -191,11 +241,26 @@ namespace SimDataStructure
 
                 ITickableSystem tickable = reader as ITickableSystem;
 
-                if ((tickable != null && tickable.willTickNow)) // tickable == null || 
+                if (tickable == null || (tickable != null && tickable.willTickNow))
                 {
                     // Fetch and send the data
-                    sendRequestedGridData(reader);
+                    int reads = sendRequestedGridData(reader);
+
+                    if (CalculateDebugInfo)
+                        gridReadCount += reads;
                 }
+            }
+
+            if (CalculateDebugInfo)
+            {
+                st.Stop();
+
+                Utils.AddToAverageList<float>(_gridReadTimePerTick, (float)st.Elapsed.TotalMilliseconds);
+
+                Utils.AddToAverageList<float>(_gridReadsPerTick, gridReadCount);
+
+                st.Reset();
+                st.Start();
             }
 
             // For every cell reading class, check if is tickable class and if so, if it will execute this tick.
@@ -206,11 +271,24 @@ namespace SimDataStructure
 
                 ITickableSystem tickable = reader as ITickableSystem;
 
-                if ((tickable != null && tickable.willTickNow)) // tickable == null || 
+                if (tickable == null || (tickable != null && tickable.willTickNow))
                 {
                     // Fetch and send the data
-                    sendRequestedCellData(reader);
+                    int reads = sendRequestedCellData(reader);
+
+                    if (CalculateDebugInfo)
+                        cellReadCount += reads;
                 }
+            }
+
+
+            if (CalculateDebugInfo)
+            {
+                st.Stop();
+
+                Utils.AddToAverageList<float>(_cellReadTimePerTick, (float)st.Elapsed.TotalMilliseconds);
+
+                Utils.AddToAverageList<float>(_cellReadsPerTick, cellReadCount);
             }
         }
 
@@ -229,6 +307,17 @@ namespace SimDataStructure
             //     grid.UpdateCellData();
             // }
 
+            int gridWriteCount = 0;
+            int cellWriteCount = 0;
+
+            Stopwatch st = null;
+
+            if (CalculateDebugInfo)
+            {
+                st = new Stopwatch();
+                st.Start();
+            }
+
             // For every grid writing class, check if is tickable class and if so, if it will execute this tick.
             // If it's not a tickable class, or it is a tickable class and it will tick this tick, read the data from it
             for (int i = 0; i < gridWritingClasses.Count; i++)
@@ -237,11 +326,24 @@ namespace SimDataStructure
 
                 ITickableSystem tickable = writer as ITickableSystem;
 
-                if ((tickable != null && tickable.willTickNow)) // tickable == null || 
+                if (tickable == null || (tickable != null && tickable.willTickNow))
                 {
                     // Write the data from the writing class to the data structure
-                    receiveGridDataFromWriter(writer);
+                    int writes = receiveGridDataFromWriter(writer);
+
+                    if (CalculateDebugInfo)
+                        gridWriteCount += writes;
                 }
+            }
+
+            if (CalculateDebugInfo)
+            {
+                st.Stop();
+
+                Utils.AddToAverageList<float>(_gridWriteTimePerTick, (float)st.Elapsed.TotalMilliseconds);
+
+                st.Reset();
+                st.Start();
             }
 
             // For every cell writing class, check if is tickable class and if so, if it will execute this tick.
@@ -252,19 +354,49 @@ namespace SimDataStructure
 
                 ITickableSystem tickable = writer as ITickableSystem;
 
-                if ((tickable != null && tickable.willTickNow)) // tickable == null || 
+                if (tickable == null || (tickable != null && tickable.willTickNow))
                 {
                     // Write the data from the writing class to the data structure
-                    receiveCellDataFromWriter(writer);
+                    int writes = receiveCellDataFromWriter(writer);
+
+                    if (CalculateDebugInfo)
+                        cellWriteCount += writes;
                 }
+            }
+
+            if (CalculateDebugInfo)
+            {
+                st.Stop();
+
+                Utils.AddToAverageList<float>(_cellWriteTimePerTick, (float)st.Elapsed.TotalMilliseconds);
+
+                Utils.AddToAverageList<float>(_gridWritesPerTick, gridWriteCount);
+                Utils.AddToAverageList<float>(_cellWritesPerTick, cellWriteCount);
+
+                gridReadsPerTick = Utils.Average(_gridReadsPerTick);
+                cellReadsPerTick = Utils.Average(_cellReadsPerTick);
+
+                gridWritesPerTick = Utils.Average(_gridWritesPerTick);
+                cellWritesPerTick = Utils.Average(_cellWritesPerTick);
+
+                gridReadTimePerTick = Utils.Average(_gridReadTimePerTick);
+                cellReadTimePerTick = Utils.Average(_cellReadTimePerTick);
+
+                gridWriteTimePerTick = Utils.Average(_gridWriteTimePerTick);
+                cellWriteTimePerTick = Utils.Average(_cellWriteTimePerTick);
+
+                gridActivityPerTick = gridReadsPerTick + gridWritesPerTick;
+                cellActivityPerTick = cellReadsPerTick + cellWritesPerTick;
             }
         }
 
         #region IO for Grid Data
         // Fetches the requested data from the data structure, caches it if not already, and sends it to the reading class
-        private void sendRequestedGridData(IReadGridData reader)
+        private int sendRequestedGridData(IReadGridData reader)
         {
             List<AbstractGridData> data = new List<AbstractGridData>();
+
+            int reads = 0;
 
             foreach (string name in reader.ReadDataNames.Keys)
             {
@@ -279,25 +411,31 @@ namespace SimDataStructure
                 }
                 else
                 {
-                    AbstractGridData newData = Grids[level].GetGridData(name);
+                    AbstractGridData newData = grids[level].GetGridData(name);
                     cachedGridData.Add(name, newData);
 
                     // Add the data to the list of data to send
                     data.Add(newData);
                 }
+
+                reads++;
             }
 
             // Send the data
             reader.receiveData(data);
+
+            return reads;
         }
 
         // Receives the new data from a writing class and writes it to the data structure
         // TODO: Make it only write ONCE, not once for every data name. It'll override it anyways so it is currently wasting writes just for them to be overwritten
 
         // TODO: Change it to not pass a tuple and just the level to write it on, int is the key and the value is a list of data
-        private void receiveGridDataFromWriter(IWriteGridData writer)
+        private int receiveGridDataFromWriter(IWriteGridData writer)
         {
             Dictionary<Tuple<string, int>, object> dataToWrite = writer.writeData();
+
+            int writes = 0;
 
             foreach (Tuple<string, int> key in dataToWrite.Keys)
             {
@@ -305,16 +443,22 @@ namespace SimDataStructure
                 int level = key.Item2;
 
                 setGridData(level, name, dataToWrite[key]);
+
+                writes++;
             }
+
+            return writes;
         }
         #endregion
 
         #region IO for Cell Data
         // Fetches the requested cell data from the data structure, caches it if not already, and sends it to the reading class
-        private void sendRequestedCellData(IReadCellData reader)
+        private int sendRequestedCellData(IReadCellData reader)
         {
             // List<Dictionary<int, List<AbstractCellData>>> data = new List<Dictionary<int, List<AbstractCellData>>>(); // (CURRENTLY NOT USED!) This is for if we want to pass cell index for some reason
             List<List<AbstractCellData>> data = new List<List<AbstractCellData>>();
+
+            int reads = 0;
 
             foreach (string name in reader.ReadDataNames.Keys)
             {
@@ -327,7 +471,7 @@ namespace SimDataStructure
                 }
                 else
                 {
-                    List<AbstractCellData> cellData = Grids[level].GetCellData(name);
+                    List<AbstractCellData> cellData = grids[level].GetCellData(name);
                     // print("Cell data: " + cellData.Count);
 
                     cachedCellData.Add(name, cellData);
@@ -335,16 +479,22 @@ namespace SimDataStructure
                     // Add the data to the list of data to send
                     data.Add(cellData);
                 }
+
+                reads++;
             }
 
             // Send the data
             reader.receiveCellData(data);
+
+            return reads;
         }
 
         // Receives the new cell data from a writing class and writes it to the data structure
-        private void receiveCellDataFromWriter(IWriteCellData writer)
+        private int receiveCellDataFromWriter(IWriteCellData writer)
         {
             Dictionary<Tuple<string, int>, List<AbstractCellData>> dataToAdd = writer.writeCellDataToAdd();
+
+            int writes = 0;
 
             foreach (Tuple<string, int> dataPointer in dataToAdd.Keys)
             {
@@ -352,16 +502,23 @@ namespace SimDataStructure
                 int level = dataPointer.Item2;
 
                 addCellData(level, name, dataToAdd[dataPointer]);
+                
+                writes++;
             }
 
             Dictionary<Tuple<string, int>, List<AbstractCellData>> dataToRemove = writer.writeCellDataToRemove();
-            foreach (Tuple<string, int> dataPointer in dataToAdd.Keys)
+
+            foreach (Tuple<string, int> dataPointer in dataToRemove.Keys)
             {
                 string name = dataPointer.Item1;
                 int level = dataPointer.Item2;
 
-                removeCellData(level, name, dataToAdd[dataPointer]);
+                removeCellData(level, name, dataToRemove[dataPointer]);
+
+                writes++;
             }
+
+            return writes;
         }
         #endregion
         #endregion
@@ -422,7 +579,7 @@ namespace SimDataStructure
         **/
         private void setGridData(int level, string name, object data)
         {
-            Grids[level].SetGridData(name, data);
+            grids[level].SetGridData(name, data);
         }
 
         /**
@@ -432,7 +589,7 @@ namespace SimDataStructure
         **/
         private void addCellData(int level, string dataName, List<AbstractCellData> data)
         {
-            Grid grid = Grids[level];
+            Grid grid = grids[level];
 
             foreach (AbstractCellData datum in data)
                 grid.AddCellData(dataName, datum);
@@ -445,7 +602,7 @@ namespace SimDataStructure
         **/
         private void removeCellData(int level, string dataName, List<AbstractCellData> data)
         {
-            Grid grid = Grids[level];
+            Grid grid = grids[level];
 
             foreach (AbstractCellData datum in data)
                 grid.RemoveCellData(dataName, datum);
@@ -458,13 +615,13 @@ namespace SimDataStructure
         **/
         private void removeCellData(int level, string dataName)
         {
-            Grids[level].RemoveCellData(dataName);
+            grids[level].RemoveCellData(dataName);
         }
         #endregion
 
         private void OnDestroy()
         {
-            foreach (Grid grid in Grids)
+            foreach (Grid grid in grids)
                 grid.Dispose();
         }
     }

@@ -7,8 +7,53 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Security.Cryptography;
 
+// namespace Utils
+// {
 public class Utils
 {
+    public static double Average(List<double> list)
+    {
+        double sum = 0;
+        foreach (double item in list)
+            sum += item;
+
+        return sum / list.Count;
+    }
+
+    public static float Average(List<float> list)
+    {
+        float sum = 0;
+        foreach (float item in list)
+            sum += item;
+
+        return sum / list.Count;
+    }
+
+    public static int Average(List<int> list)
+    {
+        int sum = 0;
+        foreach (int item in list)
+            sum += item;
+
+        return sum / list.Count;
+    }
+    
+    public static float Average<T>(List<T> list, Func<T, int> selector)
+    {
+        float sum = 0;
+        foreach (T item in list)
+            sum += selector(item);
+
+        return sum / list.Count;
+    }
+
+    public static void AddToAverageList<T>(List<T> list, T toAdd)
+    {
+        if (list.Count >= 50)
+            list.RemoveAt(0);
+
+        list.Add(toAdd);
+    }
 
     private static readonly Dictionary<float, WaitForSeconds> WaitDictionary = new Dictionary<float, WaitForSeconds>();
     /**
@@ -799,3 +844,4 @@ public class Utils
         return q;
     }
 }
+// }

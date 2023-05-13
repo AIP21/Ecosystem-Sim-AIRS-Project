@@ -2,7 +2,8 @@
     "name": "SystemsManagement.Managers",
     "rootNamespace": "",
     "references": [
-        "GUID:920c6d1f1a0e5114180dd05e51e4079c"
+        "GUID:920c6d1f1a0e5114180dd05e51e4079c",
+        "GUID:35bb8336bfe479a458bf2b1c852af789"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
