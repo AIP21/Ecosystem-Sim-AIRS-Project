@@ -1,11 +1,14 @@
 using UnityEngine;
 
-namespace Managers.Interfaces {
-    public interface ITickableSystem {
+namespace Managers.Interfaces
+{
+    public interface ITickableSystem
+    {
         float TickPriority { get; }
         int TickInterval { get; } // in frames
         int ticksSinceLastTick { get; set; }
         bool willTickNow { get; set; }
+        bool shouldTick { get; }
 
         /**
         <summary>

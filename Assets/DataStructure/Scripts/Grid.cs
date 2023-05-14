@@ -18,7 +18,7 @@ namespace SimDataStructure
         public Grid childGrid;
 
         private List<GridCell> cells;
-        private List<GridCell> childCells;
+        // private List<GridCell> childCells;
 
         public int xCellCount, yCellCount;
 
@@ -32,7 +32,7 @@ namespace SimDataStructure
             this.gridLevel = gridLevel;
 
             this.cells = new List<GridCell>();
-            this.childCells = new List<GridCell>();
+            // this.childCells = new List<GridCell>();
 
             this.xCellCount = (int)(size.x / gridLevel.CellSize.x);
             this.yCellCount = (int)(size.y / gridLevel.CellSize.y);
@@ -55,21 +55,21 @@ namespace SimDataStructure
                     // Assign this cell's neighbors to the cell above and to the left
                     if (y > 0)
                     {
-                        cell.neighbors[0] = cells[cells.Count - xCellCount - 1];
+                        cell.Neighbors[0] = cells[cells.Count - xCellCount - 1];
                     }
                     if (x > 0)
                     {
-                        cell.neighbors[1] = cells[cells.Count - 2];
+                        cell.Neighbors[1] = cells[cells.Count - 2];
                     }
 
                     // Assign the cell above and to the left's neighbors to this cell
                     if (y > 0)
                     {
-                        cells[cells.Count - xCellCount - 1].neighbors[2] = cell;
+                        cells[cells.Count - xCellCount - 1].Neighbors[2] = cell;
                     }
                     if (x > 0)
                     {
-                        cells[cells.Count - 2].neighbors[3] = cell;
+                        cells[cells.Count - 2].Neighbors[3] = cell;
                     }
                 }
             }
@@ -257,7 +257,7 @@ namespace SimDataStructure
             {
                 gridData[dataName].SetData(data);
             }
-            else
+            else // TODO: Maybe add a thing here to create a new entry if it doesn't exist?
                 Debug.Log("Grid data \"" + dataName + "\" does not exist.");
         }
 
@@ -372,22 +372,34 @@ namespace SimDataStructure
         #endregion
     }
 
-    [Serializable]
+    // [Serializable]
     public class GridCell
     {
         #region Public
         public Vector2 center;
         public Bounds bounds;
-        public GridLevel level;
+        private GridLevel level;
+        [HideInInspector]
+        public GridLevel Level { get { return level; } }
 
         // References
-        public GridCell parentCell;
-        public List<GridCell> childCells = new List<GridCell>();
-        public GridCell[] neighbors = new GridCell[4]; // 0 = above, 1 = left, 2 = below, 3 = right
+        private GridCell parentCell;
+        [HideInInspector]
+        public GridCell ParentCell { get { return parentCell; } set { parentCell = value; } }
+
+        [HideInInspector]
+        private List<GridCell> childCells = new List<GridCell>();
+        [HideInInspector]
+        public List<GridCell> ChildCells { get { return childCells; } }
+
+        private GridCell[] neighbors = new GridCell[4]; // 0 = above, 1 = left, 2 = below, 3 = right
+        [HideInInspector]
+        public GridCell[] Neighbors { get { return neighbors; } } // 0 = above, 1 = left, 2 = below, 3 = right
         #endregion
 
         #region Private
         // Data
+        [SerializeField]
         private GenericDictionary<string, List<AbstractCellData>> data = new GenericDictionary<string, List<AbstractCellData>>();
         #endregion
 
@@ -406,8 +418,8 @@ namespace SimDataStructure
                 return false;
             }
 
-            return (queryPos.x >= center.x - level.CellSize.x / 2 && queryPos.x <= center.x + level.CellSize.x / 2 &&
-                    queryPos.y >= center.y - level.CellSize.y / 2 && queryPos.y <= center.y + level.CellSize.y / 2);
+            return (queryPos.x >= center.x - Level.CellSize.x / 2 && queryPos.x <= center.x + Level.CellSize.x / 2 &&
+                    queryPos.y >= center.y - Level.CellSize.y / 2 && queryPos.y <= center.y + Level.CellSize.y / 2);
         }
 
         public GridCell GetChild(Vector2 queryPos)

@@ -144,6 +144,7 @@ namespace WaterSim
         public int TickInterval { get { return 5; } }
         public int ticksSinceLastTick { get; set; }
         public bool willTickNow { get; set; }
+        public bool shouldTick { get { return this.isActiveAndEnabled; } }
         #endregion
         #endregion
 

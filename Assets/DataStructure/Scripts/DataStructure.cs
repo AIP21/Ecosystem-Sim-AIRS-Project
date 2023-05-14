@@ -16,11 +16,13 @@ namespace SimDataStructure
         #region Public
         [Header("Grids")]
         public Vector2 OverallSize;
+        
         [Tooltip("Highest level grid is the largest grid and has the highest index")]
         public List<GridLevel> Levels;
-        public List<Grid> Grids { get; private set; }
+        
         [SerializeField]
         private List<Grid> grids = new List<Grid>();
+        public List<Grid> Grids { get {return grids;} }
 
         [Header("Data")]
         public List<GameObject> InitializingObjects = new List<GameObject>();
@@ -43,6 +45,7 @@ namespace SimDataStructure
         public int TickInterval { get { return 0; } }
         public int ticksSinceLastTick { get; set; }
         public bool willTickNow { get; set; }
+        public bool shouldTick { get { return true; } }
         #endregion
 
         #region Debug
@@ -175,8 +178,8 @@ namespace SimDataStructure
                     }
 
                     // Assign the parent cell to the container cell
-                    cell.parentCell = containerCell;
-                    containerCell.childCells.Add(cell);
+                    cell.ParentCell = containerCell;
+                    containerCell.ChildCells.Add(cell);
                 }
             }
 
@@ -502,7 +505,7 @@ namespace SimDataStructure
                 int level = dataPointer.Item2;
 
                 addCellData(level, name, dataToAdd[dataPointer]);
-                
+
                 writes++;
             }
 

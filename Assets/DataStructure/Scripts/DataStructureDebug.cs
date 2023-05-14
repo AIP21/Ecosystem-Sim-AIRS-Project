@@ -53,42 +53,20 @@ namespace SimDataStructure
 
         public void Start()
         {
-            Debug.Log("Performing tests on data structure...");
-            Stopwatch st = new Stopwatch();
-            st.Start();
-
             foreach (Grid grid in ds.Grids)
             {
                 gridColors.Add(grid, UnityEngine.Random.ColorHSV());
             }
-
-            if (DoQueryTest)
-            {
-                performQueryTest(QueryTestCount);
-            }
-
-            // if (DoAddDataTest)
-            // {
-            //     performAddDataTest(AddDataTestCount);
-            // }
-
-            // if (DoRemoveDataTest)
-            // {
-            //     performRemoveDataTest(RemoveDataTestCount);
-            // }
-
-            // if (DoModifyDataTest)
-            // {
-            //     performModifyDataTest(ModifyDataTestCount);
-            // }
-
-            st.Stop();
-
-            Debug.Log("All tests completed in " + st.ElapsedMilliseconds + " ms");
         }
 
         public void FixedUpdate()
         {
+            if (DoQueryTest)
+            {
+                DoQueryTest = false;
+                performQueryTest(QueryTestCount);
+            }
+
             if (QuerySingleCellTest && QuerySingleCellPosition != lastTestPos)
             {
                 lastTestPos = QuerySingleCellPosition;
@@ -100,15 +78,18 @@ namespace SimDataStructure
         public void performQueryTest(int count)
         {
             Debug.Log("Performing " + count + " random queries on " + (TestLevel == -1 ? "random level" : ("level " + TestLevel)) + "...");
-            int startTime = DateTime.Now.Millisecond;
+            
+            Stopwatch st = new Stopwatch();
+            st.Start();
 
             for (int i = 0; i < count; i++)
             {
                 Vector2 testPos = new Vector2(UnityEngine.Random.Range(0, ds.OverallSize.x), UnityEngine.Random.Range(0, ds.OverallSize.y));
                 performDebugQuery(testPos, TestLevel == -1 ? UnityEngine.Random.Range(0, ds.Grids.Count - 1) : TestLevel, false);
             }
+            st.Stop();
 
-            Debug.Log(count + " random queries successfully completed in " + (DateTime.Now.Millisecond - startTime) + " ms");
+            Debug.Log(count + " random queries successfully completed in " + st.Elapsed.TotalMilliseconds + " ms");
         }
 
         private void performDebugQuery(Vector2 queryPos, int level = -1, bool fetchData = true)
@@ -278,12 +259,12 @@ namespace SimDataStructure
                     {
                         Gizmos.color = Color.green;
 
-                        Vector3 center = new Vector3(cell.center.x, (cell.level.Level - 1) * LevelZShift, cell.center.y);
+                        Vector3 center = new Vector3(cell.center.x, (cell.Level.Level - 1) * LevelZShift, cell.center.y);
 
-                        Gizmos.DrawLine(center + new Vector3(-cell.level.CellSize.x / 2, 0, -cell.level.CellSize.y / 2), center + new Vector3(cell.level.CellSize.x / 2, 0, -cell.level.CellSize.y / 2));
-                        Gizmos.DrawLine(center + new Vector3(cell.level.CellSize.x / 2, 0, -cell.level.CellSize.y / 2), center + new Vector3(cell.level.CellSize.x / 2, 0, cell.level.CellSize.y / 2));
-                        Gizmos.DrawLine(center + new Vector3(cell.level.CellSize.x / 2, 0, cell.level.CellSize.y / 2), center + new Vector3(-cell.level.CellSize.x / 2, 0, cell.level.CellSize.y / 2));
-                        Gizmos.DrawLine(center + new Vector3(-cell.level.CellSize.x / 2, 0, cell.level.CellSize.y / 2), center + new Vector3(-cell.level.CellSize.x / 2, 0, -cell.level.CellSize.y / 2));
+                        Gizmos.DrawLine(center + new Vector3(-cell.Level.CellSize.x / 2, 0, -cell.Level.CellSize.y / 2), center + new Vector3(cell.Level.CellSize.x / 2, 0, -cell.Level.CellSize.y / 2));
+                        Gizmos.DrawLine(center + new Vector3(cell.Level.CellSize.x / 2, 0, -cell.Level.CellSize.y / 2), center + new Vector3(cell.Level.CellSize.x / 2, 0, cell.Level.CellSize.y / 2));
+                        Gizmos.DrawLine(center + new Vector3(cell.Level.CellSize.x / 2, 0, cell.Level.CellSize.y / 2), center + new Vector3(-cell.Level.CellSize.x / 2, 0, cell.Level.CellSize.y / 2));
+                        Gizmos.DrawLine(center + new Vector3(-cell.Level.CellSize.x / 2, 0, cell.Level.CellSize.y / 2), center + new Vector3(-cell.Level.CellSize.x / 2, 0, -cell.Level.CellSize.y / 2));
                     }
                 }
             }
@@ -305,9 +286,9 @@ namespace SimDataStructure
                 {
                     // For each neighbor, draw a small line to the edge of this cell
                     Gizmos.color = Color.white;
-                    for (int i = 0; i < cell.neighbors.Length; i++)
+                    for (int i = 0; i < cell.Neighbors.Length; i++)
                     {
-                        if (cell.neighbors[i] != null)
+                        if (cell.Neighbors[i] != null)
                         {
                             if (i == 0)
                             { // above
@@ -332,10 +313,10 @@ namespace SimDataStructure
                 if (DrawParentLines)
                 {
                     // Draw a line to the parent cell
-                    if (cell.parentCell != null)
+                    if (cell.ParentCell != null)
                     {
                         Gizmos.color = Color.red;
-                        Gizmos.DrawLine(center, new Vector3(cell.parentCell.center.x, (cell.parentCell.level.Level - 1) * levelZShift, cell.parentCell.center.y));
+                        Gizmos.DrawLine(center, new Vector3(cell.ParentCell.center.x, (cell.ParentCell.Level.Level - 1) * levelZShift, cell.ParentCell.center.y));
                     }
                 }
             }

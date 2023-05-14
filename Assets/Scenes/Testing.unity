@@ -139,7 +139,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &25418883
 Transform:
   m_ObjectHideFlags: 0
@@ -178,6 +178,7 @@ MonoBehaviour:
   QuerySingleCellTest: 1
   QuerySingleCellLevel: 0
   QuerySingleCellPosition: {x: 0, y: 0}
+  TestedCells: []
   TestedCellData:
     list: []
     keyCollision: 0
@@ -231,6 +232,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 36751346e59f29e409b3874b0603be45, type: 2}
   - {fileID: 11400000, guid: a8156ca0bf27694458adbefdae0a24e1, type: 2}
   - {fileID: 11400000, guid: 5d57596dba7f4ac4582655b943c0fedc, type: 2}
+  grids: []
   InitializingObjects:
   - {fileID: 6456605024775582197}
   ReadingObjects:
@@ -239,7 +241,7 @@ MonoBehaviour:
   WritingObjects:
   - {fileID: 6456605024775582197}
   - {fileID: 542635039}
-  CalculateDebugInfo: 1
+  CalculateDebugInfo: 0
   gridReadsPerTick: 0
   gridWritesPerTick: 0
   gridActivityPerTick: 0
@@ -250,6 +252,11 @@ MonoBehaviour:
   gridWriteTimePerTick: 0
   cellReadTimePerTick: 0
   cellWriteTimePerTick: 0
+--- !u!4 &484432729 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 2512629738840422528, guid: 0baa68192c27f434cb5441f33316dd05, type: 3}
+  m_PrefabInstance: {fileID: 1853387044}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &525463473
 GameObject:
   m_ObjectHideFlags: 0
@@ -267,7 +274,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &525463474
 Transform:
   m_ObjectHideFlags: 0
@@ -374,7 +381,8 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 484432729}
   m_Father: {fileID: 638825940}
   m_RootOrder: 5
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -393,11 +401,13 @@ MonoBehaviour:
   trees: []
   newTrees: []
   nulledTrees: []
-  first: 1
-  TestTreePrefab: {fileID: 2512629738840422531, guid: 0baa68192c27f434cb5441f33316dd05, type: 3}
-  initialTreeGenerationBounds:
+  GenerateInitialTrees: 0
+  CollectInitialChildTrees: 1
+  InitialTreeCount: 100
+  InitialTreeGenerationBounds:
     m_Center: {x: -50, y: 0, z: -50}
     m_Extent: {x: 25, y: 0, z: 25}
+  TestTreePrefab: {fileID: 2512629738840422531, guid: 0baa68192c27f434cb5441f33316dd05, type: 3}
   references:
     version: 2
     RefIds: []
@@ -449,6 +459,7 @@ MonoBehaviour:
   - {fileID: 282096875}
   - {fileID: 6456605024775582197}
   - {fileID: 542635039}
+  - {fileID: 525463473}
   CalculateDebugInfo: 0
   BeginTickTime: 0
   TickTime: 0
@@ -584,6 +595,63 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 50, y: -30, z: 0}
+--- !u!1001 &1853387044
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    m_TransformParent: {fileID: 542635040}
+    m_Modifications:
+    - target: {fileID: 2512629738840422528, guid: 0baa68192c27f434cb5441f33316dd05, type: 3}
+      propertyPath: m_RootOrder
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2512629738840422528, guid: 0baa68192c27f434cb5441f33316dd05, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2512629738840422528, guid: 0baa68192c27f434cb5441f33316dd05, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2512629738840422528, guid: 0baa68192c27f434cb5441f33316dd05, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2512629738840422528, guid: 0baa68192c27f434cb5441f33316dd05, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2512629738840422528, guid: 0baa68192c27f434cb5441f33316dd05, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2512629738840422528, guid: 0baa68192c27f434cb5441f33316dd05, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2512629738840422528, guid: 0baa68192c27f434cb5441f33316dd05, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2512629738840422528, guid: 0baa68192c27f434cb5441f33316dd05, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2512629738840422528, guid: 0baa68192c27f434cb5441f33316dd05, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2512629738840422528, guid: 0baa68192c27f434cb5441f33316dd05, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2512629738840422531, guid: 0baa68192c27f434cb5441f33316dd05, type: 3}
+      propertyPath: m_Name
+      value: Test Tree
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 0baa68192c27f434cb5441f33316dd05, type: 3}
 --- !u!1 &6456605024775582197
 GameObject:
   m_ObjectHideFlags: 0
@@ -600,7 +668,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &6456605024775582198
 MonoBehaviour:
   m_ObjectHideFlags: 0

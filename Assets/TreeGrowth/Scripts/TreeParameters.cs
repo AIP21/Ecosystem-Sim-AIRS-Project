@@ -1,13 +1,14 @@
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using TreeGrowth.Generation;
 
 namespace TreeGrowth
 {
     [System.Serializable]
     public record TreeParameters
     {
-        private const int QUADS_PER_LEAF = 16;
+        public int QUADS_PER_LEAF = 16;
 
         [Range(0.0f, 0.6f)]
         public float StemSize = 0.3f;
@@ -36,15 +37,10 @@ namespace TreeGrowth
         [Range(10, 1000)]
         public int Iterations = 100;
 
-        public Node Root;
-
         public bool GenerateLeaves = true;
 
         [Range(0.2f, 1f)]
         public float LeafQuadRadius = 0.3f;
-
-        [HideInInspector]
-        public int RayCastCount;
 
         public int MaxChildrenPerNode = 3;
 
@@ -52,5 +48,7 @@ namespace TreeGrowth
 
         [Range(1, 20)]
         public int BatchSize = 5;
+
+        public int Seed = 0;
     }
 }

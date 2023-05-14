@@ -7,6 +7,7 @@ using Managers.Interfaces;
 using SimDataStructure.Data;
 using SimDataStructure.Interfaces;
 using UnityEngine;
+using TreeGrowth.Generation;
 
 namespace TreeGrowth
 {
@@ -20,14 +21,17 @@ namespace TreeGrowth
         [SerializeReference]
         public List<TreeCellData> nulledTrees = new List<TreeCellData>();
 
-        public bool first = true;
+        public bool GenerateInitialTrees = true;
+        public bool CollectInitialChildTrees = true;
+        public int InitialTreeCount = 100;
+        public Bounds InitialTreeGenerationBounds = new Bounds(new Vector3(-50, 0, -50), new Vector3(50, 0, 50));
         public GameObject TestTreePrefab;
-
-        public Bounds initialTreeGenerationBounds = new Bounds(new Vector3(-50, 0, -50), new Vector3(50, 0, 50));
-
+        public TreeParameters TestParameters;
         #endregion
 
         #region Private
+        private bool collectedChildren = false;
+
         #region Interface Stuff
         // [Header("Data Structure")]
         private Dictionary<string, int> _readDataNames = new Dictionary<string, int>() {
@@ -47,6 +51,7 @@ namespace TreeGrowth
         public int TickInterval { get { return 5; } }
         public int ticksSinceLastTick { get; set; }
         public bool willTickNow { get; set; }
+        public bool shouldTick { get { return this.isActiveAndEnabled; } }
         #endregion
         #endregion
 
@@ -61,13 +66,37 @@ namespace TreeGrowth
         {
             this.newTrees.Clear();
             this.nulledTrees.Clear();
+
+            if (CollectInitialChildTrees == true && !collectedChildren)
+            {
+                collectedChildren = true;
+
+                foreach (Transform child in transform)
+                {
+                    GameObject childGO = child.gameObject;
+                    TreeGenerator treeGen = childGO.GetComponent<TreeGenerator>();
+
+                    if (treeGen != null)
+                    {
+                        Mesh mesh = childGO.GetComponent<MeshFilter>().mesh;
+                        MeshCollider collider = childGO.GetComponent<MeshCollider>();
+
+                        // treeGen.StartCoroutine(treeGen.BuildCoroutine(TestParameters));
+                        treeGen.Build(TestParameters);
+
+                        TreeCellData tree = new TreeCellData(childGO, treeGen, mesh, collider, null);
+
+                        newTrees.Add(tree);
+                    }
+                }
+            }
         }
 
         public void Tick(float deltaTime)
         {
-            if (first == true)
+            if (GenerateInitialTrees == true)
             {
-                first = false;
+                GenerateInitialTrees = false;
 
                 createInitialTrees();
             }
@@ -110,7 +139,10 @@ namespace TreeGrowth
             List<AbstractCellData> treeData = new List<AbstractCellData>();
 
             foreach (TreeCellData tree in this.newTrees)
+            {
                 treeData.Add(tree);
+                trees.Add(tree);
+            }
 
             if (treeData.Count > 0)
                 data.Add(new Tuple<string, int>(readWriteName, readWriteLevel), treeData);
@@ -126,7 +158,10 @@ namespace TreeGrowth
             List<AbstractCellData> treeData = new List<AbstractCellData>();
 
             foreach (TreeCellData tree in this.nulledTrees)
+            {
                 treeData.Add(tree);
+                trees.Remove(tree);
+            }
 
             if (treeData.Count > 0)
                 data.Add(new Tuple<string, int>(readWriteName, readWriteLevel), treeData);
@@ -135,16 +170,18 @@ namespace TreeGrowth
         }
         #endregion
 
+        #region Tree Growth
         private void createInitialTrees()
         {
-            for (int i = 0; i < 100; i++)
+            for (int i = 0; i < InitialTreeCount; i++)
             {
-                Vector3 randPos = new Vector3(UnityEngine.Random.Range(initialTreeGenerationBounds.min.x, initialTreeGenerationBounds.max.x), 0, UnityEngine.Random.Range(initialTreeGenerationBounds.min.z, initialTreeGenerationBounds.max.z));
+                Vector3 randPos = new Vector3(UnityEngine.Random.Range(InitialTreeGenerationBounds.min.x, InitialTreeGenerationBounds.max.x), 0, UnityEngine.Random.Range(InitialTreeGenerationBounds.min.z, InitialTreeGenerationBounds.max.z));
 
                 GameObject testTree = Instantiate(this.TestTreePrefab, randPos, Quaternion.identity);
 
                 TreeGenerator gen = testTree.GetComponent<TreeGenerator>();
-                gen.StartCoroutine(gen.BuildCoroutine());
+                // gen.StartCoroutine(gen.BuildCoroutine(TestParameters))
+                gen.Build(TestParameters);
 
                 Mesh mesh = testTree.GetComponent<MeshFilter>().mesh;
                 MeshCollider collider = testTree.GetComponent<MeshCollider>();
@@ -158,6 +195,10 @@ namespace TreeGrowth
         private void tickTree(TreeCellData tree)
         {
             // if ()
+            // {
+
+            // }
         }
+        #endregion
     }
 }

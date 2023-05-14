@@ -346,52 +346,6 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 50, y: -30, z: 0}
---- !u!1 &1517396862
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1517396863}
-  - component: {fileID: 1517396864}
-  m_Layer: 0
-  m_Name: TreePlacer
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1517396863
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1517396862}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_RootOrder: 3
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1517396864
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1517396862}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 68f61647aad0b9c47af6679d2fdd9005, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  TreeGenerator: {fileID: 6247895241133104446}
-  Generate: 0
 --- !u!1 &1871596001
 GameObject:
   m_ObjectHideFlags: 0
@@ -488,21 +442,23 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a04f9774aff229d4b80e003dea33c843, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  StemSize: 0.3
-  BranchSize: 0.1
-  SizeFalloff: 0.9
-  Distort: 0.5
-  BranchLength: 2
-  LeafColliderSize: 0.2
-  BranchAngle: 30
-  BranchLengthFalloff: 0.9
-  Iterations: 100
-  GenerateLeaves: 1
-  LeafQuadRadius: 0.3
-  RayCastCount: 0
-  MaxChildrenPerNode: 3
-  MeshSubdivisions: 5
-  BatchSize: 5
+  parameters:
+    QUADS_PER_LEAF: 16
+    StemSize: 0.3
+    BranchSize: 0.1
+    SizeFalloff: 0.9
+    Distort: 0.5
+    BranchLength: 2
+    LeafColliderSize: 0.2
+    BranchAngle: 30
+    BranchLengthFalloff: 0.9
+    Iterations: 100
+    GenerateLeaves: 1
+    LeafQuadRadius: 0.3
+    RayCastCount: 0
+    MaxChildrenPerNode: 3
+    MeshSubdivisions: 5
+    BatchSize: 5
   LeafColliders: {fileID: 0}
   ColorSchemes: []
 --- !u!1 &6278295379626485818
@@ -514,6 +470,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 6281588471591219840}
+  - component: {fileID: 6300902751677474739}
   - component: {fileID: 6247895241133104446}
   - component: {fileID: 6292878802196684226}
   - component: {fileID: 6300902751677474738}
@@ -538,7 +495,7 @@ Transform:
   m_Children:
   - {fileID: 519503807}
   m_Father: {fileID: 0}
-  m_RootOrder: 4
+  m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!33 &6292878802196684226
 MeshFilter:
@@ -591,3 +548,33 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!114 &6300902751677474739
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6278295379626485818}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9bbd394eafb6db14b90ea1a78711a61e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Generate: 0
+  Parameters:
+    QUADS_PER_LEAF: 16
+    StemSize: 0.3
+    BranchSize: 0.1
+    SizeFalloff: 0.9
+    Distort: 0.5
+    BranchLength: 2
+    LeafColliderSize: 0.2
+    BranchAngle: 30
+    BranchLengthFalloff: 0.9
+    Iterations: 100
+    GenerateLeaves: 1
+    LeafQuadRadius: 0.3
+    RayCastCount: 0
+    MaxChildrenPerNode: 3
+    MeshSubdivisions: 5
+    BatchSize: 5

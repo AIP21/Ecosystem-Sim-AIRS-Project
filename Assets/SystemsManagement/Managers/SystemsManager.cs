@@ -42,6 +42,8 @@ namespace Managers
 
         public void Start()
         {
+            Debug.LogWarning("Remember to add all tickable systems to the TickableObjects list in SystemsManager!");
+
             for (int i = 0; i < TickableObjects.Count; i++)
             {
                 ITickableSystem[] systems = TickableObjects[i].GetComponents<ITickableSystem>();
@@ -70,7 +72,6 @@ namespace Managers
             }
 
             // Figure out which systems need to be ticked this frame
-            int currentTick = Time.frameCount;
             for (int i = 0; i < tickableSystems.Count; i++)
             {
                 ITickableSystem system = tickableSystems[i];
@@ -78,8 +79,11 @@ namespace Managers
                 if (system.ticksSinceLastTick >= system.TickInterval)
                 {
                     system.ticksSinceLastTick = 0;
-                    system.willTickNow = true;
-                    toTick.Add(system);
+                    if (system.shouldTick)
+                    {
+                        system.willTickNow = true;
+                        toTick.Add(system);
+                    }
                 }
                 else
                 {
