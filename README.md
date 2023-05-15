@@ -1,5 +1,6 @@
 # Ecosystem-Sim-AIRS-Project
-Advanced Independent Research Seminar Project (2022-2023)
+Advanced Independent Research Seminar Project (2022-2023).
+
 This repository contains the code for my Ecosystem Simulation project. It is built in Unity3D, version 2021.3.18f1.
 
 ## Description
