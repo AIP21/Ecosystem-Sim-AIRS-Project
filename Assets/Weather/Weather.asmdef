@@ -1,3 +1,16 @@
 {
-	"name": "Weather"
+    "name": "Weather",
+    "rootNamespace": "",
+    "references": [
+        "GUID:19f666fb1f2e9da42a24b9f6537a9872"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
 }

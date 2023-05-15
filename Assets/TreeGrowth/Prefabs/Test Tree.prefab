@@ -98,23 +98,33 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a04f9774aff229d4b80e003dea33c843, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  StemSize: 0.3
-  BranchSize: 0.1
-  SizeFalloff: 0.9
-  Distort: 0.5
-  BranchLength: 2
-  LeafColliderSize: 0.2
-  BranchAngle: 30
-  BranchLengthFalloff: 0.9
-  Iterations: 100
-  GenerateLeaves: 1
-  LeafQuadRadius: 0.3
-  RayCastCount: 1
-  MaxChildrenPerNode: 3
-  MeshSubdivisions: 5
-  BatchSize: 5
-  LeafColliders: {fileID: 2512629739063952856}
+  parameters:
+    StemSize: 0.3
+    BranchSize: 0.1
+    SizeFalloff: 0.9
+    BranchLength: 2
+    BranchLengthFalloff: 0.9
+    BranchAngle: 30
+    AngleRandomness: 0.5
+    GenerateBranchMesh: 1
+    GenerateLeafMesh: 1
+    GenerateLeafColliders: 0
+    GenerateBranchColliders: 0
+    QuadsPerLeaf: 16
+    LeafQuadRadius: 1.5
+    LeafColliderSize: 0.2
+    MeshSubdivisions: 5
+    BranchColliderDepth: 6
+    Iterations: 100
+    BatchSize: 5
+    MaxBranchesPerNode: 3
+    PrunePercentage: 0.06
+    Seed: 0
+  Iteration: 0
   ColorSchemes: []
+  BranchColliders: {fileID: 0}
+  LeafColliders: {fileID: 2512629739063952856}
+  RayCastCount: 1
 --- !u!1 &2512629739063952856
 GameObject:
   m_ObjectHideFlags: 0

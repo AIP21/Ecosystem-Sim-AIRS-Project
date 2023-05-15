@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Spektr;
+using Utilities;
 
 [ExecuteInEditMode]
 public class LightningGenerator : MonoBehaviour

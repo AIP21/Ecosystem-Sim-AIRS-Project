@@ -45,7 +45,7 @@ namespace SimDataStructure
 
         [Header("Results from single cell test")]
         public List<GridCell> TestedCells = new List<GridCell>();
-        public GenericDictionary<string, string> TestedCellData = new GenericDictionary<string, string>();
+        public GenericDictionary<string, List<String>> TestedCellData = new GenericDictionary<string, List<String>>();
         public int TestedCellCount = 0;
 
         private Vector2 lastTestPos = new Vector2(0, 0);
@@ -78,7 +78,7 @@ namespace SimDataStructure
         public void performQueryTest(int count)
         {
             Debug.Log("Performing " + count + " random queries on " + (TestLevel == -1 ? "random level" : ("level " + TestLevel)) + "...");
-            
+
             Stopwatch st = new Stopwatch();
             st.Start();
 
@@ -122,17 +122,22 @@ namespace SimDataStructure
 
                     if (data == null)
                     {
-                        TestedCellData.Add("NULL", "Data is null");
+                        TestedCellData.Add("NULL", new List<string>() { "Data is null" });
                     }
                     else if (data.Count == 0)
                     {
-                        TestedCellData.Add("NULL", "No data");
+                        TestedCellData.Add("NULL", new List<string>() { "No data" });
                     }
                     else
                     {
                         foreach (KeyValuePair<string, List<AbstractCellData>> d in data)
                         {
-                            TestedCellData.Add(d.Key, d.Value.ToString());
+                            List<string> names = new List<string>();
+
+                            foreach (AbstractCellData datum in d.Value)
+                                names.Add(datum.ToString());
+
+                            TestedCellData.Add(d.Key, names);
                         }
                     }
                 }
@@ -274,6 +279,8 @@ namespace SimDataStructure
         {
             foreach (GridCell cell in toDraw.Cells())
             {
+                Gizmos.color = Color.white;
+
                 // Draw gizmo square using lines centered around cell center
                 Vector3 center = new Vector3(cell.center.x, (toDraw.GridLevel.Level - 1) * levelZShift, cell.center.y);
 

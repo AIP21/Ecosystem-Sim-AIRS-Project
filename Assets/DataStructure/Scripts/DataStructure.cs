@@ -8,6 +8,7 @@ using SimDataStructure.Data;
 using SimDataStructure.Interfaces;
 using UnityEngine;
 using Debug = UnityEngine.Debug;
+using Utilities;
 
 namespace SimDataStructure
 {
@@ -16,13 +17,13 @@ namespace SimDataStructure
         #region Public
         [Header("Grids")]
         public Vector2 OverallSize;
-        
+
         [Tooltip("Highest level grid is the largest grid and has the highest index")]
         public List<GridLevel> Levels;
-        
+
         [SerializeField]
         private List<Grid> grids = new List<Grid>();
-        public List<Grid> Grids { get {return grids;} }
+        public List<Grid> Grids { get { return grids; } }
 
         [Header("Data")]
         public List<GameObject> InitializingObjects = new List<GameObject>();
@@ -132,7 +133,7 @@ namespace SimDataStructure
             }
 
             st.Stop();
-            print("Data Structure finished scanning reader and writer gameObjects. Took: " + st.ElapsedMilliseconds + "ms");
+            print("Data Structure finished scanning reader and writer gameObjects. Took " + st.ElapsedMilliseconds + "ms");
         }
 
         /*
@@ -260,7 +261,8 @@ namespace SimDataStructure
 
                 Utils.AddToAverageList<float>(_gridReadTimePerTick, (float)st.Elapsed.TotalMilliseconds);
 
-                Utils.AddToAverageList<float>(_gridReadsPerTick, gridReadCount);
+                if (gridReadCount > 0)
+                    Utils.AddToAverageList<float>(_gridReadsPerTick, gridReadCount);
 
                 st.Reset();
                 st.Start();
@@ -284,14 +286,14 @@ namespace SimDataStructure
                 }
             }
 
-
             if (CalculateDebugInfo)
             {
                 st.Stop();
 
                 Utils.AddToAverageList<float>(_cellReadTimePerTick, (float)st.Elapsed.TotalMilliseconds);
 
-                Utils.AddToAverageList<float>(_cellReadsPerTick, cellReadCount);
+                if (cellReadCount > 0)
+                    Utils.AddToAverageList<float>(_cellReadsPerTick, cellReadCount);
             }
         }
 
@@ -373,8 +375,10 @@ namespace SimDataStructure
 
                 Utils.AddToAverageList<float>(_cellWriteTimePerTick, (float)st.Elapsed.TotalMilliseconds);
 
-                Utils.AddToAverageList<float>(_gridWritesPerTick, gridWriteCount);
-                Utils.AddToAverageList<float>(_cellWritesPerTick, cellWriteCount);
+                if (gridWriteCount > 0)
+                    Utils.AddToAverageList<float>(_gridWritesPerTick, gridWriteCount);
+                if (cellWriteCount > 0)
+                    Utils.AddToAverageList<float>(_cellWritesPerTick, cellWriteCount);
 
                 gridReadsPerTick = Utils.Average(_gridReadsPerTick);
                 cellReadsPerTick = Utils.Average(_cellReadsPerTick);
@@ -471,6 +475,9 @@ namespace SimDataStructure
                 {
                     // Add the cached data to the list of data to send
                     data.Add(cachedCellData[name]);
+
+                    if (CalculateDebugInfo && cachedCellData[name] != null)
+                        reads += cachedCellData[name].Count;
                 }
                 else
                 {
@@ -481,9 +488,10 @@ namespace SimDataStructure
 
                     // Add the data to the list of data to send
                     data.Add(cellData);
-                }
 
-                reads++;
+                    if (CalculateDebugInfo && cellData != null)
+                        reads += cellData.Count;
+                }
             }
 
             // Send the data
@@ -506,7 +514,8 @@ namespace SimDataStructure
 
                 addCellData(level, name, dataToAdd[dataPointer]);
 
-                writes++;
+                if (CalculateDebugInfo && dataToAdd[dataPointer] != null)
+                    writes += dataToAdd[dataPointer].Count;
             }
 
             Dictionary<Tuple<string, int>, List<AbstractCellData>> dataToRemove = writer.writeCellDataToRemove();
@@ -518,7 +527,8 @@ namespace SimDataStructure
 
                 removeCellData(level, name, dataToRemove[dataPointer]);
 
-                writes++;
+                if (CalculateDebugInfo && dataToRemove[dataPointer] != null)
+                    writes += dataToRemove[dataPointer].Count;
             }
 
             return writes;
@@ -587,7 +597,7 @@ namespace SimDataStructure
 
         /**
         <summary>
-            Add the given dictionary of cell data and its position to a cell at that position on a specific level.
+            Add the given list of cell data and its position to a cell at that position on a specific level.
         </summary>
         **/
         private void addCellData(int level, string dataName, List<AbstractCellData> data)

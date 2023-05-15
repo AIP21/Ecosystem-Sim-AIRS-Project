@@ -2,6 +2,8 @@ using UnityEngine;
 using System;
 using System.Collections.Generic;
 using SimDataStructure.Data;
+using Debug = UnityEngine.Debug;
+using Utilities;
 
 namespace SimDataStructure
 {
@@ -107,15 +109,25 @@ namespace SimDataStructure
         Return the cell that contains the query point
         </summary>
         **/
-        public GridCell GetCell(Vector2 queryPoint)
+        public GridCell GetCell(Vector3 queryPoint)
         {
+            // Make sure the query point is contained in this grid, because otherwise it would overflow into the next row/column
+            if (queryPoint.x < 0 || queryPoint.x > size.x || queryPoint.z < 0 || queryPoint.z > size.y)
+            {
+                Debug.LogError("Query point is not contained in this grid");
+                return null;
+            }
+
             // Calculate the index of the cell that contains the query point
             int index = (int)(queryPoint.x / gridLevel.CellSize.x) + (int)(queryPoint.y / gridLevel.CellSize.y) * xCellCount;
 
-            if (index < 0 || index >= cells.Count)
-                return null;
-            else
+            // Check if the index is valid
+            if (index >= 0 && index < cells.Count)
                 return cells[index];
+
+            Debug.LogError("Index " + index + " is out of bounds");
+
+            return null;
         }
 
         /**
@@ -254,9 +266,7 @@ namespace SimDataStructure
         public void SetGridData(string dataName, object data)
         {
             if (gridData.ContainsKey(dataName))
-            {
                 gridData[dataName].SetData(data);
-            }
             else // TODO: Maybe add a thing here to create a new entry if it doesn't exist?
                 Debug.Log("Grid data \"" + dataName + "\" does not exist.");
         }
@@ -317,6 +327,8 @@ namespace SimDataStructure
 
             if (cell != null)
                 cell.AddCellData(dataName, data);
+            else
+                Debug.LogError("Trying to add cell data at a position where no cells exist: " + data.Position);
         }
 
         /**
@@ -334,7 +346,7 @@ namespace SimDataStructure
             GridCell cell = GetCell(data.Position);
 
             if (cell != null)
-                return cell.RemoveCellData(dataName);
+                return cell.RemoveCellData(dataName, data);
 
             return false;
         }
@@ -377,7 +389,7 @@ namespace SimDataStructure
     {
         #region Public
         public Vector2 center;
-        public Bounds bounds;
+        public Bounds2D bounds;
         private GridLevel level;
         [HideInInspector]
         public GridLevel Level { get { return level; } }
@@ -407,19 +419,19 @@ namespace SimDataStructure
         {
             this.center = center;
             this.level = level;
-            this.bounds = new Bounds(center, level.CellSize);
+            this.bounds = new Bounds2D(center, level.CellSize);
         }
 
         #region Cell Querying
         public bool Contains(Vector2 queryPos)
         {
-            if (!bounds.Contains(queryPos))
-            {
-                return false;
-            }
+            // if (!bounds.Contains(queryPos))
+            //     return false;
 
-            return (queryPos.x >= center.x - Level.CellSize.x / 2 && queryPos.x <= center.x + Level.CellSize.x / 2 &&
-                    queryPos.y >= center.y - Level.CellSize.y / 2 && queryPos.y <= center.y + Level.CellSize.y / 2);
+            return bounds.Contains(queryPos);
+
+            // return (queryPos.x >= center.x - Level.CellSize.x / 2 && queryPos.x <= center.x + Level.CellSize.x / 2 &&
+            //         queryPos.y >= center.y - Level.CellSize.y / 2 && queryPos.y <= center.y + Level.CellSize.y / 2);
         }
 
         public GridCell GetChild(Vector2 queryPos)

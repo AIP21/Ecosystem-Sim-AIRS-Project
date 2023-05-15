@@ -12,8 +12,6 @@ namespace TreeGrowth
     {
         [SerializeField]
         private Mesh treeMesh;
-        [SerializeField]
-        private MeshCollider treeCollider;
 
         [SerializeField]
         private TreeGenerator generator;
@@ -22,11 +20,12 @@ namespace TreeGrowth
         [SerializeReference]
         private TreeParameters treeParameters;
 
-        public TreeCellData(GameObject treeObj, TreeGenerator generator, Mesh mesh, MeshCollider collider, TreeParameters parameters) : base(treeObj)
+        public float Hydration = 100.0f;
+
+        public TreeCellData(GameObject treeObj, TreeGenerator generator, Mesh mesh, TreeParameters parameters) : base(treeObj)
         {
             this.generator = generator;
             this.treeMesh = mesh;
-            this.treeCollider = collider;
             this.treeParameters = parameters;
         }
 
@@ -35,12 +34,6 @@ namespace TreeGrowth
         {
             get { return treeMesh; }
             set { treeMesh = value; }
-        }
-
-        public MeshCollider TreeCollider
-        {
-            get { return treeCollider; }
-            set { treeCollider = value; }
         }
 
         public TreeGenerator Generator

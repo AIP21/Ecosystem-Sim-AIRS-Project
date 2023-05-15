@@ -41,7 +41,18 @@ namespace SimDataStructure.Data
 
         public Transform Transform { get { return transform; } }
 
-        public Vector3 Position { get { return transform.position; } }
+        private Vector3 lastPos;
+
+        public Vector3 Position
+        {
+            get
+            {
+                if (transform != null)
+                    lastPos = transform.position;
+
+                return lastPos;
+            }
+        }
         #endregion
     }
 
