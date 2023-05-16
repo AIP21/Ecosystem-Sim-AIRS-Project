@@ -47,9 +47,9 @@ namespace Utilities
             return sum / list.Count;
         }
 
-        public static void AddToAverageList<T>(List<T> list, T toAdd)
+        public static void AddToAverageList<T>(List<T> list, T toAdd, int max = 50)
         {
-            if (list.Count >= 50)
+            if (list.Count >= max)
                 list.RemoveAt(0);
 
             list.Add(toAdd);

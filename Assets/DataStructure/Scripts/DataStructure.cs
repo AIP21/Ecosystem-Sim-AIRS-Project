@@ -52,6 +52,7 @@ namespace SimDataStructure
         #region Debug
         [Header("Debug")]
         public bool CalculateDebugInfo = false;
+        public int StatHistory = 50;
 
         [Space(10)]
         public float gridReadsPerTick = 0;
@@ -259,10 +260,10 @@ namespace SimDataStructure
             {
                 st.Stop();
 
-                Utils.AddToAverageList<float>(_gridReadTimePerTick, (float)st.Elapsed.TotalMilliseconds);
+                Utils.AddToAverageList<float>(_gridReadTimePerTick, (float)st.Elapsed.TotalMilliseconds, StatHistory);
 
                 if (gridReadCount > 0)
-                    Utils.AddToAverageList<float>(_gridReadsPerTick, gridReadCount);
+                    Utils.AddToAverageList<float>(_gridReadsPerTick, gridReadCount, StatHistory);
 
                 st.Reset();
                 st.Start();
@@ -290,10 +291,10 @@ namespace SimDataStructure
             {
                 st.Stop();
 
-                Utils.AddToAverageList<float>(_cellReadTimePerTick, (float)st.Elapsed.TotalMilliseconds);
+                Utils.AddToAverageList<float>(_cellReadTimePerTick, (float)st.Elapsed.TotalMilliseconds, StatHistory);
 
                 if (cellReadCount > 0)
-                    Utils.AddToAverageList<float>(_cellReadsPerTick, cellReadCount);
+                    Utils.AddToAverageList<float>(_cellReadsPerTick, cellReadCount, StatHistory);
             }
         }
 
@@ -345,7 +346,7 @@ namespace SimDataStructure
             {
                 st.Stop();
 
-                Utils.AddToAverageList<float>(_gridWriteTimePerTick, (float)st.Elapsed.TotalMilliseconds);
+                Utils.AddToAverageList<float>(_gridWriteTimePerTick, (float)st.Elapsed.TotalMilliseconds, StatHistory);
 
                 st.Reset();
                 st.Start();
@@ -373,12 +374,12 @@ namespace SimDataStructure
             {
                 st.Stop();
 
-                Utils.AddToAverageList<float>(_cellWriteTimePerTick, (float)st.Elapsed.TotalMilliseconds);
+                Utils.AddToAverageList<float>(_cellWriteTimePerTick, (float)st.Elapsed.TotalMilliseconds, StatHistory);
 
                 if (gridWriteCount > 0)
-                    Utils.AddToAverageList<float>(_gridWritesPerTick, gridWriteCount);
+                    Utils.AddToAverageList<float>(_gridWritesPerTick, gridWriteCount, StatHistory);
                 if (cellWriteCount > 0)
-                    Utils.AddToAverageList<float>(_cellWritesPerTick, cellWriteCount);
+                    Utils.AddToAverageList<float>(_cellWritesPerTick, cellWriteCount, StatHistory);
 
                 gridReadsPerTick = Utils.Average(_gridReadsPerTick);
                 cellReadsPerTick = Utils.Average(_cellReadsPerTick);

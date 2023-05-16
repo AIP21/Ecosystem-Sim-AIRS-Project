@@ -56,7 +56,7 @@ namespace TreeGrowth
         public Dictionary<string, int> WriteDataNames { get { return _writeDataNames; } }
 
         public float TickPriority { get { return 2; } }
-        public int TickInterval { get { return 0; } }
+        public int TickInterval { get { return 20; } }
         public int ticksSinceLastTick { get; set; }
         public bool willTickNow { get; set; }
         public bool shouldTick { get { return this.isActiveAndEnabled; } }
@@ -86,13 +86,13 @@ namespace TreeGrowth
                     createInitialTrees();
             }
 
-            if (trees.Count == 0 && newTrees.Count == 0)
-            {
-                GC.Collect();
-                print("All trees died. Restarting with new trees and random parameters");
-                TestParameters = lastTreeParams.Copy();
-                createInitialTrees();
-            }
+            // if (trees.Count == 0 && newTrees.Count == 0)
+            // {
+            //     GC.Collect();
+            //     print("All trees died. Restarting with new trees and random parameters");
+            //     TestParameters = lastTreeParams.Copy();
+            //     createInitialTrees();
+            // }
         }
 
         public void Tick(float deltaTime)
@@ -235,14 +235,14 @@ namespace TreeGrowth
             {
                 TreeCellData tree = trees[index];
 
-                if (tree.Hydration < 0)
-                {
-                    lastTreeParams = tree.TreeParameters;
+                // if (tree.Hydration < 0)
+                // {
+                //     lastTreeParams = tree.TreeParameters;
 
-                    nulledTrees.Add(tree);
-                    print("Tree died at age " + tree.Generator.Age() + " with hydration " + tree.Hydration);
-                    continue;
-                }
+                //     nulledTrees.Add(tree);
+                //     print("Tree died at age " + tree.Generator.Age() + " with hydration " + tree.Hydration);
+                //     continue;
+                // }
 
                 if (tree.Hydration < tree.TreeParameters.PruneThreshold)
                     tree.Generator.Prune(tree.TreeParameters.PrunePercentage);
@@ -265,7 +265,7 @@ namespace TreeGrowth
             }
         }
 
-        TODO: TEST OUT TREE GENERATION/EVOLUTION. it was getting stuck after a few generations on my pc
+        // TODO: TEST OUT TREE GENERATION/EVOLUTION. it was getting stuck after a few generations on my pc
 
         private void reproduceTree(TreeCellData tree)
         {

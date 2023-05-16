@@ -18,11 +18,13 @@ namespace Managers
 
         [Header("Debug")]
         public bool CalculateDebugInfo = false;
+        public int StatHistory = 50;
 
         [Space(5)]
         public float BeginTickTime = 0;
         public float TickTime = 0;
         public float EndTickTime = 0;
+        public float TotalTickTime = 0;
         #endregion
 
         #region Private
@@ -33,6 +35,7 @@ namespace Managers
         private List<float> _beginTickTimes = new List<float>();
         private List<float> _tickTimes = new List<float>();
         private List<float> _endTickTimes = new List<float>();
+        private List<float> _totalTickTimes = new List<float>();
         #endregion
 
         public void Awake()
@@ -64,6 +67,8 @@ namespace Managers
             toTick.Clear();
 
             Stopwatch st = null;
+
+            float tick = 0.0f;
 
             if (CalculateDebugInfo)
             {
@@ -105,7 +110,8 @@ namespace Managers
             {
                 st.Stop();
 
-                Utils.AddToAverageList<float>(_beginTickTimes, (float)st.Elapsed.TotalMilliseconds);
+                tick += (float)st.Elapsed.TotalMilliseconds;
+                Utils.AddToAverageList<float>(_beginTickTimes, (float)st.Elapsed.TotalMilliseconds, StatHistory);
 
                 st.Reset();
                 st.Start();
@@ -120,7 +126,8 @@ namespace Managers
             {
                 st.Stop();
 
-                Utils.AddToAverageList<float>(_tickTimes, (float)st.Elapsed.TotalMilliseconds);
+                tick += (float)st.Elapsed.TotalMilliseconds;
+                Utils.AddToAverageList<float>(_tickTimes, (float)st.Elapsed.TotalMilliseconds, StatHistory);
 
                 st.Reset();
                 st.Start();
@@ -134,11 +141,15 @@ namespace Managers
             if (CalculateDebugInfo)
             {
                 st.Stop();
-                Utils.AddToAverageList<float>(_endTickTimes, (float)st.Elapsed.TotalMilliseconds);
+
+                tick += (float)st.Elapsed.TotalMilliseconds;
+                Utils.AddToAverageList<float>(_endTickTimes, (float)st.Elapsed.TotalMilliseconds, StatHistory);
+                Utils.AddToAverageList<float>(_totalTickTimes, tick, StatHistory);
 
                 BeginTickTime = Utils.Average(_beginTickTimes);
                 TickTime = Utils.Average(_tickTimes);
                 EndTickTime = Utils.Average(_endTickTimes);
+                TotalTickTime = Utils.Average(_totalTickTimes);
             }
         }
     }
