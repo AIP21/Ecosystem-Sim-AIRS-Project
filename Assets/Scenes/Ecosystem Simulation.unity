@@ -11737,7 +11737,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0013169faf7e2a24483f14d4dcd2611c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  OverallSize: {x: 500, y: 500}
+  OverallSize: {x: 1000, y: 1000}
   Levels:
   - {fileID: 11400000, guid: 36751346e59f29e409b3874b0603be45, type: 2}
   - {fileID: 11400000, guid: a8156ca0bf27694458adbefdae0a24e1, type: 2}
@@ -21772,15 +21772,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 985569e64189cbb469fd53f9e3b46c55, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  RandomTreeCountPerTick: 5
-  RandomTickRate: 0.8
+  RandomTreeCountPerTick: 10
+  RandomTickRate: 1
   CollectInitialChildTrees: 0
   GenerateInitialTrees: 1
-  InitialTreeCount: 100
+  InitialTreeCount: 100000
   InitialTreeGenerationBounds:
     m_Center: {x: 250, y: 10, z: 250}
-    m_Extent: {x: 250, y: 10, z: 250}
-  TestTreePrefab: {fileID: 2512629738840422531, guid: 0baa68192c27f434cb5441f33316dd05, type: 3}
+    m_Extent: {x: 240, y: 10, z: 240}
+  TestTreePrefab: {fileID: 2512629738840422531, guid: d649c620bb06319498b81b2c40f5c39b, type: 3}
   TestParameters:
     StemSize: 0.3
     BranchSize: 0.1
@@ -21792,8 +21792,8 @@ MonoBehaviour:
     BranchAngle: 30
     RadialBias: 0.2
     AngleRandomness: 0.5
-    GenerateBranchMesh: 1
-    GenerateLeafMesh: 1
+    GenerateBranchMesh: 0
+    GenerateLeafMesh: 0
     GenerateLeafColliders: 0
     GenerateBranchColliders: 0
     GrowThreshold: 60
@@ -21816,6 +21816,9 @@ MonoBehaviour:
     MaxBranchesPerNode: 3
     PrunePercentage: 0.06
     Seed: 0
+  averageAge: 0
+  averageAgeNonzero: 0
+  maxAge: 0
 --- !u!1 &545314996
 GameObject:
   m_ObjectHideFlags: 0
@@ -23172,6 +23175,7 @@ MonoBehaviour:
   BeginTickTime: 0
   TickTime: 0
   EndTickTime: 0
+  TotalTickTime: 0
 --- !u!1 &583718243
 GameObject:
   m_ObjectHideFlags: 0

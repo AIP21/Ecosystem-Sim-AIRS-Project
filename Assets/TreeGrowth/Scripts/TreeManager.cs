@@ -1,13 +1,13 @@
-using System.Diagnostics;
-using System.Linq;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using Managers.Interfaces;
 using SimDataStructure.Data;
 using SimDataStructure.Interfaces;
-using UnityEngine;
 using TreeGrowth.Generation;
+using UnityEngine;
 
 namespace TreeGrowth
 {
@@ -100,8 +100,36 @@ namespace TreeGrowth
             tickTrees();
         }
 
+        public float averageAge = 0;
+        public float averageAgeNonzero = 0;
+        public int maxAge = 0;
+
         public void EndTick(float deltaTime)
         {
+            averageAge = 0;
+            averageAgeNonzero = 0;
+            maxAge = int.MinValue;
+
+            int notZeroCount = 0;
+
+            foreach (TreeCellData tree in trees)
+            {
+                int age = tree.Generator.Age();
+
+                if (age != 0)
+                {
+                    averageAgeNonzero += age;
+                    notZeroCount++;
+                }
+
+                if (age > maxAge)
+                    maxAge = age;
+
+                averageAge += age;
+            }
+
+            averageAge = averageAge / trees.Count;
+            averageAgeNonzero = averageAgeNonzero / notZeroCount;
         }
 
         // private void Update()
@@ -244,14 +272,14 @@ namespace TreeGrowth
                 //     continue;
                 // }
 
-                if (tree.Hydration < tree.TreeParameters.PruneThreshold)
-                    tree.Generator.Prune(tree.TreeParameters.PrunePercentage);
+                // if (tree.Hydration < tree.TreeParameters.PruneThreshold)
+                //     tree.Generator.Prune(tree.TreeParameters.PrunePercentage);
 
-                if (tree.Hydration > tree.TreeParameters.GrowThreshold)
-                    tree.Generator.IterateGrowth(tree.TreeParameters);
+                // if (tree.Hydration > tree.TreeParameters.GrowThreshold)
+                tree.Generator.IterateGrowth(tree.TreeParameters);
 
-                if (tree.Hydration > tree.TreeParameters.ReproduceThreshold && tree.Generator.Age() > tree.TreeParameters.ReproduceAge)
-                    reproduceTree(tree);
+                // if (tree.Hydration > tree.TreeParameters.ReproduceThreshold && tree.Generator.Age() > tree.TreeParameters.ReproduceAge)
+                //     reproduceTree(tree);
 
                 float used = tree.Generator.CalculateWaterUseThisTick();
                 tree.Hydration -= used;

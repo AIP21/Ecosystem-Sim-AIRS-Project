@@ -5,8 +5,8 @@ using UnityEngine;
 
 namespace TreeGrowth.Generation
 {
-    [RequireComponent(typeof(MeshRenderer))]
-    [RequireComponent(typeof(MeshFilter))]
+    // [RequireComponent(typeof(MeshRenderer))]
+    // [RequireComponent(typeof(MeshFilter))]
     public class TreeGenerator : MonoBehaviour
     {
         #region Public
@@ -24,14 +24,14 @@ namespace TreeGrowth.Generation
 
         #region Private
         private MeshFilter meshFilter;
-        private MeshRenderer meshRenderer;
+        // private MeshRenderer meshRenderer;
         private Node Root;
         #endregion
 
         public void Awake()
         {
-            this.meshFilter = this.GetComponent<MeshFilter>();
-            this.meshRenderer = this.GetComponent<MeshRenderer>();
+            if (this.parameters.GenerateBranchMesh || this.parameters.GenerateLeafMesh)
+                this.meshFilter = this.GetComponent<MeshFilter>();
 
             this.Reset();
         }
@@ -44,7 +44,8 @@ namespace TreeGrowth.Generation
             this.Iteration = 0;
             this.recalculateEnergy();
 
-            this.meshFilter.sharedMesh = null;
+            if (this.parameters.GenerateBranchMesh || this.parameters.GenerateLeafMesh)
+                this.meshFilter.sharedMesh = null;
 
             if (this.parameters.GenerateBranchColliders)
             {
@@ -420,7 +421,7 @@ namespace TreeGrowth.Generation
             {
                 if (item.Probability > roll)
                 {
-                    this.meshRenderer.materials[1].color = item.GetColor();
+                    // this.meshRenderer.materials[1].color = item.GetColor();
                     return;
                 }
                 else
@@ -442,7 +443,7 @@ namespace TreeGrowth.Generation
             }
         }
 
-        public float Age()
+        public int Age()
         {
             return this.Iteration; // map(0, this.parameters.Iterations, 0, 1, this.Iteration);
         }
@@ -512,7 +513,10 @@ namespace TreeGrowth.Generation
 
         public Mesh GetMesh()
         {
-            return this.meshFilter.mesh;
+            if (this.meshFilter == null)
+                return null;
+            else
+                return this.meshFilter.mesh;
         }
     }
 }
