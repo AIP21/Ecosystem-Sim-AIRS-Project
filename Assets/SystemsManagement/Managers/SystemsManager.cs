@@ -103,7 +103,7 @@ namespace Managers
             // Tick all manager systems that need to be ticked this frame
             for (int i = 0; i < toTick.Count; i++)
             {
-                toTick[i].BeginTick(deltaT);
+                toTick[i].BeginTick(deltaT * toTick[i].TickInterval);
             }
 
             if (CalculateDebugInfo)
@@ -119,7 +119,7 @@ namespace Managers
 
             for (int i = 0; i < toTick.Count; i++)
             {
-                toTick[i].Tick(deltaT);
+                toTick[i].Tick(deltaT * toTick[i].TickInterval);
             }
 
             if (CalculateDebugInfo)
@@ -135,7 +135,7 @@ namespace Managers
 
             for (int i = 0; i < toTick.Count; i++)
             {
-                toTick[i].EndTick(deltaT);
+                toTick[i].EndTick(deltaT * toTick[i].TickInterval);
             }
 
             if (CalculateDebugInfo)
