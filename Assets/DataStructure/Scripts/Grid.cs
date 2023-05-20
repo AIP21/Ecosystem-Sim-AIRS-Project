@@ -24,7 +24,7 @@ namespace SimDataStructure
 
         public int xCellCount, yCellCount;
 
-        // Compute shader data
+        // Grid data
         public GenericDictionary<string, AbstractGridData> gridData = new GenericDictionary<string, AbstractGridData>();
         #endregion
 

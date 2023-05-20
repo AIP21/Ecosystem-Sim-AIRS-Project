@@ -12,7 +12,7 @@ namespace SimDataStructure.Data
         <summary>
             Whether this cell data is static.
 
-            A static cell data means that it's gameObject does not move around, and so would always in the same cell.
+            A static cell data means that its gameObject does not move around, and so would always be in the same cell.
         </summary>
         **/
         private bool isStatic;
