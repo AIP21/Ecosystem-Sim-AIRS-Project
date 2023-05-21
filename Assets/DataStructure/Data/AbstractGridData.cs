@@ -31,7 +31,7 @@ namespace SimDataStructure.Data
 
         /**
         <summary>
-            Dispose this data. (Dispose any buffers, textures, etc from memory)
+            Dispose this data. (Dispose of any buffers, textures, etc from memory)
             This should ALWAYS be called before this object is destroyed or discarded. (Although, this should not be commonly used because you want to keep the same data object at runtime)
         </summary>
         **/

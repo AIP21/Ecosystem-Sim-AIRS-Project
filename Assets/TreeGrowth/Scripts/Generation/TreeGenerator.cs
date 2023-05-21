@@ -465,7 +465,7 @@ namespace TreeGrowth.Generation
 
         public float CalculateWaterUseThisTick()
         {
-            recalculateEnergy();
+            // recalculateEnergy();
 
             float waterUse = 0;
             foreach (Node node in this.Root.GetTree())
@@ -491,18 +491,8 @@ namespace TreeGrowth.Generation
 
         public float CalculateWaterAbsorptionThisTick()
         {
-            float waterAbsorption = 0;
-            foreach (Node node in this.Root.GetTree())
-            {
-                // If this is a stem node
-                if (Mathf.Pow(map(1, this.Root.SubtreeSize, 1, 0, node.SubtreeSize), this.parameters.SizeFalloff) == 0)
-                {
-                    float stemAbsorptionMult = 0.3f;
-                    waterAbsorption += stemAbsorptionMult * (getBranchRadius(node) + node.GetLength());
-                }
-            }
-
-            return waterAbsorption;
+            float stemAbsorptionMult = 0.3f;
+            return stemAbsorptionMult * (getBranchRadius(this.Root) + this.Root.GetLength());
         }
         #endregion
 

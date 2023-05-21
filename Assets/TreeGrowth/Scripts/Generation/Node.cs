@@ -113,11 +113,11 @@ namespace TreeGrowth.Generation
         }
 
         /**
-        Try to branch off of this branch. Only for if this branch already has any children.
+        Try to branch off of this branch. Only for if this branch already has children.
         **/
         public Node Branch()
         {
-            if (this.Children.Count() == 0) // If this branch already has any children
+            if (this.Children.Count() == 0) // If this branch doesn't already has any children then don't branch off of it
                 return null;
 
             // The math for the falloff is as follows: (branch length falloff param ^ depth of this branch in the tree)
@@ -212,7 +212,7 @@ namespace TreeGrowth.Generation
 
                 if (System.Single.IsPositiveInfinity(range)) // There is no obstacle in the way, so just return the growth direction
                 {
-                    Debug.DrawRay(this.Tree.transform.position + this.Position + growthDirection.normalized * 0.01f, growthDirection, Color.green, 10);
+                    Debug.DrawRay(this.Tree.transform.position + this.Position + growthDirection * 0.01f, growthDirection, Color.green, 10);
                     return growthDirection;
                 }
 
@@ -222,11 +222,11 @@ namespace TreeGrowth.Generation
                     result = growthDirection;
                     longestDistance = range;
 
-                    Debug.DrawRay(this.Tree.transform.position + this.Position + growthDirection.normalized * 0.01f, growthDirection, Color.yellow, 10);
+                    Debug.DrawRay(this.Tree.transform.position + this.Position + growthDirection * 0.01f, growthDirection, Color.yellow, 10);
                 }
                 else
                 {
-                    Debug.DrawRay(this.Tree.transform.position + this.Position + growthDirection.normalized * 0.01f, growthDirection, Color.red, 10);
+                    Debug.DrawRay(this.Tree.transform.position + this.Position + growthDirection * 0.01f, growthDirection, Color.red, 10);
                 }
             }
 
@@ -248,6 +248,8 @@ namespace TreeGrowth.Generation
         Cast a ray from a given position in a given direction
 
         Returns the distance to the first object hit by the ray
+
+        ASSUMES THAT THE GIVEN DIRECTION IS ALREADY NORMALIZED
         **/
         private float raycast(Vector3 position, Vector3 direction, Color color, float skip = 0f, bool debug = false)
         {
@@ -255,7 +257,7 @@ namespace TreeGrowth.Generation
 
             // Create a ray from the calculated position(tree root position + the given position + the normalized given direction * the skip distance) with the given direction
             // Skip is used to offset the origin a tiny bit, so that it doesn't hit this branch
-            Ray ray = new Ray(this.Tree.transform.position + position + direction.normalized * skip, direction);
+            Ray ray = new Ray(this.Tree.transform.position + position + direction * skip, direction);
 
             if (debug)
                 Debug.DrawRay(ray.origin, ray.direction, color, 10);

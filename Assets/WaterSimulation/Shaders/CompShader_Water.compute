@@ -112,7 +112,9 @@ float gauss(float x, float radius)
 
     // Surface evaporation
     if (evaporationConstant > 0) {
-        newSurfaceWater = max(newSurfaceWater - evaporationConstant, 0.0);
+        // Less water evaporates the more water there is
+        float evaporation = min(0.0, -2.4389 * pow(newSurfaceWater - 0.689655, 3))
+        newSurfaceWater = min(0.0, newSurfaceWater - evaporation * evaporationConstant);
     }
 
 
@@ -134,10 +136,10 @@ float gauss(float x, float radius)
         // Scale pos to external texture size
         int2 externalPos = int2(pos * externalSize);
 
-        float externalUnit = (size / externalSize); // basically how many soil cells there are in a single external cell
+        float externalUnit = pow(size / externalSize, 2); // basically how many soil cells there are in a single external cell
 
         // Get how much water is being used in this cell
-        float use = (soilUseMap[externalPos] * externalUnit) * soilUseMultiplier; // TODO: * (1 - soilData);
+        float use = (soilUseMap[externalPos] / externalUnit) * soilUseMultiplier; // TODO: * (1 - soilData);
 
         // Make sure we don't use more water than there is in this cell
         use = min(use, newSoilSaturation);
