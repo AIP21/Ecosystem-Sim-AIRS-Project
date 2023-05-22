@@ -20,7 +20,7 @@ namespace SimDataStructure.Data
             Copies the data from this AbstractGridData to the given object.
         </summary>
         **/
-        public abstract void GetData(object target);
+        public abstract void GetData(ref object target);
 
         /**
         <summary>

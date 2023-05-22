@@ -23,7 +23,7 @@ namespace SimDataStructure.Data
             This just does Graphics.Blit() to copy over the data.
         </summary>
         **/
-        public override void GetData(object target)
+        public override void GetData(ref object target)
         {
             if (this.renderTexture == null)
             {
@@ -39,6 +39,10 @@ namespace SimDataStructure.Data
             {
                 Debug.LogError("TextureGridData.GetData: target is null or not a RenderTexture");
             }
+        }
+
+        public void CopyData(RenderTexture other){
+            Graphics.Blit(this.renderTexture, other);
         }
 
         /**

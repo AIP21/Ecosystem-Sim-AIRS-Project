@@ -203,9 +203,9 @@ namespace SimDataStructure
                     Debug.LogError("DataStructure: GameObject " + InitializingObjects[i].name + " does not have a component that implements ISetupGridData");
                 }
 
-                Dictionary<Tuple<string, int>, AbstractGridData> data = initializer.initializeData();
+                Dictionary<Tuple<string, int>, object> data = initializer.initializeData();
 
-                foreach (KeyValuePair<Tuple<string, int>, AbstractGridData> entry in data)
+                foreach (KeyValuePair<Tuple<string, int>, object> entry in data)
                 {
                     // Check if the level is valid
                     if (entry.Key.Item2 < 0 || entry.Key.Item2 >= grids.Count)
@@ -214,7 +214,11 @@ namespace SimDataStructure
                         continue;
                     }
 
-                    grids[entry.Key.Item2].SetGridData(entry.Key.Item1, entry.Value);
+                    if (entry.Value is AbstractGridData){
+                        grids[entry.Key.Item2].SetGridData(entry.Key.Item1, (AbstractGridData)entry.Value);
+                    } else {
+                        Debug.LogError("DataStructure: GameObject " + InitializingObjects[i].name + " returned a data object that does not inherit from AbstractGridData");
+                    }
                 }
             }
         }
@@ -397,6 +401,7 @@ namespace SimDataStructure
                 cellActivityPerTick = cellReadsPerTick + cellWritesPerTick;
             }
         }
+        #endregion
 
         #region IO for Grid Data
         // Fetches the requested data from the data structure, caches it if not already, and sends it to the reading class
@@ -430,7 +435,7 @@ namespace SimDataStructure
             }
 
             // Send the data
-            reader.receiveData(data);
+            reader.readData(data);
 
             return reads;
         }
@@ -534,7 +539,6 @@ namespace SimDataStructure
 
             return writes;
         }
-        #endregion
         #endregion
 
         #region Cell Queries (no longer used. Also should not be used)

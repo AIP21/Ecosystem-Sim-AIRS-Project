@@ -59,7 +59,7 @@ public class GridHandler : MonoBehaviour
 
     // draw gizmo cubes around teh grids where the player is
     // so we can see it in the scene view
-    void OnDrawGizmos () {
+    void OnDrawGizmosSelected () {
         // loop in a 3 x 3 x 3 grid
         for (int x = -1; x <= 1; x++) {
             for (int y = -1; y <= 1; y++) {

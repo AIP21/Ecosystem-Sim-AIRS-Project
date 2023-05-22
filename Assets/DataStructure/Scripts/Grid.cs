@@ -99,7 +99,10 @@ namespace SimDataStructure
         {
             foreach (AbstractGridData data in gridData.Values)
             {
-                data.Dispose();
+                if (data != null)
+                    data.Dispose();
+                else
+                    Debug.LogWarning("Tried to dispose null data");
             }
         }
 
@@ -268,7 +271,7 @@ namespace SimDataStructure
             if (gridData.ContainsKey(dataName))
                 gridData[dataName].SetData(data);
             else // TODO: Maybe add a thing here to create a new entry if it doesn't exist?
-                Debug.Log("Grid data \"" + dataName + "\" does not exist.");
+                Debug.LogWarning("Grid data \"" + dataName + "\" does not exist.");
         }
 
         /**

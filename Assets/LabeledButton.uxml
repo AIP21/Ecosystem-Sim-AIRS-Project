@@ -1,0 +1,6 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements">
+    <ui:GroupBox name="LabeledButton" style="flex-direction: row; align-items: center; justify-content: center; border-left-width: 2px; border-right-width: 2px; border-top-width: 2px; border-bottom-width: 2px; border-top-left-radius: 15px; border-bottom-left-radius: 15px; border-top-right-radius: 15px; border-bottom-right-radius: 15px; border-left-color: rgba(190, 190, 190, 255); border-right-color: rgba(190, 190, 190, 255); border-top-color: rgba(190, 190, 190, 255); border-bottom-color: rgba(190, 190, 190, 255); width: 205px; height: 35px;">
+        <ui:Label text="Button" display-tooltip-when-elided="true" style="-unity-text-align: middle-center; height: 14px; white-space: nowrap;" />
+        <ui:Button text="Button" display-tooltip-when-elided="true" style="height: auto;" />
+    </ui:GroupBox>
+</ui:UXML>

@@ -43,6 +43,9 @@ namespace WaterSim
         [Header("General Settings")]
         public Texture2D heightmap;
 
+        [Header("Weather")]
+        public float RainMultiplier = 1.0f;
+
         [Space(10)]
         public int resolution = 1024;
         public int externalResolution = 256;
@@ -107,28 +110,11 @@ namespace WaterSim
         public bool enableSoilEvaporation = true;
         public bool enableSoilDiffusion = true;
         #endregion
-
-        // [Header("Data Structure")]
-        private Dictionary<string, int> _readDataNames = new Dictionary<string, int>() {
-            { "waterHeight", 0 },
-            { "waterFlow", 0 },
-            { "waterVelocity", 0 },
-            { "soilSaturation", 1 }, // 2
-            { "soilUse", 2 } // 4
-        };  // The names of the data this is reading from the data structure
-        public Dictionary<string, int> ReadDataNames { get { return _readDataNames; } }
-
-        private Dictionary<string, int> _writeDataNames = new Dictionary<string, int>(){
-            { "waterHeight", 0 },
-            { "waterFlow", 0 },
-            { "waterVelocity", 0 },
-            { "soilSaturation", 1 }, // 2
-            { "soilUse", 2 } // 4
-        };  // The names of the data this is writing to the data structure
-        public Dictionary<string, int> WriteDataNames { get { return _writeDataNames; } }
         #endregion
 
         #region Private
+        private float rainStrength = 0.0f;
+
         private int dispatchSize = 0;
         private int kernelCount = 0;
         private int kernel_reset = 0;
@@ -140,6 +126,26 @@ namespace WaterSim
         private int kernel_diffusion = 0;
 
         #region Interface Stuff
+        // [Header("Data Structure")]
+        private Dictionary<string, int> _readDataNames = new Dictionary<string, int>() {
+            { "waterHeight", 0 },
+            { "waterFlow", 0 },
+            { "waterVelocity", 0 },
+            { "soilSaturation", 1 }, // 2
+            { "soilUse", 2 }, // 4
+            {"weatherToday", 2}
+        };  // The names of the data this is reading from the data structure
+        public Dictionary<string, int> ReadDataNames { get { return _readDataNames; } }
+
+        private Dictionary<string, int> _writeDataNames = new Dictionary<string, int>(){
+            { "waterHeight", 0 },
+            { "waterFlow", 0 },
+            { "waterVelocity", 0 },
+            { "soilSaturation", 1 }, // 2
+            { "soilUse", 2 } // 4
+        };  // The names of the data this is writing to the data structure
+        public Dictionary<string, int> WriteDataNames { get { return _writeDataNames; } }
+
         public float TickPriority { get { return 1; } }
         public int TickInterval { get { return 5; } }
         public int ticksSinceLastTick { get; set; }
@@ -236,6 +242,8 @@ namespace WaterSim
             computeShader.SetFloat("diffuseAlpha", diffuseAlpha);
             computeShader.SetFloat("_deltaTime", timeStep); // deltaTime
             computeShader.SetFloat("heightmapMultiplier", heightmapMultiplier);
+            computeShader.SetFloat("rainMult", RainMultiplier);
+            computeShader.SetFloat("rainStrength", rainStrength);
         }
 
         public void Tick(float deltaTime)
@@ -260,9 +268,9 @@ namespace WaterSim
         #endregion
 
         #region Data Structure
-        public Dictionary<Tuple<string, int>, AbstractGridData> initializeData()
+        public Dictionary<Tuple<string, int>, object> initializeData()
         {
-            Dictionary<Tuple<string, int>, AbstractGridData> data = new Dictionary<Tuple<string, int>, AbstractGridData>();
+            Dictionary<Tuple<string, int>, object> data = new Dictionary<Tuple<string, int>, object>();
 
             foreach (string name in ReadDataNames.Keys)
             {
@@ -291,18 +299,28 @@ namespace WaterSim
             return data;
         }
 
-        public void receiveData(List<AbstractGridData> data)
+        public void readData(List<AbstractGridData> data)
         {
             int i = 0;
 
             foreach (string name in ReadDataNames.Keys)
             {
                 AbstractGridData abstractData = data[i];
+
                 TextureGridData dat = abstractData is TextureGridData ? (TextureGridData)abstractData : null;
 
                 if (dat == null)
                 {
-                    print("Received NULL data");
+                    if (abstractData == null)
+                        print("Received NULL data");
+                    else if (abstractData is FloatGridData) // Received weather data
+                    {
+                        object rainData = 0.0f;
+                        abstractData.GetData(ref rainData);
+
+                        this.rainStrength = (float)rainData;
+                    }
+
                     continue;
                 }
                 // else if (dat.GetData() == null)
@@ -311,32 +329,49 @@ namespace WaterSim
                 //     continue;
                 // }
 
+                // object map;
+
                 // Copy the received data to the appropriate texture
                 switch (name)
                 {
                     case "waterHeight":
                         // print("Receiving waterHeight map");
-                        dat.GetData(waterMap);
+                        // map = waterMap;
+                        // dat.GetData(ref map);
+                        // waterMap = (RenderTexture)map;
+                        dat.CopyData(this.waterMap);
 
                         break;
                     case "waterFlow":
                         // print("Receiving waterFlow map");
-                        dat.GetData(flowMap);
+                        // map = flowMap;
+                        // dat.GetData(ref map);
+                        // waterMap = (RenderTexture)map;
+                        dat.CopyData(this.flowMap);
 
                         break;
                     case "waterVelocity":
                         // print("Receiving waterVelocity map");
-                        dat.GetData(velocityMap);
+                        // map = velocityMap;
+                        // dat.GetData(ref map);
+                        // waterMap = (RenderTexture)map;
+                        dat.CopyData(this.velocityMap);
 
                         break;
                     case "soilSaturation":
                         // print("Receiving soilSaturation map");
-                        dat.GetData(saturationMap);
+                        // map = saturationMap;
+                        // dat.GetData(ref map);
+                        // waterMap = (RenderTexture)map;
+                        dat.CopyData(this.saturationMap);
 
                         break;
                     case "soilUse":
                         // print("Receiving soilUse map");
-                        dat.GetData(soilUseMap);
+                        // map = soilUseMap;
+                        // dat.GetData(ref map);
+                        // waterMap = (RenderTexture)map;
+                        dat.CopyData(this.soilUseMap);
 
                         break;
                 }
@@ -554,7 +589,7 @@ namespace WaterSim
         // #region Debug
         // public bool showDebugTextures = true;
         // public int textureToDraw = 1;
-        
+
         // private void OnGUI()
         // {
         //     if (showDebugTextures)

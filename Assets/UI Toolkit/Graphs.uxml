@@ -1,0 +1,39 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements">
+    <ui:VisualElement name="Graphs" style="height: 477px; left: 312px; top: 25px; display: none; visibility: hidden; background-color: rgba(173, 173, 173, 0.64); border-top-left-radius: 15px; border-bottom-left-radius: 15px; border-top-right-radius: 15px; border-bottom-right-radius: 15px; position: absolute; right: 21px; overflow: visible;">
+        <ui:ScrollView touch-scroll-type="Elastic" focusable="true" nested-interaction-kind="Default" style="border-top-left-radius: 15px; border-bottom-left-radius: 15px; border-top-right-radius: 15px; border-bottom-right-radius: 15px; align-items: auto;">
+            <ui:GroupBox style="flex-direction: row; align-items: stretch; justify-content: center; flex-wrap: nowrap; flex-grow: 1; flex-basis: auto; height: 1262px;">
+                <ui:VisualElement style="align-items: stretch; justify-content: space-around; flex-grow: 0; flex-direction: column; width: 50%; padding-right: 5px;">
+                    <Graphing.LineChart name="baseChart" style="height: 33%; flex-grow: 0; align-items: stretch; margin-bottom: 5px;">
+                        <ui:Label text="Temperature (yearlong)" display-tooltip-when-elided="true" style="color: rgb(255, 255, 255); -unity-font: none; -unity-font-style: bold; font-size: 20px; -unity-text-align: upper-center;" />
+                    </Graphing.LineChart>
+                    <Graphing.LineChart name="actualChart" style="height: 33%; margin-bottom: 5px;">
+                        <ui:Label text="Humidity (yearlong)" display-tooltip-when-elided="true" style="color: rgb(255, 255, 255); -unity-font: none; -unity-font-style: bold; font-size: 20px; -unity-text-align: upper-center;" />
+                    </Graphing.LineChart>
+                    <Graphing.LineChart name="precipChart" style="height: 33%; margin-bottom: 5px;">
+                        <ui:Label text="Precipitation (yearlong)" display-tooltip-when-elided="true" style="color: rgb(255, 255, 255); -unity-font: none; -unity-font-style: bold; font-size: 20px; -unity-text-align: upper-center;" />
+                    </Graphing.LineChart>
+                    <Graphing.LineChart name="precipTypeChart" style="height: 33%; margin-bottom: 5px;">
+                        <ui:Label text="Precipitation Type (yearlong)" display-tooltip-when-elided="true" style="color: rgb(255, 255, 255); -unity-font: none; -unity-font-style: bold; font-size: 20px; -unity-text-align: upper-center;" />
+                    </Graphing.LineChart>
+                    <Graphing.LineChart name="fogCloudsChart" style="height: 33%; margin-bottom: 5px;">
+                        <ui:Label text="Foginess &amp; Cloudiness (yearlong)" display-tooltip-when-elided="true" style="color: rgb(255, 255, 255); -unity-font: none; -unity-font-style: bold; font-size: 20px; -unity-text-align: upper-center;" />
+                    </Graphing.LineChart>
+                </ui:VisualElement>
+                <ui:VisualElement style="width: 50%; justify-content: space-around; align-items: stretch;">
+                    <Graphing.LineChart name="dayTempChart" style="height: 33%; margin-bottom: 5px;">
+                        <ui:Label text="Felt Temperature (day)" display-tooltip-when-elided="true" style="color: rgb(255, 255, 255); -unity-font: none; -unity-font-style: bold; font-size: 20px; -unity-text-align: upper-center;" />
+                    </Graphing.LineChart>
+                    <Graphing.LineChart name="dayHumidityChart" style="height: 33%; margin-bottom: 5px;">
+                        <ui:Label text="Felt Humidity (day)" display-tooltip-when-elided="true" style="color: rgb(255, 255, 255); -unity-font: none; -unity-font-style: bold; font-size: 20px; -unity-text-align: upper-center;" />
+                    </Graphing.LineChart>
+                    <Graphing.LineChart name="windSpeedChart" style="height: 33%; margin-bottom: 5px;">
+                        <ui:Label text="Wind Speed (day)" display-tooltip-when-elided="true" enable-rich-text="true" style="color: rgb(255, 255, 255); -unity-font: none; -unity-font-style: bold; font-size: 20px; -unity-text-align: upper-center;" />
+                    </Graphing.LineChart>
+                    <Graphing.LineChart name="windDirChart" style="height: 33%; margin-bottom: 5px;">
+                        <ui:Label text="Wind Directrion (day)" display-tooltip-when-elided="true" style="color: rgb(255, 255, 255); -unity-font: none; -unity-font-style: bold; font-size: 20px; -unity-text-align: upper-center;" />
+                    </Graphing.LineChart>
+                </ui:VisualElement>
+            </ui:GroupBox>
+        </ui:ScrollView>
+    </ui:VisualElement>
+</ui:UXML>

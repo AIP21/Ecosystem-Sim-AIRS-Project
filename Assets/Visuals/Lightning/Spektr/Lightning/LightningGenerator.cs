@@ -144,7 +144,7 @@ public class LightningGenerator : MonoBehaviour
     private void Awake()
     {
         explosionSound = transform.Find("ExplosionSound").GetComponent<AudioSource>();
-        // cam = Utils.PrimaryCamera.transform;
+        cam = Utils.PrimaryCamera.transform;
     }
 
     // Color oldc;
@@ -286,16 +286,16 @@ public class LightningGenerator : MonoBehaviour
         StartCoroutine(Draw(count));
 
         #region Thunder, flash, strike explosion, and camera shake
-        if (doSound)
-        {
-            explosionSound.transform.position = goalPosition;
-            explosionSound.PlayOneShot(explosionSound.clip);
+        // if (doSound)
+        // {
+        //     explosionSound.transform.position = goalPosition;
+        //     explosionSound.PlayOneShot(explosionSound.clip);
 
-            int randAudio = Random.Range(0, ThunderNoises.Length);
-            GetComponent<AudioSource>().clip = ThunderNoises[randAudio];
-            curClip = ThunderNoises[randAudio];
-            StartCoroutine(PlaySound());
-        }
+        //     int randAudio = Random.Range(0, ThunderNoises.Length);
+        //     GetComponent<AudioSource>().clip = ThunderNoises[randAudio];
+        //     curClip = ThunderNoises[randAudio];
+        //     StartCoroutine(PlaySound());
+        // }
 
         if (DoPhysicsExplosion)
         {

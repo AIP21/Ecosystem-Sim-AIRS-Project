@@ -1,0 +1,10 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements">
+    <ui:VisualElement name="TreeGraphs" style="display: flex; visibility: visible; background-color: rgba(173, 173, 173, 0.64); border-top-left-radius: 15px; border-bottom-left-radius: 15px; border-top-right-radius: 15px; border-bottom-right-radius: 15px; position: relative; right: 21px; flex-direction: column; align-items: stretch; justify-content: space-around; flex-grow: 1;">
+        <ui:Label text="Average Age" display-tooltip-when-elided="true" style="color: rgb(255, 255, 255); -unity-font: none; -unity-font-style: bold; font-size: 20px; -unity-text-align: upper-center;" />
+        <Graphing.LineChart name="AvgAge" style="flex-grow: 1; justify-content: flex-start;" />
+        <ui:Label text="Average Age (nonzero)" display-tooltip-when-elided="true" style="color: rgb(255, 255, 255); -unity-font: none; -unity-font-style: bold; font-size: 20px; -unity-text-align: upper-center;" />
+        <Graphing.LineChart name="AvgAgeNonzero" style="flex-grow: 1;" />
+        <ui:Label text="Highest Age" display-tooltip-when-elided="true" style="color: rgb(255, 255, 255); -unity-font: none; -unity-font-style: bold; font-size: 20px; -unity-text-align: upper-center;" />
+        <Graphing.LineChart name="MaxAge" style="flex-grow: 1;" />
+    </ui:VisualElement>
+</ui:UXML>

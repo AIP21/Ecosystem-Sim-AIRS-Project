@@ -25,6 +25,9 @@ namespace Managers
         public float TickTime = 0;
         public float EndTickTime = 0;
         public float TotalTickTime = 0;
+
+        [Space(5)]
+        public bool Running = true;
         #endregion
 
         #region Private
@@ -60,8 +63,11 @@ namespace Managers
             }
         }
 
-        public void FixedUpdate()
+        public void Update() // FixedUpdate
         {
+            if (!Running)
+                return;
+
             float deltaT = Time.fixedDeltaTime;
 
             toTick.Clear();
@@ -103,7 +109,7 @@ namespace Managers
             // Tick all manager systems that need to be ticked this frame
             for (int i = 0; i < toTick.Count; i++)
             {
-                toTick[i].BeginTick(deltaT * toTick[i].TickInterval);
+                toTick[i].BeginTick(deltaT * (toTick[i].TickInterval + 1));
             }
 
             if (CalculateDebugInfo)
@@ -119,7 +125,7 @@ namespace Managers
 
             for (int i = 0; i < toTick.Count; i++)
             {
-                toTick[i].Tick(deltaT * toTick[i].TickInterval);
+                toTick[i].Tick(deltaT * (toTick[i].TickInterval + 1));
             }
 
             if (CalculateDebugInfo)
@@ -135,7 +141,7 @@ namespace Managers
 
             for (int i = 0; i < toTick.Count; i++)
             {
-                toTick[i].EndTick(deltaT * toTick[i].TickInterval);
+                toTick[i].EndTick(deltaT * (toTick[i].TickInterval + 1));
             }
 
             if (CalculateDebugInfo)
@@ -151,6 +157,16 @@ namespace Managers
                 EndTickTime = Utils.Average(_endTickTimes);
                 TotalTickTime = Utils.Average(_totalTickTimes);
             }
+        }
+
+        public void Halt()
+        {
+            Running = false;
+        }
+
+        public void Resume()
+        {
+            Running = true;
         }
     }
 }

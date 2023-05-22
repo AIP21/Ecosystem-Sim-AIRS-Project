@@ -1,8 +1,5 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
-using SimDataStructure.Data;
 
 namespace SimDataStructure.Interfaces
 {
@@ -29,6 +26,6 @@ namespace SimDataStructure.Interfaces
                 An implementing class should initialize only the data that it or its corresponding system will use.
             </summary>
         */
-        Dictionary<Tuple<string, int>, AbstractGridData> initializeData();
+        Dictionary<Tuple<string, int>, object> initializeData();
     }
 }

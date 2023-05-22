@@ -1,0 +1,3 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements">
+    <Graphing.LineChart name="baseChart" style="height: 33%; flex-grow: 0; align-items: stretch; margin-bottom: 5px;" />
+</ui:UXML>

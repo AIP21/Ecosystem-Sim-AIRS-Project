@@ -45,6 +45,9 @@ float epsilon;
 float diffuseAlpha;
 float flowDamping;
 
+float rainMult;
+float rainStrength;
+
 float _deltaTime;
 
 // Input
@@ -85,6 +88,12 @@ float gauss(float x, float radius)
     return exp(-(x * x) / radius);
 }
 
+// Random number from 0 to 1
+float rand(float2 pos)
+{
+    return frac(sin(dot(pos, float2(12.9898, 78.233))) * 43758.5453);
+}
+
 // Reset the textures
 [numthreads(8, 8, 1)] void reset(uint3 id : SV_DispatchThreadid)
 {
@@ -113,8 +122,17 @@ float gauss(float x, float radius)
     // Surface evaporation
     if (evaporationConstant > 0) {
         // Less water evaporates the more water there is
-        float evaporation = min(0.0, -2.4389 * pow(newSurfaceWater - 0.689655, 3))
+        float evaporation = min(0.0, -2.4389 * pow(newSurfaceWater - 0.689655, 3));
         newSurfaceWater = min(0.0, newSurfaceWater - evaporation * evaporationConstant);
+    }
+
+    // Rain water gain
+    if (rainStrength > 0 && rainMult > 0){
+        if (rand(pos) < rainStrength){
+            float rain = rainStrength * rainMult * rand(pos);
+
+            newSurfaceWater = min(1.0, newSurfaceWater + rain);
+        }
     }
 
 

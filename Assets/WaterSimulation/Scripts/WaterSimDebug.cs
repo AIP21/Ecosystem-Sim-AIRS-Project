@@ -55,7 +55,7 @@ namespace WaterSim
             soilUseMap = createTexture(RenderTextureFormat.RFloat, FilterMode.Bilinear);
         }
 
-        public void receiveData(List<AbstractGridData> sentData)
+        public void readData(List<AbstractGridData> sentData)
         {
             int i = 0;
 
@@ -70,32 +70,49 @@ namespace WaterSim
                     continue;
                 }
 
+                // object map;
+
                 // Copy the received data to the appropriate texture
                 switch (name)
                 {
                     case "waterHeight":
                         // print("Receiving waterHeight map");
-                        dat.GetData(waterMap);
+                        // map = waterMap;
+                        // dat.GetData(ref map);
+                        // waterMap = (RenderTexture)map;
+                        dat.CopyData(this.waterMap);
 
                         break;
                     case "waterFlow":
                         // print("Receiving waterFlow map");
-                        dat.GetData(flowMap);
+                        // map = flowMap;
+                        // dat.GetData(ref map);
+                        // waterMap = (RenderTexture)map;
+                        dat.CopyData(this.flowMap);
 
                         break;
                     case "waterVelocity":
                         // print("Receiving waterVelocity map");
-                        dat.GetData(velocityMap);
+                        // map = velocityMap;
+                        // dat.GetData(ref map);
+                        // waterMap = (RenderTexture)map;
+                        dat.CopyData(this.velocityMap);
 
                         break;
                     case "soilSaturation":
                         // print("Receiving soilSaturation map");
-                        dat.GetData(saturationMap);
+                        // map = saturationMap;
+                        // dat.GetData(ref map);
+                        // waterMap = (RenderTexture)map;
+                        dat.CopyData(this.saturationMap);
 
                         break;
                     case "soilUse":
                         // print("Receiving soilUse map");
-                        dat.GetData(soilUseMap);
+                        // map = soilUseMap;
+                        // dat.GetData(ref map);
+                        // waterMap = (RenderTexture)map;
+                        dat.CopyData(this.soilUseMap);
 
                         break;
                 }

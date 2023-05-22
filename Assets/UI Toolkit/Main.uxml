@@ -1,0 +1,37 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <ui:VisualElement style="justify-content: space-around; flex-direction: row; flex-grow: 1; padding-left: 20px; padding-right: 20px; padding-top: 20px; padding-bottom: 60px; height: 815px;">
+        <ui:VisualElement style="justify-content: space-around; flex-grow: 1; align-items: stretch;">
+            <ui:VisualElement name="ControlPanel" style="width: 275px; border-top-left-radius: 15px; border-bottom-left-radius: 15px; border-top-right-radius: 15px; border-bottom-right-radius: 15px; background-color: rgba(173, 173, 173, 0.64); margin-top: 0; margin-left: 0; left: 25px; top: 25px; padding-top: 5px; padding-bottom: 5px; display: flex; height: 322px;">
+                <ui:Label text="Control Panel" display-tooltip-when-elided="true" style="-unity-text-align: middle-center; height: 8px; -unity-font-style: bold; margin-bottom: 4px;" />
+                <ui:GroupBox name="SimButtons" style="flex-direction: row; justify-content: space-around; align-items: stretch; margin-top: 0; margin-bottom: 0;">
+                    <ui:Button text="Halt" display-tooltip-when-elided="true" name="HaltResume" style="flex-shrink: 1; flex-grow: 1; background-color: rgb(255, 205, 93); border-top-left-radius: 10px; border-bottom-left-radius: 10px; border-top-right-radius: 10px; border-bottom-right-radius: 10px;" />
+                    <ui:Button text="Reset" display-tooltip-when-elided="true" name="Reset" style="flex-shrink: 1; flex-grow: 1; background-color: rgb(255, 95, 95); border-top-left-radius: 10px; border-bottom-left-radius: 10px; border-top-right-radius: 10px; border-bottom-right-radius: 10px;" />
+                </ui:GroupBox>
+                <ui:GroupBox name="TimeButtons" style="flex-direction: row; align-items: stretch; justify-content: center; margin-top: 0; margin-bottom: 0;">
+                    <ui:Button text="New Day" display-tooltip-when-elided="true" name="NewDay" style="flex-shrink: 1; flex-grow: 1; width: 62px; background-color: rgb(222, 255, 150); border-top-left-radius: 10px; border-bottom-left-radius: 10px; border-top-right-radius: 10px; border-bottom-right-radius: 10px;" />
+                    <ui:Button text="Pause" display-tooltip-when-elided="true" name="PlayPause" style="flex-shrink: 1; flex-grow: 1; background-color: rgb(95, 227, 255); border-top-left-radius: 10px; border-bottom-left-radius: 10px; border-top-right-radius: 10px; border-bottom-right-radius: 10px;" />
+                </ui:GroupBox>
+                <ui:Toggle label="Water Simulation" value="true" name="WaterToggle" style="margin-left: 8px; margin-right: 8px;" />
+                <ui:Toggle label="Draw Water" value="true" name="DrawWaterToggle" style="margin-right: 8px; margin-left: 8px;" />
+                <ui:Toggle label="Tree Growth" value="true" name="TreeToggle" style="margin-left: 8px; margin-right: 8px;" />
+                <ui:Toggle label="Render Trees" value="true" name="RendTreeToggle" style="margin-right: 8px; margin-left: 8px;" />
+                <ui:Toggle label="Weather Simulation" value="true" name="WeatherToggle" style="margin-right: 8px; margin-left: 8px;" />
+            </ui:VisualElement>
+            <ui:VisualElement name="Metrics" style="width: 275px; border-top-left-radius: 15px; border-bottom-left-radius: 15px; border-top-right-radius: 15px; border-bottom-right-radius: 15px; background-color: rgba(173, 173, 173, 0.64); margin-top: 0; margin-left: 0; left: 25px; padding-top: 5px; display: flex; top: 35px; height: 345px;">
+                <ui:Label text="Timing Metrics" display-tooltip-when-elided="true" name="Label" style="-unity-text-align: middle-center; height: 8px; -unity-font-style: bold; margin-bottom: 4px;" />
+                <ui:Foldout text="Ticks" name="TickList">
+                    <ui:Label text="&quot;&quot;" display-tooltip-when-elided="true" />
+                </ui:Foldout>
+                <ui:Foldout text="Data Structure" name="DSList">
+                    <ui:Label text="&quot;&quot;" display-tooltip-when-elided="true" />
+                </ui:Foldout>
+            </ui:VisualElement>
+            <ui:VisualElement name="Time" style="width: 275px; border-top-left-radius: 15px; border-bottom-left-radius: 15px; border-top-right-radius: 15px; border-bottom-right-radius: 15px; background-color: rgba(173, 173, 173, 0.64); margin-top: 7px; margin-left: 0; left: 25px; padding-top: 5px; display: flex; padding-bottom: 10px; height: 196px; top: 35px;">
+                <ui:Label text="Simulation Time" display-tooltip-when-elided="true" name="Label" style="-unity-text-align: middle-center; height: 8px; -unity-font-style: bold; margin-bottom: 4px;" />
+                <ui:Slider picking-mode="Ignore" label="Time Of Day" value="12" high-value="24" name="Day" low-value="0" inverted="false" show-input-field="true" direction="Horizontal" style="flex-grow: 1; flex-direction: column; align-items: stretch; justify-content: center;" />
+                <ui:SliderInt picking-mode="Ignore" label="Day Of Year" value="50" high-value="365" name="Year" show-input-field="true" page-size="1" style="flex-direction: column; justify-content: center;" />
+                <ui:TextField picking-mode="Ignore" label="Day Length" value="1" text="1" name="DayLength" mask-character="int" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

@@ -3,11 +3,13 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using Graphing;
 using Managers.Interfaces;
 using SimDataStructure.Data;
 using SimDataStructure.Interfaces;
 using TreeGrowth.Generation;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 namespace TreeGrowth
 {

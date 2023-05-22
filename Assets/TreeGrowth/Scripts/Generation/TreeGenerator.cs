@@ -1,3 +1,4 @@
+using System.Net;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -38,7 +39,7 @@ namespace TreeGrowth.Generation
 
         public void Reset()
         {
-            this.transform.DeleteChildren();
+            foreach (Transform child in this.transform) UnityEngine.Object.Destroy(child.gameObject);
             this.Root = new Node(Vector3.zero, this);
             this.RayCastCount = 0;
             this.Iteration = 0;

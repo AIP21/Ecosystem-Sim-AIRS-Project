@@ -1,4 +1,6 @@
-﻿// This class adds functions to built-in types.
+﻿#if UNITY_EDITOR
+
+// This class adds functions to built-in types.
 using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.Events;
@@ -545,3 +547,4 @@ public static class Extensions
         agent.velocity = Vector3.zero;
     }
 }
+#endif

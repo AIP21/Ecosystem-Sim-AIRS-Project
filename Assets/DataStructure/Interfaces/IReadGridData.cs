@@ -13,7 +13,7 @@ namespace SimDataStructure.Interfaces
     */
     public interface IReadGridData
     {
-        Dictionary<string, int> ReadDataNames { get; } // The levels and names of the data to receive from the data structure
+        Dictionary<string, int> ReadDataNames { get; } // The names and levels of the data to receive from the data structure
 
         /**
             <summary>
@@ -24,6 +24,6 @@ namespace SimDataStructure.Interfaces
                 It is recommended for the implementing class to cache the received list of data for use only during the tick, to avoid memory bloat, but the received data list can also be cached for data deltas, etc.
             </summary>
         */
-        void receiveData(List<AbstractGridData> sentData);
+        void readData(List<AbstractGridData> sentData);
     }
 }

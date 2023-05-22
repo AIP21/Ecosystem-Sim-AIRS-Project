@@ -3,27 +3,29 @@ using UnityEngine;
 using UnityEditor;
 using UnityEngine.Rendering;
 
-[ExecuteInEditMode] public class PrecipitationManager : MonoBehaviour 
+public class PrecipitationManager : MonoBehaviour
 {
-    [System.Serializable] public class EnvironmentParticlesSettings
+    [System.Serializable]
+    public class EnvironmentParticlesSettings
     {
-        [Range(0, 1)] public float amount = 1.0f;
+        [Range(0, 1)] public float amount = 0.0f;
         public Color color = Color.white;
 
         [Tooltip("Alpha = variation amount")]
         public Color colorVariation = Color.white;
         public float fallSpeed;
-        public Vector2 cameraRange; 
+        public Vector2 cameraRange;
         public Vector2 flutterFrequency, flutterSpeed, flutterMagnitude;
         public Vector2 sizeRange;
-        
-        public EnvironmentParticlesSettings (
-            Color color, Color colorVariation, 
-            float fallSpeed, Vector2 cameraRange, 
-            Vector2 flutterFrequency, Vector2 flutterSpeed, Vector2 flutterMagnitude, 
+
+        public EnvironmentParticlesSettings(
+            Color color, Color colorVariation,
+            float fallSpeed, Vector2 cameraRange,
+            Vector2 flutterFrequency, Vector2 flutterSpeed, Vector2 flutterMagnitude,
             Vector2 sizeRange
-        ) {
-            
+        )
+        {
+
             this.color = color;
             this.colorVariation = colorVariation;
             this.fallSpeed = fallSpeed;
@@ -38,25 +40,25 @@ using UnityEngine.Rendering;
     public Texture2D mainTexture;
     public Texture2D noiseTexture;
 
-    [Range(0,1)] public float windStrength;
-    [Range(-180,180)] public float windYRotation;
-		
+    [Range(0, 1)] public float windStrength;
+    [Range(-180, 180)] public float windYRotation;
+
     // 65536 (256 x 256) vertices is the max per mesh
     [Range(2, 256)] public int meshSubdivisions = 200;
 
     // populate the settings with some initial values
     public EnvironmentParticlesSettings rain = new EnvironmentParticlesSettings(
         Color.white, Color.white, 3,  // color, colorVariation, fall speed
-        new Vector2(0,15), //camera range
+        new Vector2(0, 15), //camera range
         new Vector2(0.988f, 1.234f), //flutter frequency
         new Vector2(.01f, .01f), //flutter speed
         new Vector2(.35f, .25f), //flutter magnitude
         new Vector2(.5f, 1f)//, //size range 
     );
-    
-    public EnvironmentParticlesSettings snow = new EnvironmentParticlesSettings(	
+
+    public EnvironmentParticlesSettings snow = new EnvironmentParticlesSettings(
         Color.white, Color.white, .25f,  // color, colorVariation, fall speed
-        new Vector2(0,10), //camera range
+        new Vector2(0, 10), //camera range
         new Vector2(0.988f, 1.234f), //flutter frequency
         new Vector2(1f, .5f), //flutter speed
         new Vector2(.35f, .25f), //flutter magnitude
@@ -65,13 +67,15 @@ using UnityEngine.Rendering;
 
     GridHandler gridHandler;
     Matrix4x4[] renderMatrices = new Matrix4x4[3 * 3 * 3];
-		
+
     Mesh meshToDraw;
 
     Material rainMaterial, snowMaterial;
     // automatic material creation
-    static Material CreateMaterialIfNull(string shaderName, ref Material reference) {
-        if (reference == null) {
+    static Material CreateMaterialIfNull(string shaderName, ref Material reference)
+    {
+        if (reference == null)
+        {
             reference = new Material(Shader.Find(shaderName));
             reference.hideFlags = HideFlags.HideAndDontSave;
             reference.renderQueue = 3000;
@@ -80,35 +84,41 @@ using UnityEngine.Rendering;
         return reference;
     }
 
-    void OnEnable () {
+    void OnEnable()
+    {
         gridHandler = GetComponent<GridHandler>();
         gridHandler.onPlayerGridChange += OnPlayerGridChange;
     }
 
-    void OnDisable() {
+    void OnDisable()
+    {
         gridHandler.onPlayerGridChange -= OnPlayerGridChange;
     }
-    
+
     /*
         set all our render matrices to be positioned
         in a 3x3x3 grid around the player
     */
-    void OnPlayerGridChange(Vector3Int playerGrid) {
+    void OnPlayerGridChange(Vector3Int playerGrid)
+    {
 
         // index for each individual matrix
         int i = 0;
 
         // loop in a 3 x 3 x 3 grid
-        for (int x = -1; x <= 1; x++) {
-            for (int y = -1; y <= 1; y++) {
-                for (int z = -1; z <= 1; z++) {
+        for (int x = -1; x <= 1; x++)
+        {
+            for (int y = -1; y <= 1; y++)
+            {
+                for (int z = -1; z <= 1; z++)
+                {
 
                     Vector3Int neighborOffset = new Vector3Int(x, y, z);
-                    
+
                     // adjust the rendering position matrix, leaving rotation and scale alone
                     renderMatrices[i++].SetTRS(
-                        gridHandler.GetGridCenter(playerGrid + neighborOffset), 
-                        Quaternion.identity, 
+                        gridHandler.GetGridCenter(playerGrid + neighborOffset),
+                        Quaternion.identity,
                         Vector3.one
                     );
                 }
@@ -136,7 +146,7 @@ using UnityEngine.Rendering;
         Matrix4x4 windRotationMatrix = Matrix4x4.TRS(
             Vector3.zero, Quaternion.Euler(windRotationEulerAngles), Vector3.one
         );
-			
+
         /*
             when falling straight down, the max travel distance of a particle is
             the grid size.  but when we account for the wind angle, we have to consider
@@ -159,17 +169,18 @@ using UnityEngine.Rendering;
         RenderEnvironmentParticles(snow, CreateMaterialIfNull("Hidden/Environment/Snow", ref snowMaterial), maxTravelDistance, windRotationMatrix);
     }
 
-    void RenderEnvironmentParticles(EnvironmentParticlesSettings settings, Material material, float maxTravelDistance, Matrix4x4 windRotationMatrix) {
+    void RenderEnvironmentParticles(EnvironmentParticlesSettings settings, Material material, float maxTravelDistance, Matrix4x4 windRotationMatrix)
+    {
 
         // if the amount is 0, dont render anything
         if (settings.amount <= 0)
             return;
 
         material.SetTexture("_MainTex", mainTexture);
-        material.SetTexture("_NoiseTex", noiseTexture);  
+        material.SetTexture("_NoiseTex", noiseTexture);
 
         material.SetFloat("_GridSize", gridHandler.gridSize);
-        
+
         material.SetFloat("_Amount", settings.amount);
 
         material.SetColor("_Color", settings.color);
@@ -184,9 +195,9 @@ using UnityEngine.Rendering;
         material.SetFloat("_MaxTravelDistance", maxTravelDistance);
 
         material.SetMatrix("_WindRotationMatrix", windRotationMatrix);
-                        
+
         Graphics.DrawMeshInstanced(
-            meshToDraw, 0, material, renderMatrices, renderMatrices.Length, 
+            meshToDraw, 0, material, renderMatrices, renderMatrices.Length,
             null, ShadowCastingMode.Off, true, 0, null, LightProbeUsage.Off
         );
     }
@@ -195,19 +206,22 @@ using UnityEngine.Rendering;
     // center at [0,0], 
     // min at [-.5, -.5] 
     // max at [.5, .5]
-    public void RebuildPrecipitationMesh() {
-        Mesh mesh = new Mesh ();
+    public void RebuildPrecipitationMesh()
+    {
+        Mesh mesh = new Mesh();
         List<int> indicies = new List<int>();
         List<Vector3> vertices = new List<Vector3>();
         List<Vector3> uvs = new List<Vector3>();
-        
+
         // use 0 - 100 range instead of 0 to 1
         // to avoid precision errors when subdivisions
         // are to high
         float f = 100f / meshSubdivisions;
-        int i  = 0;
-        for (float x = 0.0f; x <= 100f; x += f) {
-            for (float y = 0.0f; y <= 100f; y += f) {
+        int i = 0;
+        for (float x = 0.0f; x <= 100f; x += f)
+        {
+            for (float y = 0.0f; y <= 100f; y += f)
+            {
 
                 // normalize x and y to a value between 0 and 1
                 float x01 = x / 100.0f;
@@ -218,7 +232,7 @@ using UnityEngine.Rendering;
                 // calcualte the threshold for this vertex
                 // to recreate the 'thinning out' effect
                 float vertexIntensityThreshold = Mathf.Max(
-                    (float)((x / f) % 4.0f) / 4.0f, 
+                    (float)((x / f) % 4.0f) / 4.0f,
                     (float)((y / f) % 4.0f) / 4.0f
                 );
 
@@ -226,11 +240,11 @@ using UnityEngine.Rendering;
                 uvs.Add(new Vector3(x01, y01, vertexIntensityThreshold));
 
                 indicies.Add(i++);
-            }    
+            }
         }
-        
+
         mesh.SetVertices(vertices);
-        mesh.SetUVs(0,uvs);
+        mesh.SetUVs(0, uvs);
         mesh.SetIndices(indicies.ToArray(), MeshTopology.Points, 0);
 
         // give a large bounds so it's always visible, we'll handle culling manually
@@ -240,19 +254,22 @@ using UnityEngine.Rendering;
         mesh.hideFlags = HideFlags.HideAndDontSave;
 
         meshToDraw = mesh;
-    } 
+    }
 }
 
 #if UNITY_EDITOR
 // create a custom editor with a button
 // to trigger rebuilding of the render mesh
-[CustomEditor(typeof(PrecipitationManager))] 
-public class PrecipitationManagerEditor : Editor {
+[CustomEditor(typeof(PrecipitationManager))]
+public class PrecipitationManagerEditor : Editor
+{
 
-    public override void OnInspectorGUI() {
+    public override void OnInspectorGUI()
+    {
         base.OnInspectorGUI();
-        
-        if (GUILayout.Button("Rebuild Precipitation Mesh")) {
+
+        if (GUILayout.Button("Rebuild Precipitation Mesh"))
+        {
             (target as PrecipitationManager).RebuildPrecipitationMesh();
 
             // set dirty to make sure the editor updates

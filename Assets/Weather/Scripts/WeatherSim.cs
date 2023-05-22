@@ -1,26 +1,31 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Configuration;
 using Managers.Interfaces;
+using SimDataStructure.Data;
+using SimDataStructure.Interfaces;
 using UnityEngine;
 using Utilities;
+using Graphing;
 using Random = UnityEngine.Random;
+using UnityEngine.UIElements;
 
 namespace Weather
 {
     //[ExecuteInEditMode]
-    public class WeatherSim : MonoBehaviour, ITickableSystem
+    public class WeatherSim : MonoBehaviour, ITickableSystem, ISetupGridData, IReadGridData, IWriteGridData
     {
-        //         public LTDescr delay, tween;
+        #region Variables
+        public LTDescr delay, tween;
 
 #if UNITY_EDITOR
-    [SerializeField] [HideInInspector] private bool referencesHeaderGroup;
-    [SerializeField] [HideInInspector] private bool controlHeaderGroup;
-    [SerializeField] [HideInInspector] private bool temperatureHeaderGroup;
-    [SerializeField] [HideInInspector] private bool lightningHeaderGroup;
-    [SerializeField] [HideInInspector] private bool blendingHeaderGroup;
-    [SerializeField] [HideInInspector] private bool otherHeaderGroup;
+        [SerializeField][HideInInspector] private bool referencesHeaderGroup;
+        [SerializeField][HideInInspector] private bool controlHeaderGroup;
+        [SerializeField][HideInInspector] private bool temperatureHeaderGroup;
+        [SerializeField][HideInInspector] private bool lightningHeaderGroup;
+        [SerializeField][HideInInspector] private bool weatherHeaderGroup;
+        [SerializeField][HideInInspector] private bool blendingHeaderGroup;
+        [SerializeField][HideInInspector] private bool otherHeaderGroup;
 #endif
 
         #region Public
@@ -28,19 +33,13 @@ namespace Weather
         public Transform sunTransform;
         public float precipDurationMultiplier = 1.0f;
 
-        [Range(0.0f, 24.0f)]
-        public float timeOfDay = 12.0f;
-
-        [Tooltip("The number of hours to step per tick")]
-        public float tickTimeStep = 1.0f;
-        [Tooltip("In minutes")]
-        public float dayLength = 2.0f;
+        public PrecipitationManager precipitationManager;
         #endregion
 
         #region Value containers
         [Header("Value containers")]
-        public ValueContainer TodayVals;
-        public ValueContainer YesterdayVals;
+        public WeatherGridData TodayVals;
+        public WeatherGridData YesterdayVals;
         #endregion
 
         //         #region Script references
@@ -51,8 +50,6 @@ namespace Weather
 
         #region Control variables
         [Header("Control variables")]
-        [Range(0, 365)]
-        [SerializeField][HideInInspector] private int SeasonTime;
         [SerializeField][HideInInspector] public bool IsWeather;
         [SerializeField][HideInInspector] private bool ComputeValues = true;
         [SerializeField][HideInInspector] private bool ApplyValues = true;
@@ -79,6 +76,16 @@ namespace Weather
         [SerializeField][HideInInspector] private Transform LightningParent;
         [SerializeField][HideInInspector] private int LightningPoolSize = 25;
         private List<GameObject> pooledLightning = new List<GameObject>();
+        #endregion
+
+        #region Weather Creation
+        [SerializeField][HideInInspector] private bool CreateRandomWeather;
+        [SerializeField][HideInInspector] private bool CreateRain;
+        [SerializeField][HideInInspector] private bool CreateThunder;
+        [SerializeField][HideInInspector] private bool CreateSnow;
+        [SerializeField][HideInInspector] private float CreateWeatherIntensity;
+        [SerializeField][HideInInspector] private float CreateWeatherTemp;
+        [SerializeField][HideInInspector] private float CreateWeatherDuration;
         #endregion
 
         #region Lighting blending gradients
@@ -125,7 +132,7 @@ namespace Weather
         [SerializeField][HideInInspector] private AnimationCurve MilkyWayIntensityRain;
         #endregion
 
-        #region Extra Computation Cariables
+        #region Extra Computation Variables
         [Header("Extra computation variables")]
         [SerializeField][HideInInspector] private float BaseTempDifference;
         [SerializeField][HideInInspector] private float BaseHumidityDifference;
@@ -139,48 +146,114 @@ namespace Weather
         public float zaraTemperature;
         [HideInInspector]
         public float zaraWindSpeed;
+
+        public UIDocument uiDocument;
+        public LineChart baseChart;
+        public LineChart actualChart;
+        public LineChart precipChart;
+        public LineChart precipTypeChart;
+        public LineChart fogCloudsChart;
+        public LineChart dayTempChart;
+        public LineChart dayHumidityChart;
+        public LineChart windSpeedChart;
+        public LineChart windDirChart;
         #endregion
 
         #region Private
-        #region Interface Stuff
-        // private Dictionary<string, int> _readDataNames = new Dictionary<string, int>() {
-        //     { "trees", 1 }, // 2
-        // };  // The names of the cell data this is reading from the data structure, along with its grid level
-        // public Dictionary<string, int> ReadDataNames { get { return _readDataNames; } }
+        private float timeOfDay;
+        private int dayOfYear;
+        private int ticksPerDay;
 
-        // private Dictionary<string, int> _writeDataNames = new Dictionary<string, int>(){
-        //     { "trees", 1 }, // 2
-        // };  // The names of the cell data this is writing to the data structure, along with its grid level
-        // public Dictionary<string, int> WriteDataNames { get { return _writeDataNames; } }
+        private Dictionary<Tuple<string, int>, object> data = new Dictionary<Tuple<string, int>, object>();
+        private Tuple<string, int> weatherYesterdayKey = new Tuple<string, int>("weatherYesterday", 2);
+        private Tuple<string, int> weatherTodayKey = new Tuple<string, int>("weatherToday", 2);
+        private Tuple<string, int> rainStrengthKey = new Tuple<string, int>("rainStrength", 2);
+
+        #region Interface Stuff
+        private Dictionary<string, int> _readDataNames = new Dictionary<string, int>() {
+            { "timeOfDay", 2 },
+            { "dayOfYear", 2 },
+            { "newDay", 2 },
+            { "ticksPerDay", 2}
+        };  // The names of the grid data this is reading from the data structure, along with its grid level
+        public Dictionary<string, int> ReadDataNames { get { return _readDataNames; } }
+
+        private Dictionary<string, int> _writeDataNames = new Dictionary<string, int>(){
+            { "weatherYesterday", 2 },
+            { "weatherToday", 2 },
+            { "rainStrength", 2 },
+        };  // The names of the grid data this is writing to the data structure, along with its grid level
+        public Dictionary<string, int> WriteDataNames { get { return _writeDataNames; } }
 
         public float TickPriority { get { return 3; } }
-        public int TickInterval { get { return 20; } }
+        public int TickInterval { get { return 0; } } // 20
         public int ticksSinceLastTick { get; set; }
         public bool willTickNow { get; set; }
         public bool shouldTick { get { return this.isActiveAndEnabled; } }
         #endregion
         #endregion
+        #endregion
 
+        #region Unity Methods
         private void Start()
         {
+            // Set up ui references
+            // baseChart = uiDocument.rootVisualElement.Q<LineChart>("baseChart");
+            // actualChart = uiDocument.rootVisualElement.Q<LineChart>("actualChart");
+            // precipChart = uiDocument.rootVisualElement.Q<LineChart>("precipChart");
+            // precipTypeChart = uiDocument.rootVisualElement.Q<LineChart>("precipTypeChart");
+            // fogCloudsChart = uiDocument.rootVisualElement.Q<LineChart>("fogCloudsChart");
+            // dayTempChart = uiDocument.rootVisualElement.Q<LineChart>("dayTempChart");
+            // dayHumidityChart = uiDocument.rootVisualElement.Q<LineChart>("dayHumidityChart");
+            // windSpeedChart = uiDocument.rootVisualElement.Q<LineChart>("windSpeedChart");
+            // windDirChart = uiDocument.rootVisualElement.Q<LineChart>("windDirChart");
+
+            // // Set up graphs
+            // baseChart.EnableGraph(365);
+            // actualChart.EnableGraph(365);
+            // precipChart.EnableGraph(365);
+            // precipTypeChart.EnableGraph(365);
+            // fogCloudsChart.EnableGraph(365);
+            // dayTempChart.EnableGraph(29);
+            // dayHumidityChart.EnableGraph(29);
+            // windSpeedChart.EnableGraph(29);
+            // windDirChart.EnableGraph(29);
+
+            // // Set up lines
+            // baseChart.AddLine("baseTemp", Color.red);
+            // baseChart.AddLine("actualTemp", Color.blue);
+            // actualChart.AddLine("baseHumidity", Color.red);
+            // actualChart.AddLine("actualHumidity", Color.blue);
+            // precipChart.AddLine("intensity", Color.red, true);
+            // precipChart.AddLine("temp", Color.green, true);
+            // precipChart.AddLine("duration", Color.blue, true);
+            // precipChart.AddLine("chance", Color.yellow, true);
+            // precipTypeChart.AddLine("type", Color.red);
+            // dayTempChart.AddLine("temp", Color.red);
+            // dayHumidityChart.AddLine("humidity", Color.red);
+            // windSpeedChart.AddLine("speed", Color.red);
+            // windDirChart.AddLine("direction", Color.red);
+            // fogCloudsChart.AddLine("fog", Color.red);
+            // fogCloudsChart.AddLine("cloudCover", Color.blue);
+
             shadowReceiver = Utils.PrimaryCamera.transform;
             TodayVals.PrecipIntensity = 0;
-            // SkyController.GetCurrentWeatherProfile().profilePropertyList[25].slider = 0;
-            // SkyController.GetCurrentWeatherProfile().profilePropertyList[26].slider = 0;
+            this.precipitationManager.rain.amount = 0.0f;
+            this.precipitationManager.snow.amount = 0.0f;
             TodayVals.isThundering = false;
             TodayVals.isRaining = false;
             TodayVals.isSnowing = false;
-            // tween = LeanTween.delayedCall(0, () => { });
-            // delay = LeanTween.delayedCall(0, () => { });
+            tween = LeanTween.delayedCall(0, () => { });
+            delay = LeanTween.delayedCall(0, () => { });
 
-            pooledLightning = new List<GameObject>();
-            for (int i = 0; i < LightningPoolSize; i++)
-            {
-                GameObject obj = (GameObject)Instantiate(LightningPrefab);
-                obj.transform.parent = LightningParent;
-                obj.SetActive(false);
-                pooledLightning.Add(obj);
-            }
+            // pooledLightning = new List<GameObject>();
+            // for (int i = 0; i < LightningPoolSize; i++)
+            // {
+            //     GameObject obj = (GameObject)Instantiate(LightningPrefab);
+            //     obj.transform.parent = LightningParent;
+            //     obj.SetActive(false);
+            //     pooledLightning.Add(obj);
+            // }
 
             NewDay();
         }
@@ -191,6 +264,8 @@ namespace Weather
             TodayVals.ResetEditor();
             // i = 0;
             // SkyController.SetDefaultWeatherProfile(1);
+            this.precipitationManager.rain.amount = 0.0f;
+            this.precipitationManager.snow.amount = 0.0f;
             TodayVals.isThundering = false;
             TodayVals.isRaining = false;
             TodayVals.isSnowing = false;
@@ -200,25 +275,12 @@ namespace Weather
             UpdateSimulation();
             ComputeValues = true;
         }
+        #endregion
 
         #region Ticking
-        public float deltaDay;
         public void BeginTick(float deltaTime)
         {
-            // daylength is in minutes
-            // deltatime is in seconds
-            deltaDay = (deltaTime / 60.0f) * (24.0f / dayLength);
 
-            float newVal = timeOfDay + deltaDay;
-
-            // Wrap back to 0 if it's 24
-            if (newVal >= 24)
-            {
-                timeOfDay = newVal - 24.0f;
-                NewDay();
-            }
-            else
-                timeOfDay = newVal;
         }
 
         public void Tick(float deltaTime)
@@ -233,11 +295,55 @@ namespace Weather
         }
         #endregion
 
+        #region Data Structure
+        public Dictionary<Tuple<string, int>, object> initializeData()
+        {
+            this.data.Add(this.weatherYesterdayKey, this.YesterdayVals);
+            this.data.Add(this.weatherTodayKey, this.TodayVals);
+            this.data.Add(this.rainStrengthKey, new FloatGridData(this.TodayVals.PrecipIntensity));
+
+            return this.data;
+        }
+
+        public void readData(List<AbstractGridData> sentData)
+        {
+            // Read data from list
+            object temp = (object)0.0f;
+
+            sentData[0].GetData(ref temp);
+            this.timeOfDay = (float)temp;
+
+            temp = (object)0;
+
+            sentData[1].GetData(ref temp);
+            this.dayOfYear = (int)temp;
+
+            temp = (object)false;
+
+            sentData[2].GetData(ref temp);
+            if ((bool)temp)
+                NewDay();
+
+            temp = (object)0;
+
+            sentData[3].GetData(ref temp);
+            this.ticksPerDay = (int)temp;
+        }
+
+        public Dictionary<Tuple<string, int>, object> writeData()
+        {
+            // Update data dictionary
+            this.data[this.weatherYesterdayKey] = this.YesterdayVals;
+            this.data[this.weatherTodayKey] = this.TodayVals;
+            this.data[this.rainStrengthKey] = this.TodayVals.PrecipIntensity;
+
+            return data;
+        }
+        #endregion
+
         #region Methods
         public void UpdateSimulation()
         {
-            print("Updating simulation");
-
             if (!IsWeather && StormCooldown > 0)
                 StormCooldown--;
 
@@ -250,69 +356,84 @@ namespace Weather
             CalcFogginess();
             CalcCloudCover();
 
-            if (DoWeather && IsWeather && TodayVals.isThundering)
-            {
-                // Maybe increase spawn chances based on difficulty
-                if (LightningSpawnChance > Random.Range(0f, 100f))
-                {
-                    Vector3 randomVec = RandomPointInBox();
-                    GameObject bolt = GetPooledObject();
-                    if (bolt != null)
-                    {
-                        Debug.Log("Spawned new lightning");
-                        bolt.transform.position = new Vector3(bolt.transform.position.x + Random.Range(-50, 50), 150, bolt.transform.position.z + Random.Range(-50, 50));
-                        bolt.SetActive(true);
-                        bolt.GetComponent<LightningGenerator>().Generate(Random.Range(1, 3));
-                    }
-                }
-            }
-        }
+            // Update graphs
+            // dayTempChart.AddValue("temp", TodayVals.ActualTemp);
+            // dayHumidityChart.AddValue("humidity", TodayVals.ActualHumidity);
+            // windSpeedChart.AddValue("speed", TodayVals.WindSpeed);
+            // windDirChart.AddValue("direction", TodayVals.WindDir);
 
-        public GameObject GetPooledObject()
-        {
-            for (int i = 0; i < pooledLightning.Count; i++)
-            {
-                if (!pooledLightning[i].activeInHierarchy)
-                {
-                    return pooledLightning[i];
-                }
-            }
-            return null;
+            // if (DoWeather && IsWeather && TodayVals.isThundering)
+            // {
+            //     if (LightningSpawnChance > Random.Range(0f, 100f))
+            //     {
+            //         Vector3 randomVec = RandomPointInBox();
+            //         GameObject bolt = GetPooledObject();
+            //         if (bolt != null)
+            //         {
+            //             Debug.Log("Spawned new lightning");
+            //             bolt.transform.position = new Vector3(bolt.transform.position.x + Random.Range(-50, 50), 150, bolt.transform.position.z + Random.Range(-50, 50));
+            //             bolt.SetActive(true);
+            //             bolt.GetComponent<LightningGenerator>().Generate(Random.Range(1, 3));
+            //         }
+            //     }
+            // }
         }
 
         public void NewDay(bool fromEditor = false)
         {
-            if (SeasonTime < 365)
-                SeasonTime++;
-            else if (SeasonTime >= 365)
-                SeasonTime = 0;
-
             // Save yesterday's values and prepare for today's values
-            SaveTodaysValues();
+            CopyWeatherValues();
+
+            // Add to graph
+            // baseChart.AddValue("baseTemp", TodayVals.BaseTemp);
+            // baseChart.AddValue("actualTemp", TodayVals.ActualTemp);
+            // actualChart.AddValue("baseHumidity", TodayVals.BaseHumidity);
+            // actualChart.AddValue("actualHumidity", TodayVals.ActualHumidity);
+            // precipChart.AddValue("intensity", TodayVals.PrecipIntensity);
+            // precipChart.AddValue("temp", TodayVals.PrecipTemp);
+            // precipChart.AddValue("duration", TodayVals.PrecipLength);
+            // precipChart.AddValue("chance", TodayVals.PrecipChance);
+
+            // int precipType = 0;
+            // if (TodayVals.isRaining)
+            //     precipType = 1;
+            // else if (TodayVals.isSnowing)
+            //     precipType = 2;
+            // else if (TodayVals.isThundering)
+            //     precipType = 3;
+            // else if (TodayVals.isRaining && TodayVals.isThundering)
+            //     precipType = 4;
+            // else if (TodayVals.isRaining && TodayVals.isSnowing)
+            //     precipType = 5;
+
+            // precipTypeChart.AddValue("type", precipType);
+            // fogCloudsChart.AddValue("fog", TodayVals.Fogginess);
+            // fogCloudsChart.AddValue("cloudCover", TodayVals.CloudCover);
 
             #region Base temp
             float tempBaseTemp;
 
             // Calculate today's base temp with yesterday's influence
             // Sample season temp from curve
-            tempBaseTemp = SeasonTempCurve.Evaluate(SeasonTime);
+            tempBaseTemp = SeasonTempCurve.Evaluate(dayOfYear);
 
             // Add yesterday's temp influence
             tempBaseTemp += (YesterdayVals.BaseTemp / 20);
 
             // Add a biased random deviation of 5-25 degrees
-            // Maybe change the bias based on chosen difficulty?
             tempBaseTemp -= Utils.BiasedRandom(5, 25, 0.5f);
             tempBaseTemp += Utils.BiasedRandom(5, 25, 0.5f);
 
             // Smoothly transition the temperature
-            if (fromEditor)
-            {
-                TodayVals.BaseTemp = tempBaseTemp;
-                BaseTempDifference = Mathf.Abs(TodayVals.BaseTemp - YesterdayVals.BaseTemp);
-            }
+            // if (fromEditor)
+            // {
+            TodayVals.BaseTemp = tempBaseTemp;
+            BaseTempDifference = Mathf.Abs(TodayVals.BaseTemp - YesterdayVals.BaseTemp);
+            // }
             // else
+            // {
             //     LeanTween.value(this.gameObject, YesterdayVals.BaseTemp, tempBaseTemp, 5).setOnUpdate(UpdateBaseTemp).setOnComplete(() => { BaseTempDifference = Mathf.Abs(TodayVals.BaseTemp - YesterdayVals.BaseTemp); });
+            // }
             #endregion
 
             #region Base humidity
@@ -322,18 +443,20 @@ namespace Weather
             tempBaseHumidity = (BaseHumidityDifference + (TodayVals.PrecipIntensity / 20)) + Utils.ScaleNumber(-25, 120, 0, 1, TodayVals.BaseTemp);
 
             // Smoothly transition the humidity
-            if (fromEditor)
-            {
-                TodayVals.BaseHumidity = tempBaseHumidity;
-                BaseHumidityDifference = Mathf.Abs(TodayVals.BaseHumidity - YesterdayVals.BaseHumidity);
-            }
+            // if (fromEditor)
+            // {
+            TodayVals.BaseHumidity = tempBaseHumidity;
+            BaseHumidityDifference = Mathf.Abs(TodayVals.BaseHumidity - YesterdayVals.BaseHumidity);
+            // }
             // else
-            //     LeanTween.value(this.gameObject, YesterdayVals.BaseHumidity, tempBaseHumidity, 5).setOnUpdate(UpdateBaseHumidity).setOnComplete(() => { BaseHumidityDifference = Mathf.Abs(TodayVals.BaseHumidity - YesterdayVals.BaseHumidity); });
+            // LeanTween.value(this.gameObject, YesterdayVals.BaseHumidity, tempBaseHumidity, 5).setOnUpdate(UpdateBaseHumidity).setOnComplete(() => { BaseHumidityDifference = Mathf.Abs(TodayVals.BaseHumidity - YesterdayVals.BaseHumidity); });
+
             #endregion
 
             #region Wind direction
             // Smoothly transition the wind direction to a new random value
             // LeanTween.value(this.gameObject, YesterdayVals.BaseHumidity, Random.value * 360, 5).setOnUpdate(UpdateWindDir);
+            TodayVals.WindDir = Random.value * 360;
             #endregion
 
             // Calculate morning fog and (maybe) dew?
@@ -347,23 +470,16 @@ namespace Weather
             CalcCloudCover();
         }
 
-        public void CancelWeather()
+        public GameObject GetPooledObject()
         {
-            if (IsWeather)
+            for (int i = 0; i < pooledLightning.Count; i++)
             {
-                // LeanTween.cancel(tween.uniqueId);
-                // LeanTween.cancel(delay.uniqueId);
-
-                // tween = LeanTween.value(this.gameObject, TodayVals.PrecipIntensity, 0, 5).setOnUpdate(UpdatePrecipValues).setOnComplete((() =>
-                // {
-                //     IsWeather = false;
-                //     TodayVals.isThundering = false;
-                //     TodayVals.isRaining = false;
-                //     TodayVals.isSnowing = false;
-                //     TodayVals.PrecipTemp = 0;
-                //     TodayVals.PrecipLength = 0;
-                // }));
+                if (!pooledLightning[i].activeInHierarchy)
+                {
+                    return pooledLightning[i];
+                }
             }
+            return null;
         }
 
         public void UpdateBaseTemp(float value)
@@ -379,6 +495,7 @@ namespace Weather
         public void UpdateWindDir(float value)
         {
             TodayVals.WindDir = value;
+            this.precipitationManager.windYRotation = value;
         }
 
         public void UpdatePrecipValues(float value)
@@ -388,29 +505,88 @@ namespace Weather
             zaraRainIntensity = value;
             // SkyController.GetCurrentWeatherProfile().profilePropertyList[29].slider = value;
 
-            // if (TodayVals.isRaining)
-            //     SkyController.GetCurrentWeatherProfile().profilePropertyList[25].slider = value;
-            // if (TodayVals.isSnowing)
-            //     SkyController.GetCurrentWeatherProfile().profilePropertyList[26].slider = value;
+            if (TodayVals.isRaining)
+                this.precipitationManager.rain.amount = value;
+
+            if (TodayVals.isSnowing)
+                this.precipitationManager.snow.amount = value;
+
+            if (value == 0)
+            {
+                this.precipitationManager.rain.amount = 0;
+                this.precipitationManager.snow.amount = 0;
+            }
 
             CalcCloudCover();
         }
 
-        public void SaveTodaysValues()
+        // Copy every value from today to yesterday
+        public void CopyWeatherValues()
         {
-            YesterdayVals.BaseTemp = TodayVals.BaseTemp;
-            YesterdayVals.BaseHumidity = TodayVals.BaseHumidity;
-            YesterdayVals.WindSpeed = TodayVals.WindSpeed;
-            YesterdayVals.PrecipChance = TodayVals.PrecipChance;
-            YesterdayVals.PrecipIntensity = TodayVals.PrecipIntensity;
-            YesterdayVals.PrecipLength = TodayVals.PrecipLength;
-            YesterdayVals.PrecipTemp = TodayVals.PrecipTemp;
-            YesterdayVals.Fogginess = TodayVals.Fogginess;
-            YesterdayVals.CloudCover = TodayVals.CloudCover;
-            YesterdayVals.isThundering = TodayVals.isThundering;
-            YesterdayVals.isRaining = TodayVals.isRaining;
-            YesterdayVals.isSnowing = TodayVals.isSnowing;
-            YesterdayVals.WindDir = TodayVals.WindDir;
+            TodayVals.CopyTo(YesterdayVals);
+        }
+
+        public void CreateWeather(bool rain, bool thunder, bool snow, bool force = false)
+        {
+            float intensity = CalcPrecipIntensity();
+            this.CreateWeather(rain, thunder, snow, this.calcPrecipTemp(), intensity, this.calcPrecipLength(intensity), force);
+        }
+
+        public void CreateWeather(bool rain, bool thunder, bool snow, float temperature, float intensity, float duration, bool force = false)
+        {
+            this.IsWeather = true;
+            this.TodayVals.isRaining = rain;
+            this.TodayVals.isThundering = thunder;
+            this.TodayVals.isSnowing = snow;
+            this.TodayVals.PrecipTemp = temperature;
+            this.TodayVals.PrecipLength = duration;
+
+            if ((ApplyValues && IsWeather) || force)
+            {
+                if (force)
+                    this.StormCooldown = 0;
+
+                tween = LeanTween.value(this.gameObject, TodayVals.PrecipIntensity, intensity, Random.Range(15, 30)).setOnComplete(() =>
+                {
+                    delay = LeanTween.delayedCall(TodayVals.PrecipLength, () =>
+                    {
+                        tween = LeanTween.value(this.gameObject, TodayVals.PrecipIntensity, 0, Random.Range(15, 30)).setOnComplete(() =>
+                        {
+                            IsWeather = false;
+                            TodayVals.isThundering = false;
+                            TodayVals.isRaining = false;
+                            TodayVals.isSnowing = false;
+                            TodayVals.PrecipTemp = 0;
+                            TodayVals.PrecipLength = 0;
+                        }).setOnUpdate(UpdatePrecipValues);
+                    });
+                }).setOnUpdate(UpdatePrecipValues);
+            }
+        }
+
+        public void CancelWeather(bool resetCooldown = false)
+        {
+            if (IsWeather)
+            {
+                LeanTween.cancel(tween.uniqueId);
+                LeanTween.cancel(delay.uniqueId);
+
+                tween = LeanTween.value(this.gameObject, TodayVals.PrecipIntensity, 0, 5).setOnUpdate(UpdatePrecipValues).setOnComplete((() =>
+                {
+                    IsWeather = false;
+                    TodayVals.isThundering = false;
+                    TodayVals.isRaining = false;
+                    TodayVals.isSnowing = false;
+                    TodayVals.PrecipTemp = 0;
+                    TodayVals.PrecipLength = 0;
+
+                    this.precipitationManager.rain.amount = 0;
+                    this.precipitationManager.snow.amount = 0;
+
+                    if (resetCooldown)
+                        StormCooldown = 0;
+                }));
+            }
         }
 
         public void OnDrawGizmosSelected()
@@ -428,23 +604,18 @@ namespace Weather
         }
         #endregion
 
-        private float getTimeOfDay()
-        {
-            return timeOfDay / 24.0f; // TEMPORARY
-        }
-
         #region Computation Functions
         public void CalcActualTemp()
         {
             if (ComputeValues)
-                TodayVals.ActualTemp = (TodayVals.BaseTemp + (2 * DayTempCurve.Evaluate(getTimeOfDay())))
+                TodayVals.ActualTemp = (TodayVals.BaseTemp + (2 * DayTempCurve.Evaluate(this.timeOfDay / 24.0f)))
                                        + ((TodayVals.WindSpeed * -1.5f)
                                        + (TodayVals.ActualHumidity)
                                        + (TodayVals.PrecipIntensity / 10)
                                        + (TodayVals.PrecipTemp + (TodayVals.PrecipIntensity / 10))
                                        + currentSunExposure);
             if (ApplyValues)
-                zaraTemperature = ((TodayVals.ActualTemp - 32) * 5) / 9; // Convert to celcius bc Zara is annoying
+                zaraTemperature = ((TodayVals.ActualTemp - 32) * 5) / 9; // Convert to Celsius
         }
 
         public void CalcActualHumidity()
@@ -456,12 +627,16 @@ namespace Weather
         public void CalcWindSpeed()
         {
             if (ComputeValues)
-                TodayVals.WindSpeed = (BaseTempDifference + TodayVals.PrecipIntensity) - (TodayVals.CloudCover / 4) - 1; // miles/hr
-                                                                                                                         // TodayVals.WindSpeed = Utils.ScaleNumber(0, 5, 0, 1, (BaseTempDifference + TodayVals.PrecipIntensity) - (TodayVals.CloudCover / 5));
+                TodayVals.WindSpeed = Mathf.Clamp(Mathf.InverseLerp(0.0f, 10.0f, ((BaseTempDifference + TodayVals.PrecipIntensity) - (TodayVals.CloudCover / 4) - 1)) / 10.0f, 0.0f, 1.0f); // miles/hr
+                // TodayVals.WindSpeed = Utils.ScaleNumber(0, 5, 0, 1, (BaseTempDifference + TodayVals.PrecipIntensity) - (TodayVals.CloudCover / 5));
 
             if (ApplyValues)
             {
+                // WTF IS THIS CONVERSION
                 zaraWindSpeed = TodayVals.WindSpeed / 2.237f; // meters/s
+
+                this.precipitationManager.windStrength = TodayVals.WindSpeed;
+
                 // SkyController.GetCurrentWeatherProfile().profilePropertyList[33].slider = TodayVals.WindSpeed;
                 // SkyController.GetCurrentWeatherProfile().profilePropertyList[34].slider = TodayVals.WindDir;
                 // SkyController.GetCurrentWeatherProfile().profilePropertyList[14].slider = TodayVals.WindDir;
@@ -483,31 +658,31 @@ namespace Weather
             }
         }
 
-        private float CalcSunExposure() // SHOULD NOT BE USED
-        {
-            Vector3 sunDir = sunTransform.forward;
+        // private float CalcSunExposure() // SHOULD NOT BE USED
+        // {
+        //     Vector3 sunDir = sunTransform.forward;
 
-            if (Physics.Raycast(shadowReceiver.position, shadowReceiver.position - sunDir, 30, ShadowCasterMask))
-            {
-                // In a shadow
-                Debug.DrawLine(shadowReceiver.position, shadowReceiver.position - sunDir, Color.red);
-                InSun = false;
+        //     if (Physics.Raycast(shadowReceiver.position, shadowReceiver.position - sunDir, 30, ShadowCasterMask))
+        //     {
+        //         // In a shadow
+        //         Debug.DrawLine(shadowReceiver.position, shadowReceiver.position - sunDir, Color.red);
+        //         InSun = false;
 
-                if (currentSunExposure > 0)
-                    currentSunExposure -= Time.deltaTime * 0.4f;
-            }
-            else
-            {
-                // Not in a shadow
-                Debug.DrawLine(shadowReceiver.position, shadowReceiver.position - sunDir, Color.green);
-                InSun = true;
+        //         if (currentSunExposure > 0)
+        //             currentSunExposure -= Time.deltaTime * 0.4f;
+        //     }
+        //     else
+        //     {
+        //         // Not in a shadow
+        //         Debug.DrawLine(shadowReceiver.position, shadowReceiver.position - sunDir, Color.green);
+        //         InSun = true;
 
-                if (currentSunExposure < 1)
-                    currentSunExposure += Time.deltaTime * 0.4f;
-            }
+        //         if (currentSunExposure < 1)
+        //             currentSunExposure += Time.deltaTime * 0.4f;
+        //     }
 
-            return currentSunExposure;
-        }
+        //     return currentSunExposure;
+        // }
 
         #region Precipitation and Clouds
         public void CalcPrecipChance()
@@ -525,67 +700,56 @@ namespace Weather
         public void CalcPrecipType()
         {
             float rand = Random.value;
+
             // print("Rand is: " + rand);
             if (rand <= (TodayVals.PrecipChance / 100))
             {
                 rand = Random.value;
-                // print("Random chance calculation suceeded.");
+                // print("Random chance calculation succeeded.");
                 // print("New rand is: " + rand);
                 if ((TodayVals.ActualTemp > 70 && TodayVals.ActualTemp <= 90) && rand <= (TodayVals.PrecipChance / 10))
                 {
                     print("Created a thunderstorm");
-                    IsWeather = true;
-                    TodayVals.isThundering = true;
-                    TodayVals.isRaining = true;
-                    TodayVals.isSnowing = false;
+                    this.CreateWeather(true, true, false);
                 }
                 else if (TodayVals.ActualTemp > 40)
                 {
                     print("Created a rainstorm");
-                    IsWeather = true;
-                    TodayVals.isThundering = false;
-                    TodayVals.isRaining = true;
-                    TodayVals.isSnowing = false;
+                    this.CreateWeather(true, false, false);
                 }
                 else if (TodayVals.ActualTemp > 25 && TodayVals.ActualTemp <= 35)
                 {
-                    print("Created a sleetstorm");
-                    IsWeather = true;
-                    TodayVals.isThundering = false;
-                    TodayVals.isRaining = true;
-                    TodayVals.isSnowing = true;
+                    print("Created a sleet storm");
+                    this.CreateWeather(false, true, true);
                 }
                 else if (TodayVals.ActualTemp <= 25)
                 {
                     print("Created a snowstorm");
-                    IsWeather = true;
-                    TodayVals.isThundering = false;
-                    TodayVals.isRaining = false;
-                    TodayVals.isSnowing = true;
+                    this.CreateWeather(false, false, true);
                 }
 
-                if (ApplyValues && IsWeather)
-                {
-                    float intensity = CalcPrecipIntensity();
-                    CalcPrecipTemp();
-                    CalcPrecipLength(intensity);
+                // if (ApplyValues && IsWeather)
+                // {
+                //     float intensity = CalcPrecipIntensity();
+                //     // CalcPrecipTemp();
+                //     // CalcPrecipLength(intensity);
 
-                    // tween = LeanTween.value(this.gameObject, TodayVals.PrecipIntensity, intensity, Random.Range(15, 30)).setOnComplete(() =>
-                    // {
-                    //     delay = LeanTween.delayedCall(TodayVals.PrecipLength, () =>
-                    //     {
-                    //         tween = LeanTween.value(this.gameObject, TodayVals.PrecipIntensity, 0, Random.Range(15, 30)).setOnComplete(() =>
-                    //         {
-                    //             IsWeather = false;
-                    //             TodayVals.isThundering = false;
-                    //             TodayVals.isRaining = false;
-                    //             TodayVals.isSnowing = false;
-                    //             TodayVals.PrecipTemp = 0;
-                    //             TodayVals.PrecipLength = 0;
-                    //         }).setOnUpdate(UpdatePrecipValues);
-                    //     });
-                    // }).setOnUpdate(UpdatePrecipValues);
-                }
+                //     tween = LeanTween.value(this.gameObject, TodayVals.PrecipIntensity, intensity, Random.Range(15, 30)).setOnComplete(() =>
+                //     {
+                //         delay = LeanTween.delayedCall(TodayVals.PrecipLength, () =>
+                //         {
+                //             tween = LeanTween.value(this.gameObject, TodayVals.PrecipIntensity, 0, Random.Range(15, 30)).setOnComplete(() =>
+                //             {
+                //                 IsWeather = false;
+                //                 TodayVals.isThundering = false;
+                //                 TodayVals.isRaining = false;
+                //                 TodayVals.isSnowing = false;
+                //                 TodayVals.PrecipTemp = 0;
+                //                 TodayVals.PrecipLength = 0;
+                //             }).setOnUpdate(UpdatePrecipValues);
+                //         });
+                //     }).setOnUpdate(UpdatePrecipValues);
+                // }
             }
         }
 
@@ -603,20 +767,24 @@ namespace Weather
         }
 
         // Only calculated when choosing precip type
-        public void CalcPrecipTemp()
+        private float calcPrecipTemp()
         {
-            TodayVals.PrecipTemp = Utils.ScaleNumber(-25, 120, -10, 1, TodayVals.ActualTemp);
+            return Utils.ScaleNumber(-25, 120, -10, 1, TodayVals.ActualTemp);
         }
 
-        public void CalcPrecipLength(float intensity)
+        private float calcPrecipLength(float intensity)
         {
-            if (TodayVals.isThundering)
-                TodayVals.PrecipLength = (5 * intensity) * precipDurationMultiplier; //Mathf.Clamp(precipLengthConstant, 0.1f, 100);
-            else
-                TodayVals.PrecipLength = (7 * intensity) * precipDurationMultiplier; //Mathf.Clamp(precipLengthConstant, 0.1f, 100);
+            float length = 0.0f;
 
-            StormCooldown = (int)TodayVals.PrecipLength + 120;
+            if (TodayVals.isThundering)
+                length = (5 * intensity) * precipDurationMultiplier; //Mathf.Clamp(precipLengthConstant, 0.1f, 100);
+            else
+                length = (7 * intensity) * precipDurationMultiplier; //Mathf.Clamp(precipLengthConstant, 0.1f, 100);
+
+            StormCooldown = (int)length + 120;
             print("Storm cooldown: " + StormCooldown);
+
+            return length;
         }
 
         public void CalcCloudCover()
@@ -661,7 +829,6 @@ namespace Weather
         }
         #endregion
         #endregion
-
     }
 
     // float val1 = SkyController.GetCurrentWeatherProfile().profilePropertyList[27].slider;
